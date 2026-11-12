@@ -6,7 +6,7 @@
 
 ## Overview
 
-The **Animated Picture Book Studio** is a **100% self-contained** Antigravity plugin that bundles the complete Picture-Book Crayon Video Engine inside `<plugin-root>/engine/` (`~/.gemini/config/plugins/animated_picture_book_studio/engine/` or `D:\picture_book_plugin\engine\`), turning it into a turnkey creative studio without requiring a separate clone on new machines. On this machine, `D:\picture_book` is also pre-installed with `node_modules` for instant execution, or you can scaffold a fresh project into any workspace using `scripts/ensure_engine.py`. It provides skills, agents, rules, and the full engine so you can ask Antigravity to:
+The **Animated Picture Book Studio** is a **100% self-contained** Antigravity plugin that bundles the complete Picture-Book Crayon Video Engine inside `<plugin-root>/engine/` (`~/.gemini/config/plugins/animated_picture_book_studio/engine/`), turning it into a turnkey creative studio without requiring any external repository. You can scaffold the bundled engine into any active `<workspace>` (or run it in-place) using `scripts/ensure_engine.py`. It provides skills, agents, rules, and the full engine so you can ask Antigravity to:
 
 - **Create animated videos** — Design scenes with characters, props, buildings, camera movements, and hand-drawn annotations in a warm crayon/oil-pastel aesthetic.
 - **Model assets after photos** — Turn user-provided photos into hand-crafted 2D cutout SVG characters, props, or buildings that match the storybook style.
@@ -19,7 +19,7 @@ The **Animated Picture Book Studio** is a **100% self-contained** Antigravity pl
 ## Plugin Contents
 
 ```
-D:\picture_book_plugin\
+<plugin-root>/
 ├── plugin.json                              # Plugin manifest
 ├── README.md                                # This file
 ├── assets/
@@ -91,7 +91,7 @@ Turnkey runbook for previewing and exporting videos:
 - Build verification (`pnpm test` & `pnpm run build`)
 - Vite dev server management (`http://localhost:5173`)
 - Automated browser video export via `?auto_export=1` or `#btn-download-video`
-- Server-side save to `D:\picture_book\exports\` via `/__studio/save-export`
+- Server-side save to `<workspace>/exports/` via `/__studio/save-export`
 - Delivering the finished `.mp4` file to the user
 
 ---
@@ -113,7 +113,7 @@ Turnkey producer/orchestrator for users who want to make or edit animated videos
 
 The `rules/AGENTS.md` file is always active when the plugin is enabled. It enforces:
 
-1. **Self-contained engine resolution**: Bundled engine at `<plugin-root>/engine/` (`~/.gemini/config/plugins/animated_picture_book_studio/engine/` or `D:\picture_book_plugin\engine\`), pre-installed engine at `D:\picture_book`, or workspace scaffolding via `scripts/ensure_engine.py`
+1. **Self-contained engine resolution**: Bundled engine at `<plugin-root>/engine/`, automatically scaffolded into the active `<workspace>` (with `pnpm install`) via `scripts/ensure_engine.py`
 2. **Animation routing**: Load `picture-book-animation` skill for any scene/animation work
 3. **Code authoring routing**: Follow `coder-agent` standards for all TypeScript code
 4. **Photo asset routing**: Load `photo-to-crayon-asset` skill for custom assets from photos
@@ -145,21 +145,21 @@ The `rules/AGENTS.md` file is always active when the plugin is enabled. It enfor
 
 | Item | Location |
 |------|----------|
-| Bundled engine (self-contained) | `<plugin-root>/engine/` (`~/.gemini/config/plugins/animated_picture_book_studio/engine/` or `D:\picture_book_plugin\engine\`) |
+| Bundled engine (self-contained) | `<plugin-root>/engine/` (`~/.gemini/config/plugins/animated_picture_book_studio/engine/`) |
 | Engine resolver / scaffolder | `<plugin-root>/scripts/ensure_engine.py` |
-| Pre-installed engine root | `D:\picture_book` (or active scaffolded workspace) |
-| Source code | `<engine-root>\src\` |
-| Scenes | `<engine-root>\src\scenes\` |
-| Characters | `<engine-root>\src\assets\characters\` |
-| Props | `<engine-root>\src\assets\props\` |
-| Buildings | `<engine-root>\src\assets\buildings\` |
-| Audio engine | `<engine-root>\src\audio\soundEngine.ts` |
-| Schema | `<engine-root>\src\engine\schema.ts` |
-| Design tokens | `<engine-root>\src\theme\tokens.ts` |
-| Architecture docs | `<engine-root>\docs\ARCHITECTURE.md` |
-| Style guide | `<engine-root>\docs\STYLE_GUIDE.md` |
-| Audio files | `<engine-root>\public\audio\` |
-| Exported videos | `<engine-root>\exports\` |
+| Active engine workspace | `<workspace>` (where `ensure_engine.py` scaffolds `<plugin-root>/engine/`) |
+| Source code | `<workspace>/src/` |
+| Scenes | `<workspace>/src/scenes/` |
+| Characters | `<workspace>/src/assets/characters/` |
+| Props | `<workspace>/src/assets/props/` |
+| Buildings | `<workspace>/src/assets/buildings/` |
+| Audio engine | `<workspace>/src/audio/soundEngine.ts` |
+| Schema | `<workspace>/src/engine/schema.ts` |
+| Design tokens | `<workspace>/src/theme/tokens.ts` |
+| Architecture docs | `<workspace>/docs/ARCHITECTURE.md` |
+| Style guide | `<workspace>/docs/STYLE_GUIDE.md` |
+| Audio files | `<workspace>/public/audio/` |
+| Exported videos | `<workspace>/exports/` |
 | Dev server | `http://localhost:5173` |
 | Tests | `pnpm test` |
 | Build | `pnpm run build` |

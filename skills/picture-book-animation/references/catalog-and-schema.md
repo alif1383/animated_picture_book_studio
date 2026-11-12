@@ -2,7 +2,7 @@
 
 > [!NOTE]
 > This is the exhaustive reference companion to the [picture-book-animation](../SKILL.md) skill.
-> All types are defined in `D:\picture_book\src\engine\schema.ts`; all tokens in `D:\picture_book\src\theme\tokens.ts`.
+> All types are defined in `<workspace>/src/engine/schema.ts`; all tokens in `<workspace>/src/theme/tokens.ts`.
 
 ---
 
@@ -484,7 +484,7 @@ export const SCENE_REGISTRY: Record<ShortSampleId, SceneDefinition> = {
 | `?vibrant=` | `1` or `0` | Override Vibrant Crayon Mode |
 | `?t=` | `<seconds>` | Seek to a specific time |
 | `?autoplay=` | `1` or `0` | Auto-start playback |
-| `?auto_export=` | `1` | Automatically export 16:9 `.mp4` on mount and save to `D:\picture_book\exports\` |
+| `?auto_export=` | `1` | Automatically export 16:9 `.mp4` on mount and save to `<workspace>/exports/` |
 | `?resolution=` | `1080p` or `720p` | Export resolution for `?auto_export=1` (default: `1080p`) |
 
 ---

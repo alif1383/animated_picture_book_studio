@@ -117,12 +117,12 @@ Load `skills/photo-to-crayon-asset/SKILL.md` whenever creating custom characters
 ### Audio Sync & Generation (Including `audioClips`)
 Load `skills/picture-book-audio/SKILL.md` whenever adding, editing, or generating audio. Covers all three audio modes:
 - **Mode A — Procedural `audioCues`**: Built-in `AudioNoteCue[]` with 9 synthesizer kinds (`lullaby`, `chime`, `crayon_scribble`, `party_horn`, `confetti_pop`, `cheer_applause`, `candle_blow`, `giggle`, `birthday_song`).
-- **Mode B — External `audioClips`**: `AudioClipCue[]` for user-provided or generated `.mp3`/`.wav` files placed in `D:\picture_book\public\audio\`, with `startTime`, `duration`, `offsetSec`, and `volume` control. The `PictureBookSoundEngine` automatically plays clips in real-time preview AND mixes them into the offline audio buffer during `.mp4` export.
+- **Mode B — External `audioClips`**: `AudioClipCue[]` for user-provided or generated `.mp3`/`.wav` files placed in `<workspace>/public/audio/`, with `startTime`, `duration`, `offsetSec`, and `volume` control. The `PictureBookSoundEngine` automatically plays clips in real-time preview AND mixes them into the offline audio buffer during `.mp4` export.
 - **Mode C — Generated Audio**: TTS narration via `edge-tts`/`gTTS` and procedural WAV SFX via the bundled `scripts/generate_audio.py` utility.
 
 ### Turnkey Dev Server & Automated Browser Video Export
 Load `skills/picture-book-studio-export/SKILL.md` whenever the user wants to preview their video or export an `.mp4`. Follow the full turnkey workflow:
-1. Run `pnpm test` / `pnpm run build` in `D:\picture_book`.
+1. Run `pnpm test` / `pnpm run build` in `<workspace>`.
 2. Start `pnpm run dev` with `IsDaemon: true` → `http://localhost:5173`. Keep it running.
 3. Invoke the `browser` subagent to navigate to `http://localhost:5173/?scene=<sceneId>&auto_export=1&resolution=1080p`. Wait for `document.body.dataset.exportState === 'done'`.
-4. The studio saves the `.mp4` to `D:\picture_book\exports\<filename>.mp4` via `/__studio/save-export`. Give the user a clickable `[filename.mp4](file:///D:/picture_book/exports/filename.mp4)` link and the live preview URL.
+4. The studio saves the `.mp4` to `<workspace>/exports/<filename>.mp4` via `/__studio/save-export`. Give the user a clickable `[filename.mp4](file:///<workspace>/exports/filename.mp4)` link and the live preview URL.

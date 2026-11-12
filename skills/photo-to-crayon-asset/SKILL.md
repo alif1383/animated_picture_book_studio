@@ -5,7 +5,7 @@ description: "Workflow for turning user-supplied photos or reference images into
 
 # Photo-to-Crayon Asset Pipeline
 
-This skill provides a step-by-step workflow for turning a user-supplied **photo** (or an AI-generated reference image via `image-generator`) into a **hand-crafted 2D cutout SVG TypeScript asset** that renders inside the Picture-Book Crayon Video Engine at `D:\picture_book\src\assets\`.
+This skill provides a step-by-step workflow for turning a user-supplied **photo** (or an AI-generated reference image via `image-generator`) into a **hand-crafted 2D cutout SVG TypeScript asset** that renders inside the Picture-Book Crayon Video Engine at `<workspace>/src/assets/`.
 
 > [!IMPORTANT]
 > The engine has **no automated photo import pipeline**. All assets are hand-coded TypeScript functions that return SVG strings. The photo serves as a **visual reference only** — the agent must interpret and re-create the subject in the engine's wax crayon / oil pastel / felt-tip marker aesthetic.
@@ -27,7 +27,7 @@ Use `read_file` to view the user's photo and note:
 Run the helper script to extract objective color data and map it to official TOKENS palette colors:
 
 ```bash
-python "D:\picture_book_plugin\skills\photo-to-crayon-asset\scripts\analyze_reference_photo.py" "<path_to_photo>"
+python "<plugin-root>/skills/photo-to-crayon-asset/scripts/analyze_reference_photo.py" "<path_to_photo>"
 ```
 
 The script outputs a structured report with:
@@ -49,7 +49,7 @@ From the script output and your visual inspection, decide:
 
 ## Step 2: SVG Cutout Decomposition
 
-Break the subject from the photo into **layered storybook cutout shapes** using the engine's SVG utility functions from `D:\picture_book\src\engine\svgUtils.ts`:
+Break the subject from the photo into **layered storybook cutout shapes** using the engine's SVG utility functions from `<workspace>/src/engine/svgUtils.ts`:
 
 ### Available SVG shape builders
 
@@ -87,7 +87,7 @@ import { svgEl, crayonPath, crayonStrokeAttrs, svgTransform } from '../../engine
 5. **Limbs / appendages** — Simple stub arms/legs or leaf fronds as small `crayonPath` shapes
 
 > [!TIP]
-> Study existing character files like `D:\picture_book\src\assets\characters\singingRadish.ts` or `birthdayStrawberry.ts` for the exact pattern to follow.
+> Study existing character files like `src/assets/characters/singingRadish.ts` or `birthdayStrawberry.ts` for the exact pattern to follow.
 
 ---
 
@@ -149,13 +149,13 @@ After creating the asset file, follow these steps to wire it into the engine:
 ### 4.1 Create the asset file
 
 Place in the appropriate directory:
-- **Characters**: `D:\picture_book\src\assets\characters\<assetName>.ts`
-- **Props**: `D:\picture_book\src\assets\props\<assetName>.ts`
-- **Buildings**: `D:\picture_book\src\assets\buildings\<assetName>.ts`
+- **Characters**: `<workspace>/src/assets/characters/<assetName>.ts`
+- **Props**: `<workspace>/src/assets/props/<assetName>.ts`
+- **Buildings**: `<workspace>/src/assets/buildings/<assetName>.ts`
 
 ### 4.2 Add kind literal to schema
 
-Edit `D:\picture_book\src\engine\schema.ts` to add the new kind to the appropriate union type:
+Edit `<workspace>/src/engine/schema.ts` to add the new kind to the appropriate union type:
 
 ```typescript
 // For a new character:
@@ -179,7 +179,7 @@ export type BuildingKind = 'ochre_cottage' | 'corner_store' | 'my_new_building';
 
 Edit the corresponding `index.ts` barrel file:
 
-**Characters** — `D:\picture_book\src\assets\characters\index.ts`:
+**Characters** — `<workspace>/src/assets/characters/index.ts`:
 
 ```typescript
 // 1. Add import at top
@@ -194,13 +194,13 @@ case 'my_new_character':
   break;
 ```
 
-**Props** — `D:\picture_book\src\assets\props\index.ts` (same pattern with `renderProp()`)
+**Props** — `<workspace>/src/assets/props/index.ts` (same pattern with `renderProp()`)
 
-**Buildings** — `D:\picture_book\src\assets\buildings\index.ts` (same pattern with `renderBuilding()`)
+**Buildings** — `<workspace>/src/assets/buildings/index.ts` (same pattern with `renderBuilding()`)
 
 ### 4.4 (Optional) Add to Asset Catalog UI
 
-To make the new asset appear in the Studio's interactive Asset Catalog grid, add an entry to `ASSET_CATALOG_ITEMS` in `D:\picture_book\src\ui\app.ts`:
+To make the new asset appear in the Studio's interactive Asset Catalog grid, add an entry to `ASSET_CATALOG_ITEMS` in `<workspace>/src/ui/app.ts`:
 
 ```typescript
 {
@@ -220,7 +220,7 @@ To make the new asset appear in the Studio's interactive Asset Catalog grid, add
 ### 4.5 Build & test
 
 ```bash
-cd D:\picture_book
+cd <workspace>
 pnpm run test     # all unit tests pass
 pnpm run build    # strict TypeScript compilation succeeds
 ```
@@ -234,13 +234,13 @@ pnpm run build    # strict TypeScript compilation succeeds
 
 | File | Purpose |
 |---|---|
-| `D:\picture_book\src\engine\schema.ts` | TypeScript interfaces & kind unions |
-| `D:\picture_book\src\theme\tokens.ts` | All colors, patterns, filter IDs, timing |
-| `D:\picture_book\src\engine\svgUtils.ts` | SVG string builders, jitter math |
-| `D:\picture_book\src\engine\filters.ts` | SVG `<defs>` generator, pattern fills |
-| `D:\picture_book\src\assets\characters\types.ts` | `CharacterRenderOptions` interface |
-| `D:\picture_book\src\assets\characters\index.ts` | Character barrel + `renderCharacter()` switch |
-| `D:\picture_book\src\assets\characters\singingRadish.ts` | Good example of a cutout character rig |
-| `D:\picture_book\src\assets\characters\birthdayStrawberry.ts` | Good example with crown/accessories |
-| `D:\picture_book\docs\STYLE_GUIDE.md` | Palette & aesthetic rules |
-| `D:\picture_book\docs\ARCHITECTURE.md` | Full codebase module map |
+| `src/engine/schema.ts` | TypeScript interfaces & kind unions |
+| `src/theme/tokens.ts` | All colors, patterns, filter IDs, timing |
+| `src/engine/svgUtils.ts` | SVG string builders, jitter math |
+| `src/engine/filters.ts` | SVG `<defs>` generator, pattern fills |
+| `src/assets/characters/types.ts` | `CharacterRenderOptions` interface |
+| `src/assets/characters/index.ts` | Character barrel + `renderCharacter()` switch |
+| `src/assets/characters/singingRadish.ts` | Good example of a cutout character rig |
+| `src/assets/characters/birthdayStrawberry.ts` | Good example with crown/accessories |
+| `docs/STYLE_GUIDE.md` | Palette & aesthetic rules |
+| `docs/ARCHITECTURE.md` | Full codebase module map |

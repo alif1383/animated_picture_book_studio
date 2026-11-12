@@ -10,11 +10,11 @@ description: >-
 # Picture-Book Audio Skill
 
 This skill teaches an Antigravity agent how to work with **all three audio
-modes** in the Picture-Book Crayon Video Engine (`D:\picture_book`).
+modes** in the Picture-Book Crayon Video Engine (`<workspace>`, scaffolded from `<plugin-root>/engine/`).
 
 > [!IMPORTANT]
-> The engine source is at `D:\picture_book`. Audio assets go in
-> `D:\picture_book\public\audio\`. Never modify engine source files
+> The active engine workspace is `<workspace>`. Audio assets go in
+> `<workspace>/public/audio/`. Never modify engine source files
 > unless the task explicitly requires adding a new procedural synthesiser
 > kind — follow `coder-agent` standards for that.
 
@@ -30,7 +30,7 @@ in-browser using the WebAudio API. No external audio files required.
 Each scene has an optional `audioCues: AudioNoteCue[]` array:
 
 ```ts
-// D:\picture_book\src\engine\schema.ts
+// src/engine/schema.ts
 interface AudioNoteCue {
   time: number;      // Scene timestamp in seconds when the cue fires
   freq: number;      // Frequency in Hz
@@ -107,12 +107,12 @@ audioCues: [
 ### Adding a New Procedural Synthesiser Kind
 
 1. Add the new kind string to the `AudioCueKind` union in
-   `D:\picture_book\src\engine\schema.ts`.
+   `<workspace>/src/engine/schema.ts`.
 2. Add a private `synthesize<Name>()` method in
-   `D:\picture_book\src\audio\soundEngine.ts` following the existing
+   `<workspace>/src/audio/soundEngine.ts` following the existing
    patterns (create oscillators/buffers → gain envelope → `connectOutput`).
 3. Add an `else if` branch in `scheduleCueOnContext()`.
-4. Run `pnpm test` and `pnpm run build` in `D:\picture_book`.
+4. Run `pnpm test` and `pnpm run build` in `<workspace>`.
 
 ---
 
@@ -124,7 +124,7 @@ effects, use the `audioClips: AudioClipCue[]` array on a scene.
 ### AudioClipCue Interface
 
 ```ts
-// D:\picture_book\src\engine\schema.ts
+// src/engine/schema.ts
 interface AudioClipCue {
   id?: string;           // Unique identifier (e.g. 'act1-voiceover')
   src: string;           // URL path — e.g. '/audio/narration.mp3'
@@ -138,10 +138,10 @@ interface AudioClipCue {
 
 ### Step-by-Step Workflow
 
-1. **Place the audio file** in `D:\picture_book\public\audio\`:
+1. **Place the audio file** in `<workspace>/public/audio/`:
    ```
-   D:\picture_book\public\audio\act1-voiceover.mp3
-   D:\picture_book\public\audio\background-music.wav
+   <workspace>/public/audio/act1-voiceover.mp3
+   <workspace>/public/audio/background-music.wav
    ```
    Vite serves `public/` at the root, so `/audio/act1-voiceover.mp3` works.
 
@@ -199,7 +199,7 @@ interface AudioClipCue {
 ## Mode C — Generating Audio with `generate_audio.py`
 
 A bundled Python CLI at
-`D:\picture_book_plugin\skills\picture-book-audio\scripts\generate_audio.py`
+`<plugin-root>/skills/picture-book-audio/scripts/generate_audio.py`
 can **generate** narration and custom sound effects on demand.
 
 ### Prerequisites
@@ -239,7 +239,7 @@ python generate_audio.py tts "And so the little moon drifted off to sleep." \
   --name act5-narration --voice sonia --start-time 22.0
 ```
 
-Output is saved to `D:\picture_book\public\audio\act1-narration.mp3` and
+Output is saved to `./public/audio/act1-narration.mp3` in `<workspace>` and
 the script prints a ready-to-paste `AudioClipCue` TypeScript snippet.
 
 ### Subcommand: `sfx` / `tone` — Procedural WAV Sound Effects
@@ -290,7 +290,7 @@ python generate_audio.py sfx chord --freq 261.63 --duration 2.0 --name c-chord
 python generate_audio.py sfx sweep --freq 200 --freq-end 1200 --duration 1.0 --name whoosh
 ```
 
-All files save to `D:\picture_book\public\audio\<name>.wav` by default.
+All files save to `./public/audio/<name>.wav` in `<workspace>` by default.
 
 ### Subcommand: `info` — Inspect Audio Files
 
@@ -302,7 +302,7 @@ Prints format details (channels, sample rate, duration) and a
 ready-to-paste `AudioClipCue` TypeScript snippet:
 
 ```bash
-python generate_audio.py info D:\picture_book\public\audio\narration.mp3 --start-time 2.5
+python generate_audio.py info ./public/audio/narration.mp3 --start-time 2.5
 ```
 
 ---

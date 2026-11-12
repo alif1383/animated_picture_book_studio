@@ -4,8 +4,8 @@ import fs from 'fs';
 
 /**
  * Vite dev-server plugin: POST /__studio/save-export
- * Saves exported MP4 blobs directly to D:\picture_book\exports\<sanitized-filename>
- * and returns JSON { ok: true, savedPath: "D:/picture_book/exports/..." }.
+ * Saves exported MP4 blobs directly to <workspace>/exports/<sanitized-filename>
+ * and returns JSON { ok: true, savedPath: "<workspace>/exports/..." }.
  *
  * Headers:
  *   x-export-filename: <filename>.mp4   (takes priority)
@@ -31,7 +31,7 @@ function studioSaveExportPlugin(): Plugin {
 
         // Sanitize filename: allow only safe chars, strip path separators
         const safeFilename = path.basename(rawFilename).replace(/[^a-zA-Z0-9._\-]/g, '_');
-        const exportsDir = path.resolve(__dirname, 'exports');
+        const exportsDir = path.resolve(process.cwd(), 'exports');
         fs.mkdirSync(exportsDir, { recursive: true });
         const savedPath = path.join(exportsDir, safeFilename);
 

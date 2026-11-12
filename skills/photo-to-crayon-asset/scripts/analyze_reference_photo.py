@@ -26,7 +26,8 @@ except ImportError:
 
 
 # ---------------------------------------------------------------------------
-# Official TOKENS palette from D:\picture_book\src\theme\tokens.ts
+# Official TOKENS palette from <workspace>/src/theme/tokens.ts
+# (bundled at <plugin-root>/engine/src/theme/tokens.ts)
 # ---------------------------------------------------------------------------
 TOKENS_COLORS = {
     # Paper Base
@@ -309,13 +310,14 @@ def format_markdown(report: dict) -> str:
 
 
 def main():
-    if len(sys.argv) < 2:
+    if len(sys.argv) < 2 or sys.argv[1] in ("-h", "--help"):
         print(
             "Usage: python analyze_reference_photo.py <image_path> "
-            "[--format=json|markdown] [--colors=N]",
-            file=sys.stderr,
+            "[--format=json|markdown] [--colors=N]\n\n"
+            "Analyzes a reference photo and maps dominant regional colors to official "
+            "Picture-Book Studio TOKENS colors and crayon fill patterns."
         )
-        sys.exit(1)
+        sys.exit(0 if len(sys.argv) >= 2 and sys.argv[1] in ("-h", "--help") else 1)
 
     image_path = sys.argv[1]
     output_format = "json"

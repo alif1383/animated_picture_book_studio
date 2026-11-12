@@ -13,7 +13,7 @@ Examples
 --------
   # Narration
   python generate_audio.py tts "Once upon a time" --name act1-narration
-  python generate_audio.py tts "Hello world" --voice en-US-GuyNeural --rate +10% --pitch +2st -o D:/my/output.mp3
+  python generate_audio.py tts "Hello world" --voice en-US-GuyNeural --rate +10% --pitch +2st -o ./public/audio/output.mp3
 
   # Sound effects
   python generate_audio.py sfx page_turn --name page1
@@ -23,7 +23,7 @@ Examples
   python generate_audio.py sfx sweep --freq 200 --freq-end 1200 --duration 1.0
 
   # Inspect
-  python generate_audio.py info D:/picture_book/public/audio/narration.mp3 --start-time 2.5
+  python generate_audio.py info ./public/audio/narration.mp3 --start-time 2.5
 """
 
 from __future__ import annotations
@@ -38,9 +38,25 @@ import wave
 from pathlib import Path
 
 # ---------------------------------------------------------------------------
-# Constants
+# Constants & Dynamic Audio Directory Resolution
 # ---------------------------------------------------------------------------
-DEFAULT_AUDIO_DIR = Path(r"D:\picture_book\public\audio")
+BUNDLED_ENGINE_AUDIO_DIR = (
+    Path(__file__).resolve().parents[3] / "engine" / "public" / "audio"
+)
+
+
+def resolve_default_audio_dir(output_dir: str | Path | None = None) -> Path:
+    if output_dir:
+        return Path(output_dir).resolve()
+    cwd = Path.cwd().resolve()
+    if (cwd / "public").is_dir() or (cwd / "src" / "engine" / "schema.ts").is_file():
+        return cwd / "public" / "audio"
+    if BUNDLED_ENGINE_AUDIO_DIR.parent.is_dir():
+        return cwd / "public" / "audio"
+    return Path("./public/audio").resolve()
+
+
+DEFAULT_AUDIO_DIR = resolve_default_audio_dir()
 SAMPLE_RATE = 44100
 CHANNELS = 1
 SAMPWIDTH = 2  # 16-bit
@@ -256,7 +272,8 @@ def cmd_tts(args):
     text: str = args.text
     voice: str = VOICES.get(args.voice, args.voice) if args.voice else DEFAULT_VOICE
     name: str = args.name or "tts-output"
-    out_path: Path = Path(args.output) if args.output else DEFAULT_AUDIO_DIR / f"{name}.mp3"
+    audio_dir = resolve_default_audio_dir(getattr(args, "output_dir", None))
+    out_path: Path = Path(args.output) if args.output else audio_dir / f"{name}.mp3"
     out_path.parent.mkdir(parents=True, exist_ok=True)
 
     rate_str = args.rate or "+0%"
@@ -309,7 +326,8 @@ def cmd_sfx(args):
     freq: float = args.freq or 440.0
     freq_end: float = args.freq_end or (freq * 4)
     name: str = args.name or preset_name
-    out_path: Path = Path(args.output) if args.output else DEFAULT_AUDIO_DIR / f"{name}.wav"
+    audio_dir = resolve_default_audio_dir(getattr(args, "output_dir", None))
+    out_path: Path = Path(args.output) if args.output else audio_dir / f"{name}.wav"
 
     gen_fn = SFX_PRESETS.get(preset_name)
     if gen_fn is None:
@@ -386,12 +404,7 @@ def cmd_info(args):
             pass
 
     print()
-    # Compute src path relative to public/audio
-    try:
-        rel = file_path.relative_to(Path(r"D:\picture_book\public"))
-        src_path = "/" + str(rel).replace("\\", "/")
-    except ValueError:
-        src_path = "/" + file_path.name
+    src_path = _compute_public_src_path(file_path)
 
     name = args.name or file_path.stem
     start_time = args.start_time or 0.0
@@ -401,6 +414,17 @@ def cmd_info(args):
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
+def _compute_public_src_path(file_path: Path) -> str:
+    """Compute URL path relative to `public/` if inside one, else `/audio/<name>`."""
+    resolved = file_path.resolve()
+    parts = resolved.parts
+    if "public" in parts:
+        idx = len(parts) - 1 - parts[::-1].index("public")
+        rel = Path(*parts[idx + 1:])
+        return "/" + str(rel).replace("\\", "/")
+    return "/audio/" + file_path.name
+
 
 def _print_clip_snippet(file_str: str, name: str, start_time: float | None):
     """Print a ready-to-paste AudioClipCue after generating."""
@@ -413,11 +437,7 @@ def _print_clip_snippet(file_str: str, name: str, start_time: float | None):
         except Exception:
             pass
 
-    try:
-        rel = file_path.relative_to(Path(r"D:\picture_book\public"))
-        src_path = "/" + str(rel).replace("\\", "/")
-    except ValueError:
-        src_path = "/" + file_path.name
+    src_path = _compute_public_src_path(file_path)
 
     st = start_time if start_time else 0.0
     _print_clip_snippet_full(src_path, name, st, duration_sec)
@@ -450,6 +470,10 @@ def build_parser() -> argparse.ArgumentParser:
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=__doc__,
     )
+    parser.add_argument(
+        "--output-dir",
+        help="Default output directory for generated audio files (default: ./public/audio in workspace or <plugin-root>/engine/public/audio)",
+    )
     sub = parser.add_subparsers(dest="command", required=True)
 
     # ---- tts ----
@@ -459,7 +483,8 @@ def build_parser() -> argparse.ArgumentParser:
     p_tts.add_argument("--voice", "-v", help=f"Voice name or shortcut ({', '.join(VOICES.keys())})")
     p_tts.add_argument("--rate", help="Speech rate adjustment, e.g. '+10%%' or '-20%%'")
     p_tts.add_argument("--pitch", help="Pitch adjustment, e.g. '+2st' or '-3Hz'")
-    p_tts.add_argument("--output", "-o", help="Output file path (default: D:/picture_book/public/audio/<name>.mp3)")
+    p_tts.add_argument("--output", "-o", help="Output file path (default: ./public/audio/<name>.mp3)")
+    p_tts.add_argument("--output-dir", help="Output directory when --output is not specified (default: ./public/audio)")
     p_tts.add_argument("--start-time", type=float, default=0.0, help="startTime for the AudioClipCue snippet (default: 0)")
 
     # ---- sfx ----
@@ -470,7 +495,8 @@ def build_parser() -> argparse.ArgumentParser:
     p_sfx.add_argument("--duration", "-d", type=float, default=0.5, help="Duration in seconds (default: 0.5)")
     p_sfx.add_argument("--freq", "-f", type=float, default=440.0, help="Base frequency in Hz (default: 440)")
     p_sfx.add_argument("--freq-end", type=float, help="End frequency for sweep (default: freq × 4)")
-    p_sfx.add_argument("--output", "-o", help="Output file path (default: D:/picture_book/public/audio/<name>.wav)")
+    p_sfx.add_argument("--output", "-o", help="Output file path (default: ./public/audio/<name>.wav)")
+    p_sfx.add_argument("--output-dir", help="Output directory when --output is not specified (default: ./public/audio)")
     p_sfx.add_argument("--start-time", type=float, default=0.0, help="startTime for the AudioClipCue snippet (default: 0)")
 
     # ---- tone (alias) ----
@@ -481,7 +507,8 @@ def build_parser() -> argparse.ArgumentParser:
     p_tone.add_argument("--duration", "-d", type=float, default=0.5, help="Duration in seconds (default: 0.5)")
     p_tone.add_argument("--freq", "-f", type=float, default=440.0, help="Base frequency in Hz (default: 440)")
     p_tone.add_argument("--freq-end", type=float, help="End frequency for sweep (default: freq × 4)")
-    p_tone.add_argument("--output", "-o", help="Output file path (default: D:/picture_book/public/audio/<name>.wav)")
+    p_tone.add_argument("--output", "-o", help="Output file path (default: ./public/audio/<name>.wav)")
+    p_tone.add_argument("--output-dir", help="Output directory when --output is not specified (default: ./public/audio)")
     p_tone.add_argument("--start-time", type=float, default=0.0, help="startTime for the AudioClipCue snippet (default: 0)")
 
     # ---- info ----

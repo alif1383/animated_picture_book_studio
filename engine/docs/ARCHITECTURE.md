@@ -92,7 +92,7 @@ The **Picture-Book Crayon Video Engine** is a declarative 2D stop-motion storybo
 ## 4. Dev Server Middleware: `POST /__studio/save-export`
 Defined in `vite.config.ts` via the `studioSaveExportPlugin`. Available only during `pnpm run dev`.
 
-**Purpose**: Saves a video export blob to `D:\picture_book\exports\<filename>` so agent automation can retrieve the file from disk after a browser-triggered export.
+**Purpose**: Saves a video export blob to `<workspace>/exports/<filename>` so agent automation can retrieve the file from disk after a browser-triggered export.
 
 **Usage**:
 ```
@@ -100,7 +100,7 @@ POST http://localhost:5173/__studio/save-export?filename=<filename>.mp4
 Content-Type: application/octet-stream
 (raw MP4 blob body)
 
-Response: { "ok": true, "savedPath": "D:/picture_book/exports/<filename>.mp4" }
+Response: { "ok": true, "savedPath": "<workspace>/exports/<filename>.mp4" }
 ```
 
 Headers: `x-export-filename: <filename>` takes priority over `?filename=` query param.

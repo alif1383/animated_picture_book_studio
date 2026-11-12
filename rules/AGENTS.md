@@ -6,13 +6,13 @@ These rules are always active when the Animated Picture Book Studio plugin is en
 
 ## Engine Workspace Path & Self-Contained Bundled Engine
 
-The **entire Picture-Book Studio engine source code** (`src/`, `docs/`, `tests/`, `public/`, `exports/`, `index.html`, `package.json`, `pnpm-lock.yaml`, `tsconfig.json`, `vite.config.ts`) is **bundled directly inside this plugin** at `<plugin-root>/engine/` (`~/.gemini/config/plugins/animated_picture_book_studio/engine/` or `D:\picture_book_plugin\engine\`). Users do **not** need `D:\picture_book` separately cloned on a new machine.
+The **entire Picture-Book Studio engine source code** (`src/`, `docs/`, `tests/`, `public/`, `exports/`, `index.html`, `package.json`, `pnpm-lock.yaml`, `tsconfig.json`, `vite.config.ts`) is **bundled directly inside this plugin** at `<plugin-root>/engine/` (`~/.gemini/config/plugins/animated_picture_book_studio/engine/`). Users do **not** need any external repository cloned.
 
-When resolving which engine directory to run `pnpm` commands, file edits, and Git operations in, follow this priority order (or run `python <plugin-root>/scripts/ensure_engine.py`):
+When resolving which engine directory (`<workspace>`) to run `pnpm` commands, file edits, and Git operations in, run `python <plugin-root>/scripts/ensure_engine.py`:
 
-1. **Current workspace has the engine**: If the active workspace already contains `src/engine/schema.ts`, use the current workspace root.
-2. **Pre-installed local engine (`D:\picture_book`)**: On this machine, `D:\picture_book` is already pre-installed with `node_modules`. If the current workspace is not an engine clone and `D:\picture_book\src\engine\schema.ts` exists with `node_modules`, run directly in `D:\picture_book`.
-3. **Scaffold a fresh project anywhere from the bundled `engine/`**: On a new machine where `D:\picture_book` does not exist—or whenever the user asks to scaffold a fresh copy into their workspace—copy `<plugin-root>/engine/` into the target workspace (`python <plugin-root>/scripts/ensure_engine.py --scaffold --workspace <target>` or `robocopy <plugin-root>\engine <target> /E`) and run `pnpm install`.
+1. **Current workspace has the engine**: If the active `<workspace>` already contains `src/engine/schema.ts`, `ensure_engine.py` uses `<workspace>` and ensures `node_modules` is installed via `pnpm install`.
+2. **Scaffold into `<workspace>` from the bundled `engine/`**: If `<workspace>/src/engine/schema.ts` does not exist yet (or `--scaffold` is passed), `ensure_engine.py` automatically copies `<plugin-root>/engine/` into `<workspace>` and runs `pnpm install`.
+3. **In-place mode (`--in-place`)**: Pass `--in-place` to `ensure_engine.py` to install dependencies and run directly inside `<plugin-root>/engine`.
 
 ---
 
@@ -36,7 +36,7 @@ Whenever writing or modifying TypeScript code—including scenes, engine modules
 - **Modular DRY architecture**: Reuse existing engine primitives (`svgUtils.ts`, `filters.ts`, `fillMask.ts`, `timeline.ts`, `clock.ts`) before writing new code. Actively eliminate duplication.
 - **Living documentation**: Update `docs/ARCHITECTURE.md` whenever files, modules, or public APIs are added, modified, or removed.
 - **Minimalism & reuse checks**: Before implementing anything new, audit the codebase for existing utilities that can be extended or composed.
-- **Strict TypeScript + Vitest verification**: All code must compile under `strict: true`. Run `pnpm test` and `pnpm run build` in `D:\picture_book` after every change to verify correctness.
+- **Strict TypeScript + Vitest verification**: All code must compile under `strict: true`. Run `pnpm test` and `pnpm run build` in `<workspace>` after every change to verify correctness.
 - **Atomic Git commits**: Commit after each completed phase or sub-task with clean, imperative messages.
 
 When the task involves substantial code changes, **delegate to or invoke the `picture-book-coder` or `picture-book-agent-coder` subagent** so these engineering standards are enforced end-to-end.
@@ -69,7 +69,7 @@ Whenever the user wants to add audio to specific parts of a video—whether usin
 skills/picture-book-audio/SKILL.md
 ```
 
-This skill covers all three audio modes, the `AudioNoteCue` and `AudioClipCue` interfaces, how to place audio files in `D:\picture_book\public\audio\`, and how to generate narration or procedural WAV sound effects using the bundled Python utility.
+This skill covers all three audio modes, the `AudioNoteCue` and `AudioClipCue` interfaces, how to place audio files in `<workspace>/public/audio/`, and how to generate narration or procedural WAV sound effects using the bundled Python utility.
 
 ---
 
@@ -83,9 +83,9 @@ skills/picture-book-studio-export/SKILL.md
 
 Follow this complete workflow:
 
-1. **Build & test first**: Run `pnpm test` and/or `pnpm run build` in `D:\picture_book` to ensure the scene compiles.
-2. **Start the Vite dev server**: Run `pnpm run dev` in `D:\picture_book` with `IsDaemon: true` — the server starts on `http://localhost:5173`. **Keep it running** so the user can inspect their video interactively.
+1. **Build & test first**: Run `pnpm test` and/or `pnpm run build` in `<workspace>` to ensure the scene compiles.
+2. **Start the Vite dev server**: Run `pnpm run dev` in `<workspace>` with `IsDaemon: true` — the server starts on `http://localhost:5173`. **Keep it running** so the user can inspect their video interactively.
 3. **Automated browser export**: Invoke the `browser` subagent (or Chrome DevTools MCP) to navigate to `http://localhost:5173/?scene=<sceneId>&auto_export=1&resolution=1080p` (or click `#btn-download-video`). Wait until `document.body.dataset.exportState === 'done'`.
-4. **Deliver the video**: The studio saves the exported `.mp4` to `D:\picture_book\exports\<filename>.mp4`. Give the user:
-   - A clickable file link: `[filename.mp4](file:///D:/picture_book/exports/filename.mp4)`
+4. **Deliver the video**: The studio saves the exported `.mp4` to `<workspace>/exports/<filename>.mp4`. Give the user:
+   - A clickable file link: `[filename.mp4](file:///<workspace>/exports/filename.mp4)`
    - The live preview URL: `http://localhost:5173/?scene=<sceneId>&autoplay=1`

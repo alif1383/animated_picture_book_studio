@@ -62,24 +62,24 @@ If the user wants audio (sound effects, narration, music):
 1. Load `skills/picture-book-audio/SKILL.md`.
 2. Determine the audio mode:
    - **Procedural SFX** (`audioCues`): Add `AudioNoteCue[]` entries to the scene definition.
-   - **User-provided files** (`audioClips`): Copy files to `D:\picture_book\public\audio\` and add `AudioClipCue[]` entries.
-   - **Generated narration/SFX**: Run `scripts/generate_audio.py tts --text "..." --output D:\picture_book\public\audio\<name>.mp3` (or `sfx` mode for WAV effects), then add `AudioClipCue[]` entries.
+   - **User-provided files** (`audioClips`): Copy files to `<workspace>/public/audio/` and add `AudioClipCue[]` entries.
+   - **Generated narration/SFX**: Run `scripts/generate_audio.py tts "<text>" --name <name> --output <workspace>/public/audio/<name>.mp3` (or `sfx` mode for WAV effects), then add `AudioClipCue[]` entries.
 3. Delegate code changes to `picture-book-coder`.
 
 ### Phase 4: Preview & Export
 
 1. Load `skills/picture-book-studio-export/SKILL.md`.
-2. Run `pnpm test` and `pnpm run build` in `D:\picture_book` to verify everything compiles.
-3. Start the Vite dev server: `pnpm run dev` in `D:\picture_book` with `IsDaemon: true`.
+2. Ensure the engine is scaffolded in `<workspace>` (`python <plugin-root>/scripts/ensure_engine.py --workspace <workspace>`), then run `pnpm test` and `pnpm run build` in `<workspace>` to verify everything compiles.
+3. Start the Vite dev server: `pnpm run dev` in `<workspace>` with `IsDaemon: true`.
 4. Give the user the live preview link: `http://localhost:5173/?scene=<sceneId>&autoplay=1`
 5. When ready to export, invoke the `browser` subagent to navigate to:
    ```
    http://localhost:5173/?scene=<sceneId>&auto_export=1&resolution=1080p
    ```
 6. Wait for `document.body.dataset.exportState === 'done'`.
-7. Verify the `.mp4` file exists in `D:\picture_book\exports\`.
+7. Verify the `.mp4` file exists in `<workspace>/exports/`.
 8. Deliver to the user:
-   - Clickable file link: `[<filename>.mp4](file:///D:/picture_book/exports/<filename>.mp4)`
+   - Clickable file link: `[<filename>.mp4](file:///<workspace>/exports/<filename>.mp4)`
    - Live preview URL (dev server stays running): `http://localhost:5173/?scene=<sceneId>&autoplay=1`
 
 ---
@@ -107,16 +107,16 @@ If the user wants audio (sound effects, narration, music):
 
 | Item | Location |
 |------|----------|
-| Engine root | `D:\picture_book` |
-| Scenes | `D:\picture_book\src\scenes\` |
-| Assets (characters, props, buildings) | `D:\picture_book\src\assets\` |
-| Audio engine | `D:\picture_book\src\audio\soundEngine.ts` |
-| Schema & interfaces | `D:\picture_book\src\engine\schema.ts` |
-| Design tokens | `D:\picture_book\src\theme\tokens.ts` |
-| Architecture docs | `D:\picture_book\docs\ARCHITECTURE.md` |
-| Style guide | `D:\picture_book\docs\STYLE_GUIDE.md` |
-| Audio files (user/generated) | `D:\picture_book\public\audio\` |
-| Exported videos | `D:\picture_book\exports\` |
+| Engine root | `<workspace>` (scaffolded from `<plugin-root>/engine/` via `scripts/ensure_engine.py`) |
+| Scenes | `<workspace>/src/scenes/` |
+| Assets (characters, props, buildings) | `<workspace>/src/assets/` |
+| Audio engine | `<workspace>/src/audio/soundEngine.ts` |
+| Schema & interfaces | `<workspace>/src/engine/schema.ts` |
+| Design tokens | `<workspace>/src/theme/tokens.ts` |
+| Architecture docs | `<workspace>/docs/ARCHITECTURE.md` |
+| Style guide | `<workspace>/docs/STYLE_GUIDE.md` |
+| Audio files (user/generated) | `<workspace>/public/audio/` |
+| Exported videos | `<workspace>/exports/` |
 | Dev server | `http://localhost:5173` |
-| Tests | `pnpm test` in `D:\picture_book` |
-| Build | `pnpm run build` in `D:\picture_book` |
+| Tests | `pnpm test` in `<workspace>` |
+| Build | `pnpm run build` in `<workspace>` |

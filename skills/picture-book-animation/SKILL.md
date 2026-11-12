@@ -5,7 +5,7 @@ description: "How to create, edit, and style animations, scenes, acts, timelines
 
 # Picture-Book Animation & Scene Authoring Skill
 
-This skill is the authoritative guide for creating and editing animated storybook scenes in the **Picture-Book Crayon Video Engine** (`D:\picture_book`).
+This skill is the authoritative guide for creating and editing animated storybook scenes in the **Picture-Book Crayon Video Engine** (`<workspace>`, scaffolded from `<plugin-root>/engine/`).
 
 > [!IMPORTANT]
 > For the complete catalog of all 15 characters, 2 buildings, 13 props, 21 crayon fill patterns, full TypeScript interfaces, TOKENS color palette, and SCENE_REGISTRY routing — see [references/catalog-and-schema.md](references/catalog-and-schema.md).
@@ -39,7 +39,7 @@ Boosts pigment saturation (1.42×) and contrast via `#vibrant-grade` filter whil
 **All visual values** must come from the centralized theme module:
 
 ```
-D:\picture_book\src\theme\tokens.ts  →  import { TOKENS } from '../theme/tokens';
+src/theme/tokens.ts  →  import { TOKENS } from '../theme/tokens';
 ```
 
 - `TOKENS.colors.*` — 40+ official palette colors (paper, outlines, fills, vibrant meadow palette)
@@ -85,7 +85,7 @@ Set `fillProgress` (0..1) and `fillSteps` (default 10) on nodes, and animate `fi
 
 ### Step 1: Create the scene file
 
-Create a new TypeScript file in `D:\picture_book\src\scenes\<sceneName>.ts`:
+Create a new TypeScript file in `<workspace>/src/scenes/<sceneName>.ts`:
 
 ```typescript
 import { TOKENS } from '../theme/tokens';
@@ -199,7 +199,7 @@ export const MY_SCENE: SceneDefinition = {
 
 ### Step 2: Register in SCENE_REGISTRY
 
-Edit `D:\picture_book\src\ui\app.ts`:
+Edit `<workspace>/src/ui/app.ts`:
 
 ```typescript
 import { MY_SCENE } from '../scenes/myScene';
@@ -218,7 +218,7 @@ Or add a named alias to `FOOTAGE_ALIASES` if you want `?footage=<alias>` to loop
 ### Step 3: Build & verify
 
 ```bash
-cd D:\picture_book
+cd <workspace>
 pnpm run build    # strict TypeScript compilation
 pnpm run test     # unit tests
 pnpm run dev      # start dev server → http://localhost:5173?short_sample=4
@@ -325,7 +325,7 @@ camera: [
 
 ### 5.6 Syncing audio (`audioCues` & `audioClips`)
 
-Scenes support both procedural WebAudio synthesis (`audioCues`) and external/generated audio file clips (`audioClips`, e.g., TTS narration or WAV/MP3 soundtracks placed in `D:\picture_book\public\audio\`):
+Scenes support both procedural WebAudio synthesis (`audioCues`) and external/generated audio file clips (`audioClips`, e.g., TTS narration or WAV/MP3 soundtracks placed in `<workspace>/public/audio/`):
 
 ```typescript
 audioCues: [
@@ -387,7 +387,7 @@ Use consistent `zIndex` ranges to maintain the correct visual stack:
 
 ### Dev server
 ```bash
-cd D:\picture_book
+cd <workspace>
 pnpm run dev    # → http://localhost:5173
 ```
 
@@ -398,10 +398,10 @@ URL parameters for testing: `?short_sample=1|2|3|birthday`, `?footage=<actId>`, 
 ## 8. Reference
 
 - **Full asset catalog & TypeScript schema**: [references/catalog-and-schema.md](references/catalog-and-schema.md)
-- **Architecture docs**: `D:\picture_book\docs\ARCHITECTURE.md`
-- **Style guide & palette**: `D:\picture_book\docs\STYLE_GUIDE.md`
-- **Schema types**: `D:\picture_book\src\engine\schema.ts`
-- **Design tokens**: `D:\picture_book\src\theme\tokens.ts`
-- **Example scene (vibrant birthday party)**: `D:\picture_book\src\scenes\meadowParty.ts`
-- **Example scene (night story)**: `D:\picture_book\src\scenes\moonlightStory.ts`
-- **Example scene (morning/sunset)**: `D:\picture_book\src\scenes\shortSample1.ts`
+- **Architecture docs**: `<workspace>/docs/ARCHITECTURE.md`
+- **Style guide & palette**: `<workspace>/docs/STYLE_GUIDE.md`
+- **Schema types**: `<workspace>/src/engine/schema.ts`
+- **Design tokens**: `<workspace>/src/theme/tokens.ts`
+- **Example scene (vibrant birthday party)**: `<workspace>/src/scenes/meadowParty.ts`
+- **Example scene (night story)**: `<workspace>/src/scenes/moonlightStory.ts`
+- **Example scene (morning/sunset)**: `<workspace>/src/scenes/shortSample1.ts`

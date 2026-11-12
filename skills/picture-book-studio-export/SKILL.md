@@ -16,14 +16,11 @@ Engine.
 > [!IMPORTANT]
 > **Self-Contained Bundled Engine**: All of the engine source code is bundled
 > directly inside this plugin at `<plugin-root>/engine/`
-> (`~/.gemini/config/plugins/animated_picture_book_studio/engine/` or
-> `D:\picture_book_plugin\engine\`).
-> - If the current workspace already has `src/engine/schema.ts`, run there.
-> - On this machine, `D:\picture_book` is already pre-installed with
->   `node_modules`, so you can run directly in `D:\picture_book`.
-> - On a new machine (or to scaffold a fresh project into any workspace), run
->   `python <plugin-root>/scripts/ensure_engine.py --scaffold --workspace <target>`
->   (or `robocopy <plugin-root>\engine <target> /E` + `pnpm install`).
+> (`~/.gemini/config/plugins/animated_picture_book_studio/engine/`).
+> - Run `python <plugin-root>/scripts/ensure_engine.py --workspace <workspace>`
+>   to verify or automatically scaffold `<plugin-root>/engine/` into the active
+>   `<workspace>` and install dependencies via `pnpm install`.
+> - Alternatively, pass `--in-place` to run directly inside `<plugin-root>/engine`.
 >
 > This skill does NOT modify scene source files — it only resolves the engine
 > workspace, starts the dev server, opens the browser, and orchestrates video
@@ -36,7 +33,7 @@ Engine.
 Before starting the server, ensure the project compiles cleanly:
 
 ```bash
-# Run from D:\picture_book
+# Run from <workspace>
 pnpm test
 ```
 
@@ -50,8 +47,8 @@ pnpm run build
 ```
 
 > [!NOTE]
-> `pnpm run build` runs `tsc && vite build` → output in `D:\picture_book\dist\`.
-> Tests use Vitest in Node environment (`D:\picture_book\tests\`).
+> `pnpm run build` runs `tsc && vite build` → output in `<workspace>/dist/`.
+> Tests use Vitest in Node environment (`<workspace>/tests/`).
 
 ---
 
@@ -63,7 +60,7 @@ the duration of the session:
 ```
 run_command:
   CommandLine: pnpm run dev
-  WorkingDirectory: D:\picture_book
+  WorkingDirectory: <workspace>
   IsDaemon: true
   WaitMsBeforeAsync: 3000
 ```
@@ -140,7 +137,7 @@ Poll `document.body.dataset.exportState` until it equals `'done'`:
 // Export states: 'exporting' → 'done' (success) or 'error' (failure)
 document.body.dataset.exportState  // 'done' when complete
 document.body.dataset.exportFilename  // e.g. 'picture-book-short-sample-1-1080p-16x9.mp4'
-document.body.dataset.exportSavedPath  // e.g. 'D:/picture_book/exports/picture-book-short-sample-1-1080p-16x9.mp4'
+document.body.dataset.exportSavedPath  // e.g. '<workspace>/exports/picture-book-short-sample-1-1080p-16x9.mp4'
 ```
 
 Alternatively, wait for the download button text to change:
@@ -155,14 +152,14 @@ The studio does **two things** when export completes:
 2. **Server save** — POSTs the MP4 blob to `/__studio/save-export` on the
    Vite dev server, which writes it to:
    ```
-   D:\picture_book\exports\<filename>.mp4
+   <workspace>/exports/<filename>.mp4
    ```
 
 > [!NOTE]
 > The `/__studio/save-export` endpoint is a Vite dev-server middleware.
 > It sanitises the filename and writes the raw MP4 bytes to the `exports/`
 > directory. The saved path is returned as JSON:
-> `{ ok: true, savedPath: "D:/picture_book/exports/..." }`.
+> `{ ok: true, savedPath: "<workspace>/exports/..." }`.
 
 ### Export Pipeline Details
 
@@ -196,7 +193,7 @@ Once export is complete, provide the user with:
 
 ```markdown
 Here's your finished video:
-[picture-book-short-sample-1-1080p-16x9.mp4](file:///D:/picture_book/exports/picture-book-short-sample-1-1080p-16x9.mp4)
+[picture-book-short-sample-1-1080p-16x9.mp4](file:///<workspace>/exports/picture-book-short-sample-1-1080p-16x9.mp4)
 ```
 
 > [!TIP]
@@ -216,13 +213,13 @@ Leave the dev server running so the user can click this link.
 
 ```bash
 # Check the exports directory
-Get-ChildItem D:\picture_book\exports\
+Get-ChildItem ./exports/
 ```
 
 If the user requested a specific output path, copy the file:
 
 ```bash
-Copy-Item "D:\picture_book\exports\picture-book-short-sample-1-1080p-16x9.mp4" "C:\Users\user\Desktop\my-video.mp4"
+Copy-Item "./exports/picture-book-short-sample-1-1080p-16x9.mp4" "C:\Users\user\Desktop\my-video.mp4"
 ```
 
 ---
@@ -230,12 +227,12 @@ Copy-Item "D:\picture_book\exports\picture-book-short-sample-1-1080p-16x9.mp4" "
 ## Full Agent Workflow — Cheat Sheet
 
 ```
-1. pnpm test                              # verify build in D:\picture_book
+1. pnpm test                              # verify build in <workspace>
 2. pnpm run dev  (IsDaemon: true)          # start Vite on :5173
 3. Browser → localhost:5173/?scene=<id>&auto_export=1&resolution=1080p
 4. Wait for document.body.dataset.exportState === 'done'
-5. Verify D:\picture_book\exports\<filename>.mp4 exists
-6. Reply with [filename.mp4](file:///D:/picture_book/exports/filename.mp4)
+5. Verify <workspace>/exports/<filename>.mp4 exists
+6. Reply with [filename.mp4](file:///<workspace>/exports/filename.mp4)
    + live link http://localhost:5173/?scene=<id>&autoplay=1
 ```
 

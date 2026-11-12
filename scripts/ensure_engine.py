@@ -3,14 +3,14 @@
 Ensure the Picture-Book Crayon Video Engine is available and ready to run.
 
 Resolution order:
-1. If the current workspace (or --workspace) already has `src/engine/schema.ts`,
-   use that workspace directory.
-2. Else if `D:\\picture_book\\src\\engine\\schema.ts` exists with `node_modules`
-   (and `--scaffold` was not explicitly passed), use `D:\\picture_book`.
-3. Otherwise (or when `--scaffold` is passed), copy the plugin's bundled
-   `<plugin-root>/engine/` directory into the target workspace and run
-   `pnpm install` so the user has a complete, self-contained engine setup
-   without needing `D:\\picture_book` pre-cloned.
+1. If `--in-place` is passed, prepare `<plugin-root>/engine` directly and run
+   `pnpm install` if `node_modules` is missing.
+2. Otherwise, check the target workspace (`--workspace <dir>`, defaulting to
+   `Path.cwd()`). If `<workspace>/src/engine/schema.ts` does not exist yet (or
+   `--scaffold` is passed), automatically copy `<plugin-root>/engine/` into
+   `<workspace>`.
+3. Ensure `node_modules` exists in the resolved engine directory by running
+   `pnpm install` (unless `--no-install` is passed).
 """
 
 from __future__ import annotations
@@ -26,7 +26,6 @@ from pathlib import Path
 
 PLUGIN_ROOT = Path(__file__).resolve().parent.parent
 BUNDLED_ENGINE_DIR = PLUGIN_ROOT / "engine"
-DEFAULT_PREINSTALLED_ENGINE = Path(r"D:\picture_book")
 
 
 def is_engine_root(path: Path) -> bool:
@@ -70,35 +69,29 @@ def ensure_dependencies(engine_dir: Path, run_install: bool = True) -> bool:
 def resolve_engine(
     workspace: Path | None = None,
     scaffold: bool = False,
+    in_place: bool = False,
     install_deps: bool = True,
 ) -> dict[str, object]:
-    cwd = (workspace or Path.cwd()).resolve()
-
-    # 1. Current workspace already has the Picture-Book Studio engine
-    if is_engine_root(cwd) and not scaffold:
-        deps_ready = ensure_dependencies(cwd, run_install=install_deps)
+    if in_place:
+        deps_ready = ensure_dependencies(BUNDLED_ENGINE_DIR, run_install=install_deps)
         return {
-            "engine_dir": str(cwd),
+            "engine_dir": str(BUNDLED_ENGINE_DIR),
+            "source": "bundled_engine_in_place",
+            "bundled_engine_dir": str(BUNDLED_ENGINE_DIR),
+            "node_modules_ready": deps_ready,
+        }
+
+    target = (workspace or Path.cwd()).resolve()
+
+    if is_engine_root(target) and not scaffold:
+        deps_ready = ensure_dependencies(target, run_install=install_deps)
+        return {
+            "engine_dir": str(target),
             "source": "workspace",
             "bundled_engine_dir": str(BUNDLED_ENGINE_DIR),
             "node_modules_ready": deps_ready,
         }
 
-    # 2. Pre-installed D:\picture_book exists with node_modules
-    if (
-        not scaffold
-        and is_engine_root(DEFAULT_PREINSTALLED_ENGINE)
-        and has_node_modules(DEFAULT_PREINSTALLED_ENGINE)
-    ):
-        return {
-            "engine_dir": str(DEFAULT_PREINSTALLED_ENGINE),
-            "source": "preinstalled_d_picture_book",
-            "bundled_engine_dir": str(BUNDLED_ENGINE_DIR),
-            "node_modules_ready": True,
-        }
-
-    # 3. Scaffold from the plugin's bundled engine/ directory into target workspace
-    target = cwd
     copy_bundled_engine(target)
     deps_ready = ensure_dependencies(target, run_install=install_deps)
     return {
@@ -122,7 +115,12 @@ def main() -> int:
     parser.add_argument(
         "--scaffold",
         action="store_true",
-        help="Force copying the bundled engine/ into --workspace even if D:\\picture_book exists.",
+        help="Force copying the bundled <plugin-root>/engine/ into --workspace.",
+    )
+    parser.add_argument(
+        "--in-place",
+        action="store_true",
+        help="Use and install dependencies directly inside <plugin-root>/engine.",
     )
     parser.add_argument(
         "--no-install",
@@ -139,6 +137,7 @@ def main() -> int:
     result = resolve_engine(
         workspace=args.workspace,
         scaffold=args.scaffold,
+        in_place=args.in_place,
         install_deps=not args.no_install,
     )
     if args.json:
