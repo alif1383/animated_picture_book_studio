@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <!-- Crayon texture pattern -->
+    <pattern id="crayon-grain" patternUnits="userSpaceOnUse" width="4" height="4">
+      <rect width="4" height="4" fill="#F4EFE6"/>
+      <circle cx="1" cy="1" r="0.6" fill="#EDE6D6" opacity="0.5"/>
+      <circle cx="3" cy="3" r="0.4" fill="#E8DFD0" opacity="0.4"/>
+    </pattern>
+    <!-- Page shadow -->
+    <filter id="page-shadow" x="-5%" y="-5%" width="115%" height="115%">
+      <feDropShadow dx="2" dy="2" stdDeviation="3" flood-color="#2B231D" flood-opacity="0.18"/>
+    </filter>
+  </defs>
+
+  <!-- Transparent outer margin (~10%) -->
+
+  <!-- Storybook page background -->
+  <rect x="26" y="26" width="204" height="204" rx="12" ry="12"
+        fill="#F4EFE6" stroke="#2B231D" stroke-width="3.5"
+        filter="url(#page-shadow)"/>
+
+  <!-- Inner warm ochre page border -->
+  <rect x="36" y="36" width="184" height="184" rx="8" ry="8"
+        fill="none" stroke="#E3B464" stroke-width="2" stroke-dasharray="6 3"
+        opacity="0.6"/>
+
+  <!-- Storybook spine lines (left edge) -->
+  <line x1="42" y1="40" x2="42" y2="216" stroke="#D4A84B" stroke-width="1.5" opacity="0.4"/>
+  <line x1="47" y1="40" x2="47" y2="216" stroke="#D4A84B" stroke-width="1" opacity="0.3"/>
+
+  <!-- Crayon stick (terracotta, angled) -->
+  <g transform="translate(128, 155) rotate(-35)">
+    <!-- Crayon body -->
+    <rect x="-52" y="-10" width="90" height="20" rx="2" ry="2"
+          fill="#C84B31" stroke="#2B231D" stroke-width="2"/>
+    <!-- Crayon wrapper band -->
+    <rect x="-30" y="-10" width="44" height="20" rx="1" ry="1"
+          fill="#B5412A" stroke="none" opacity="0.5"/>
+    <!-- Wrapper label lines -->
+    <line x1="-22" y1="-3" x2="6" y2="-3" stroke="#F4EFE6" stroke-width="1.2" opacity="0.6"/>
+    <line x1="-18" y1="1" x2="2" y2="1" stroke="#F4EFE6" stroke-width="1" opacity="0.4"/>
+    <!-- Crayon tip -->
+    <polygon points="38,-10 38,10 56,0" fill="#D65E3F" stroke="#2B231D" stroke-width="2"
+             stroke-linejoin="round"/>
+    <!-- Tip highlight -->
+    <polygon points="44,-5 44,5 53,0" fill="#E87B5A" stroke="none" opacity="0.5"/>
+  </g>
+
+  <!-- Clapperboard / play motif (top-right area) -->
+  <g transform="translate(168, 72)">
+    <!-- Clapperboard base -->
+    <rect x="-28" y="-8" width="48" height="32" rx="3" ry="3"
+          fill="#2B231D" stroke="#2B231D" stroke-width="1.5"/>
+    <!-- Clapperboard top (hinged) -->
+    <rect x="-30" y="-18" width="52" height="12" rx="2" ry="2"
+          fill="#2B231D" stroke="#2B231D" stroke-width="1.5"
+          transform="rotate(-8, -30, -6)"/>
+    <!-- Clapper stripes -->
+    <rect x="-26" y="-16" width="8" height="8" fill="#F4EFE6" opacity="0.85"
+          transform="rotate(-8, -30, -6)"/>
+    <rect x="-10" y="-16" width="8" height="8" fill="#F4EFE6" opacity="0.85"
+          transform="rotate(-8, -30, -6)"/>
+    <rect x="6" y="-16" width="8" height="8" fill="#F4EFE6" opacity="0.85"
+          transform="rotate(-8, -30, -6)"/>
+    <!-- Play triangle on clapperboard body -->
+    <polygon points="-6,-1 -6,17 10,8" fill="#E3B464" stroke="none"/>
+  </g>
+
+  <!-- Scribble crayon marks (decorative, bottom-left) -->
+  <g opacity="0.35">
+    <path d="M55,180 Q65,172 75,179 Q85,186 95,178" fill="none"
+          stroke="#C84B31" stroke-width="3" stroke-linecap="round"/>
+    <path d="M60,190 Q72,183 82,191" fill="none"
+          stroke="#E3B464" stroke-width="2.5" stroke-linecap="round"/>
+  </g>
+
+  <!-- Small stars (hand-drawn, top-left) -->
+  <g fill="#F0C243" stroke="#2B231D" stroke-width="1" opacity="0.7">
+    <polygon points="72,58 74,64 80,64 75,68 77,74 72,70 67,74 69,68 64,64 70,64"
+             transform="scale(0.6) translate(40, 40)"/>
+    <polygon points="95,48 96.5,53 102,53 97.5,56 99,61 95,58 91,61 92.5,56 88,53 93.5,53"
+             transform="scale(0.5) translate(60, 30)"/>
+  </g>
+
+  <!-- Bottom text area: "STUDIO" in warm hand-lettered style -->
+  <text x="128" y="212" text-anchor="middle"
+        font-family="Georgia, 'Times New Roman', serif" font-size="16"
+        font-weight="bold" letter-spacing="4"
+        fill="#2B231D" opacity="0.55">STUDIO</text>
+</svg>
