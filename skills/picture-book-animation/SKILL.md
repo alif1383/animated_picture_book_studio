@@ -219,9 +219,10 @@ Or add a named alias to `FOOTAGE_ALIASES` if you want `?footage=<alias>` to loop
 
 ```bash
 cd <workspace>
-pnpm run build    # strict TypeScript compilation
-pnpm run test     # unit tests
-pnpm run dev      # start dev server → http://localhost:5173?short_sample=4
+agy-node scripts/studio-cli.mjs typecheck   # strict TypeScript compilation (tsc --noEmit)
+agy-node scripts/studio-cli.mjs test        # unit & integration tests
+agy-node scripts/studio-cli.mjs build       # production build into dist/
+agy-node scripts/studio-cli.mjs dev         # start dev server → http://localhost:5173?short_sample=4
 ```
 
 ---
@@ -374,21 +375,21 @@ Use consistent `zIndex` ranges to maintain the correct visual stack:
 ## 7. Development Principles
 
 > [!WARNING]
-> When writing or modifying engine code, you **MUST** follow `coder-agent` development principles or delegate to `picture-book-coder` / `picture-book-agent-coder`.
+> When writing or modifying engine code, you **MUST** follow `picture-book-agent-coder` development principles or delegate to `picture-book-agent-coder` / `picture-book-coder`.
 
 ### Mandatory practices:
 1. **Living Documentation** — Update `docs/ARCHITECTURE.md` whenever files/APIs change.
-2. **Atomic Git Commits** — Commit after each completed phase/sub-task with clean imperative messages.
+2. **Atomic Git Commits (`scripts/vcs.mjs`)** — Check `agy-node scripts/vcs.mjs check` (uses native `git` if installed or bundled `isomorphic-git` if not), initialize with `agy-node scripts/vcs.mjs init` if needed, and commit after each completed phase/sub-task via `agy-node scripts/vcs.mjs commit -m "<message>"`.
 3. **Hierarchical Planning** — Break large tasks into macro phases → micro sub-plans → incremental execution.
 4. **Code Reuse (DRY)** — Consult existing codebase before writing new utilities. Extend shared primitives from `svgUtils.ts`, `filters.ts`, `clock.ts`.
 5. **Centralized Tokens** — Never scatter magic numbers. Always import from `TOKENS`.
-6. **Strict TypeScript** — All code must compile under `strict: true`. Run `pnpm run build` to verify.
-7. **Testing** — Run `pnpm run test` (Vitest) for unit/integration tests. Visually verify in browser.
+6. **Strict TypeScript** — All code must compile under `strict: true`. Run `agy-node scripts/studio-cli.mjs typecheck` and `agy-node scripts/studio-cli.mjs build` to verify.
+7. **Testing** — Run `agy-node scripts/studio-cli.mjs test` for unit/integration tests. Visually verify in browser.
 
 ### Dev server
 ```bash
 cd <workspace>
-pnpm run dev    # → http://localhost:5173
+agy-node scripts/studio-cli.mjs dev    # → http://localhost:5173
 ```
 
 URL parameters for testing: `?short_sample=1|2|3|birthday`, `?footage=<actId>`, `?autoplay=1`, `?vibrant=1|0`, `?t=<seconds>`.

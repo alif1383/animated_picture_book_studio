@@ -1,20 +1,14 @@
 {
   "name": "picture-book-crayon-engine",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc --noEmit && vite build",
-    "typecheck": "tsc --noEmit",
-    "test": "vitest run"
-  },
-  "devDependencies": {
-    "typescript": "^5.6.3",
-    "vite": "^5.4.10",
-    "vitest": "^2.1.4"
-  },
-  "dependencies": {
-    "mp4-muxer": "^5.2.2"
+    "dev": "node scripts/studio-cli.mjs dev",
+    "build": "node scripts/studio-cli.mjs build",
+    "typecheck": "node scripts/studio-cli.mjs typecheck",
+    "test": "node scripts/studio-cli.mjs test",
+    "export": "node scripts/studio-cli.mjs export",
+    "vcs": "node scripts/vcs.mjs"
   }
 }

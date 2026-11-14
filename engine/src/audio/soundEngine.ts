@@ -186,6 +186,12 @@ export class PictureBookSoundEngine {
       this.synthesizeCandleBlow(ctx, freq, duration, t0);
     } else if (kind === 'giggle') {
       this.synthesizeGiggle(ctx, freq, duration, t0);
+    } else if (kind === 'ocean_wave') {
+      this.synthesizeOceanWave(ctx, freq, duration, t0);
+    } else if (kind === 'water_splash') {
+      this.synthesizeWaterSplash(ctx, freq, duration, t0);
+    } else if (kind === 'floatie_squeak') {
+      this.synthesizeFloatieSqueak(ctx, freq, duration, t0);
     } else {
       this.synthesizeMusicBoxNote(ctx, freq, duration, 'triangle', 2, 0.22, t0);
     }
@@ -345,43 +351,133 @@ export class PictureBookSoundEngine {
     osc2.stop(now + duration * 0.65 + 0.02);
   }
 
-  private synthesizeCrayonScribble(
+  /**
+   * Shared filtered-noise foley helper used by crayon_scribble, candle_blow,
+   * ocean_wave, and water_splash on both live AudioContext and OfflineAudioContext.
+   */
+  private scheduleFilteredNoise(
     ctx: BaseAudioContext,
-    centerFreq: number,
-    duration: number,
-    startTime: number = ctx.currentTime
+    options: {
+      duration: number;
+      startTime: number;
+      filterType: BiquadFilterType;
+      startFreq: number;
+      peakFreq?: { freq: number; atRatio: number };
+      endFreq?: number;
+      q: number;
+      peakGain: number;
+      attackSec: number;
+      envelope?: (i: number, count: number, sampleRate: number) => number;
+    }
   ): void {
-    const now = startTime;
-    const sampleCount = Math.max(1, Math.floor(ctx.sampleRate * duration));
+    const dur = Math.max(0.04, options.duration);
+    const now = options.startTime;
+    const nyquistSafe = Math.max(200, ctx.sampleRate * 0.45);
+    const clampFreq = (f: number) => Math.max(40, Math.min(nyquistSafe, f));
+
+    const sampleCount = Math.max(1, Math.floor(ctx.sampleRate * dur));
     const buffer = ctx.createBuffer(1, sampleCount, ctx.sampleRate);
     const data = buffer.getChannelData(0);
 
     for (let i = 0; i < sampleCount; i++) {
-      const grainMod =
-        0.65 + 0.35 * Math.sin((i / ctx.sampleRate) * Math.PI * 36);
-      data[i] = (Math.random() * 2 - 1) * grainMod;
+      const mod = options.envelope
+        ? options.envelope(i, sampleCount, ctx.sampleRate)
+        : 1;
+      data[i] = (Math.random() * 2 - 1) * mod;
     }
 
     const noise = ctx.createBufferSource();
     noise.buffer = buffer;
 
     const filter = ctx.createBiquadFilter();
-    filter.type = 'bandpass';
-    filter.frequency.setValueAtTime(centerFreq, now);
-    filter.Q.setValueAtTime(2.4, now);
+    filter.type = options.filterType;
+    filter.frequency.setValueAtTime(clampFreq(options.startFreq), now);
+    if (options.peakFreq) {
+      const crestTime = now + dur * Math.min(0.85, Math.max(0.1, options.peakFreq.atRatio));
+      filter.frequency.exponentialRampToValueAtTime(
+        clampFreq(options.peakFreq.freq),
+        crestTime
+      );
+    }
+    if (options.endFreq !== undefined) {
+      filter.frequency.exponentialRampToValueAtTime(
+        clampFreq(options.endFreq),
+        now + dur
+      );
+    }
+    filter.Q.setValueAtTime(options.q, now);
 
     const gain = ctx.createGain();
-    const scaledPeak = 0.14 * this.masterVolume;
+    const scaledPeak = Math.max(0.0002, options.peakGain * this.masterVolume);
+    const attack = Math.min(Math.max(0.005, options.attackSec), dur * 0.75);
     gain.gain.setValueAtTime(0.0001, now);
-    gain.gain.linearRampToValueAtTime(scaledPeak, now + 0.01);
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+    gain.gain.linearRampToValueAtTime(scaledPeak, now + attack);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + dur);
 
     noise.connect(filter);
     filter.connect(gain);
     this.connectOutput(ctx, gain);
 
     noise.start(now);
-    noise.stop(now + duration + 0.01);
+    noise.stop(now + dur + 0.02);
+  }
+
+  /**
+   * Shared short pitch-sweeping oscillator blip used by confetti_pop and water_splash droplets.
+   */
+  private schedulePitchBlip(
+    ctx: BaseAudioContext,
+    wave: OscillatorType,
+    startFreq: number,
+    endFreq: number,
+    duration: number,
+    peakGain: number,
+    startTime: number
+  ): void {
+    const dur = Math.max(0.03, duration);
+    const nyquistSafe = Math.max(200, ctx.sampleRate * 0.45);
+    const clampFreq = (f: number) => Math.max(40, Math.min(nyquistSafe, f));
+
+    const osc = ctx.createOscillator();
+    osc.type = wave;
+    osc.frequency.setValueAtTime(clampFreq(startFreq), startTime);
+    osc.frequency.exponentialRampToValueAtTime(
+      clampFreq(endFreq),
+      startTime + dur
+    );
+
+    const gain = ctx.createGain();
+    const scaledPeak = Math.max(0.0002, peakGain * this.masterVolume);
+    gain.gain.setValueAtTime(0.0001, startTime);
+    gain.gain.linearRampToValueAtTime(
+      scaledPeak,
+      startTime + Math.min(0.01, dur * 0.3)
+    );
+    gain.gain.exponentialRampToValueAtTime(0.0001, startTime + dur);
+
+    osc.connect(gain);
+    this.connectOutput(ctx, gain);
+    osc.start(startTime);
+    osc.stop(startTime + dur + 0.01);
+  }
+
+  private synthesizeCrayonScribble(
+    ctx: BaseAudioContext,
+    centerFreq: number,
+    duration: number,
+    startTime: number = ctx.currentTime
+  ): void {
+    this.scheduleFilteredNoise(ctx, {
+      duration,
+      startTime,
+      filterType: 'bandpass',
+      startFreq: centerFreq,
+      q: 2.4,
+      peakGain: 0.14,
+      attackSec: 0.01,
+      envelope: (i, _count, sr) =>
+        0.65 + 0.35 * Math.sin((i / sr) * Math.PI * 36),
+    });
   }
 
   /**
@@ -464,19 +560,15 @@ export class PictureBookSoundEngine {
     const popDur = Math.min(0.11, duration * 0.45);
 
     // Quick pitch-drop thump
-    const osc = ctx.createOscillator();
-    osc.type = 'triangle';
-    osc.frequency.setValueAtTime(Math.max(240, freq), now);
-    osc.frequency.exponentialRampToValueAtTime(68, now + popDur);
-
-    const gain = ctx.createGain();
-    gain.gain.setValueAtTime(0.28 * this.masterVolume, now);
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + popDur);
-
-    osc.connect(gain);
-    this.connectOutput(ctx, gain);
-    osc.start(now);
-    osc.stop(now + popDur + 0.01);
+    this.schedulePitchBlip(
+      ctx,
+      'triangle',
+      Math.max(240, freq),
+      68,
+      popDur,
+      0.28,
+      now
+    );
 
     // Paper burst + high sparkle chime
     this.synthesizeCrayonScribble(ctx, 1350, popDur, now);
@@ -509,40 +601,17 @@ export class PictureBookSoundEngine {
     duration: number,
     startTime: number = ctx.currentTime
   ): void {
-    const now = startTime;
-    const sampleCount = Math.max(1, Math.floor(ctx.sampleRate * duration));
-    const buffer = ctx.createBuffer(1, sampleCount, ctx.sampleRate);
-    const data = buffer.getChannelData(0);
-
-    for (let i = 0; i < sampleCount; i++) {
-      const env = Math.sin((i / sampleCount) * Math.PI);
-      data[i] = (Math.random() * 2 - 1) * env;
-    }
-
-    const noise = ctx.createBufferSource();
-    noise.buffer = buffer;
-
-    const filter = ctx.createBiquadFilter();
-    filter.type = 'bandpass';
-    filter.frequency.setValueAtTime(Math.max(320, centerFreq * 1.4), now);
-    filter.frequency.exponentialRampToValueAtTime(
-      Math.max(160, centerFreq * 0.45),
-      now + duration
-    );
-    filter.Q.setValueAtTime(1.8, now);
-
-    const gain = ctx.createGain();
-    const scaledPeak = 0.22 * this.masterVolume;
-    gain.gain.setValueAtTime(0.0001, now);
-    gain.gain.linearRampToValueAtTime(scaledPeak, now + duration * 0.22);
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
-
-    noise.connect(filter);
-    filter.connect(gain);
-    this.connectOutput(ctx, gain);
-
-    noise.start(now);
-    noise.stop(now + duration + 0.02);
+    this.scheduleFilteredNoise(ctx, {
+      duration,
+      startTime,
+      filterType: 'bandpass',
+      startFreq: Math.max(320, centerFreq * 1.4),
+      endFreq: Math.max(160, centerFreq * 0.45),
+      q: 1.8,
+      peakGain: 0.22,
+      attackSec: duration * 0.22,
+      envelope: (i, count) => Math.sin((i / count) * Math.PI),
+    });
   }
 
   /**
@@ -623,6 +692,147 @@ export class PictureBookSoundEngine {
 
     osc.start(now);
     osc.stop(now + duration + 0.02);
+  }
+
+  /**
+   * Soft rolling ocean surf swell (`'ocean_wave'`):
+   * warm lowpass surf body swelling up to a frothy crest and receding onto the sand.
+   */
+  private synthesizeOceanWave(
+    ctx: BaseAudioContext,
+    freq: number,
+    duration: number,
+    startTime: number = ctx.currentTime
+  ): void {
+    const dur = Math.max(0.25, duration);
+    const base = Math.max(120, Math.min(600, freq));
+    this.scheduleFilteredNoise(ctx, {
+      duration: dur,
+      startTime,
+      filterType: 'lowpass',
+      startFreq: base * 0.55,
+      peakFreq: { freq: base * 2.1, atRatio: 0.45 },
+      endFreq: base * 0.48,
+      q: 1.0,
+      peakGain: 0.19,
+      attackSec: dur * 0.42,
+      envelope: (i, count) => Math.sin((i / count) * Math.PI),
+    });
+    // Gentle frothy shoreline hiss near the wave crest
+    this.scheduleFilteredNoise(ctx, {
+      duration: dur * 0.65,
+      startTime: startTime + dur * 0.2,
+      filterType: 'bandpass',
+      startFreq: 950,
+      endFreq: 480,
+      q: 1.3,
+      peakGain: 0.06,
+      attackSec: dur * 0.22,
+      envelope: (i, count) => Math.sin((i / count) * Math.PI),
+    });
+  }
+
+  /**
+   * Playful bubbly water splash (`'water_splash'`):
+   * crisp filtered splash noise burst + rapid upward-popping sine water-droplet blips.
+   */
+  private synthesizeWaterSplash(
+    ctx: BaseAudioContext,
+    freq: number,
+    duration: number,
+    startTime: number = ctx.currentTime
+  ): void {
+    const now = startTime;
+    const dur = Math.max(0.16, duration);
+    // Splash spray burst
+    this.scheduleFilteredNoise(ctx, {
+      duration: dur * 0.78,
+      startTime: now,
+      filterType: 'bandpass',
+      startFreq: Math.max(780, freq * 1.9),
+      endFreq: Math.max(240, freq * 0.58),
+      q: 1.35,
+      peakGain: 0.22,
+      attackSec: 0.015,
+      envelope: (i, count) => Math.pow(1 - i / count, 0.7),
+    });
+
+    // 4 bubbly upward-popping water-droplet blips
+    const bubbleRatios = [0.78, 1.0, 1.24, 1.48];
+    const blipDur = Math.max(0.045, Math.min(0.095, dur * 0.24));
+    for (let i = 0; i < bubbleRatios.length; i++) {
+      const bStart = now + 0.02 + i * Math.min(0.065, dur * 0.15);
+      const bFreq = Math.max(260, freq * bubbleRatios[i]);
+      this.schedulePitchBlip(
+        ctx,
+        'sine',
+        bFreq * 0.75,
+        bFreq * 1.62,
+        blipDur,
+        0.13,
+        bStart
+      );
+    }
+  }
+
+  /**
+   * Cute inflatable vinyl / rubber-ducky squeak (`'floatie_squeak'`):
+   * playful two-chirp pitch bend ("squeak-squeak!") through a resonant bandpass filter.
+   */
+  private synthesizeFloatieSqueak(
+    ctx: BaseAudioContext,
+    freq: number,
+    duration: number,
+    startTime: number = ctx.currentTime
+  ): void {
+    const now = startTime;
+    const dur = Math.max(0.14, duration);
+    const nyquistSafe = Math.max(400, ctx.sampleRate * 0.45);
+    const base = Math.min(nyquistSafe * 0.55, Math.max(580, freq));
+    const chirpDur = dur * 0.42;
+    const chirp2Start = now + dur * 0.52;
+
+    const scheduleChirp = (tStart: number, pitchScale: number) => {
+      const osc = ctx.createOscillator();
+      osc.type = 'triangle';
+      const f0 = base * pitchScale;
+      osc.frequency.setValueAtTime(f0, tStart);
+      osc.frequency.exponentialRampToValueAtTime(
+        Math.min(nyquistSafe, f0 * 1.48),
+        tStart + chirpDur * 0.55
+      );
+      osc.frequency.exponentialRampToValueAtTime(
+        Math.min(nyquistSafe, f0 * 1.12),
+        tStart + chirpDur
+      );
+
+      const filter = ctx.createBiquadFilter();
+      filter.type = 'bandpass';
+      filter.frequency.setValueAtTime(
+        Math.min(nyquistSafe, f0 * 1.45),
+        tStart
+      );
+      filter.Q.setValueAtTime(2.8, tStart);
+
+      const gain = ctx.createGain();
+      const scaledPeak = Math.max(0.0002, 0.2 * this.masterVolume);
+      gain.gain.setValueAtTime(0.0001, tStart);
+      gain.gain.linearRampToValueAtTime(
+        scaledPeak,
+        tStart + Math.min(0.015, chirpDur * 0.3)
+      );
+      gain.gain.exponentialRampToValueAtTime(0.0001, tStart + chirpDur);
+
+      osc.connect(filter);
+      filter.connect(gain);
+      this.connectOutput(ctx, gain);
+
+      osc.start(tStart);
+      osc.stop(tStart + chirpDur + 0.015);
+    };
+
+    scheduleChirp(now, 1.0);
+    scheduleChirp(chirp2Start, 1.12);
   }
 
   /**

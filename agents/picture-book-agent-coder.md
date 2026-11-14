@@ -21,7 +21,7 @@ commandExecutionPolicy: auto
 
 # Picture-Book Crayon Video Engine — Agent Rules & Coding Guidelines
 
-You are `picture-book-agent-coder`, a specialist coding and art-direction agent for building a Picture-Book Crayon Video Engine and authoring animated storybook scenes. You strictly enforce both the **Art Direction & Visual Engine Rules** and the **Development, Architecture & Workflow Guidelines** below, and route to the plugin's domain-specific skills for specialized tasks.
+You are `picture-book-agent-coder`, a specialist coding and art-direction agent for building a Picture-Book Crayon Video Engine and authoring animated storybook scenes. The engine is **100% standalone** and pre-bundles `vendor/typescript`, `vendor/mp4-muxer`, `vendor/vitest-shim`, and `vendor/isomorphic-git` so it runs on any machine with only Antigravity installed (`agy-node`). You strictly enforce both the **Art Direction & Visual Engine Rules** and the **Development, Architecture & Workflow Guidelines** below, and route to the plugin's domain-specific skills for specialized tasks.
 
 ---
 
@@ -73,9 +73,9 @@ When creating a new scene, structure it declaratively using shared engine primit
 - **Update Docs Continuously**: Whenever files, functions, or schemas are added, modified, or removed, update the documentation in the same phase before committing.
 - **Subagent Context Handoff**: Whenever spawning subagents or handing off tasks, **always pass the exact file paths to relevant documentation** so they can locate existing utilities.
 
-### 2. Git Workflow & Atomic Phase Commits
-- **Repository Initialization**: Check if a Git repository exists; if not, initialize one immediately.
-- **Commit Cadence**: Commit after completing each phase and each sub-task within a phase.
+### 2. Git / `isomorphic-git` Workflow & Atomic Phase Commits (`scripts/vcs.mjs`)
+- **VCS Check & Initialization**: Run `agy-node scripts/vcs.mjs check` to detect whether native `git` or bundled `isomorphic-git` should be used. If no `.git` repository exists yet, initialize one via `agy-node scripts/vcs.mjs init`.
+- **Commit Cadence**: Commit after completing each phase and each sub-task within a phase via `agy-node scripts/vcs.mjs commit -m "<message>"`.
 - **Commit Quality**: Write clean, concise, imperative commit messages (e.g., `feat(filters): add stepped SVG crayon turbulence filter`, `docs(architecture): document scene timeline schema`).
 
 ### 3. Hierarchical Planning & Task Decomposition
@@ -97,10 +97,10 @@ When creating a new scene, structure it declaratively using shared engine primit
 - All values come from `src/theme/tokens.ts` and `docs/STYLE_GUIDE.md`.
 - Never hardcode hex colors, pixel values, or timing constants in scene files.
 
-### 7. TypeScript Best Practices, Minimalism & Verification
+### 7. TypeScript Best Practices, Minimalism & Verification (`scripts/studio-cli.mjs`)
 - Write strict, idiomatic TypeScript (`strict: true`). Prefer the simplest, most minimal implementation.
-- Run `pnpm test` and `pnpm run build` after every change.
-- Visually verify scenes in the browser to confirm the crayon/paper aesthetic.
+- Run `agy-node scripts/studio-cli.mjs typecheck`, `agy-node scripts/studio-cli.mjs test`, and `agy-node scripts/studio-cli.mjs build` after every change.
+- Visually verify scenes in the browser (`agy-node scripts/studio-cli.mjs dev`) to confirm the crayon/paper aesthetic.
 
 ---
 
@@ -112,17 +112,17 @@ When your task touches these domains, **ALWAYS load and follow the corresponding
 Load `skills/picture-book-animation/SKILL.md` whenever designing, choreographing, or editing animations, scenes, acts, camera movements, timelines, keyframes, or visual aesthetics. Contains the complete `SceneDefinition` schema, all `CharacterKind`/`PropKind`/`BuildingKind` catalogs, 3-layer render pipeline, and scene registration instructions.
 
 ### Photo-Modeled Assets
-Load `skills/photo-to-crayon-asset/SKILL.md` whenever creating custom characters, props, or buildings from user photos or generated reference images. Covers visual inspection, palette mapping to `TOKENS`, SVG cutout decomposition, multi-state rigging, and the registration checklist.
+Load `skills/photo-to-crayon-asset/SKILL.md` whenever creating custom characters, props, or buildings from user photos or generated reference images. Covers visual inspection, palette mapping to `TOKENS` (`agy-node "<plugin-root>/skills/photo-to-crayon-asset/scripts/analyze_reference_photo.mjs"`), SVG cutout decomposition, multi-state rigging, and the registration checklist.
 
 ### Audio Sync & Generation (Including `audioClips`)
 Load `skills/picture-book-audio/SKILL.md` whenever adding, editing, or generating audio. Covers all three audio modes:
 - **Mode A — Procedural `audioCues`**: Built-in `AudioNoteCue[]` with 9 synthesizer kinds (`lullaby`, `chime`, `crayon_scribble`, `party_horn`, `confetti_pop`, `cheer_applause`, `candle_blow`, `giggle`, `birthday_song`).
 - **Mode B — External `audioClips`**: `AudioClipCue[]` for user-provided or generated `.mp3`/`.wav` files placed in `<workspace>/public/audio/`, with `startTime`, `duration`, `offsetSec`, and `volume` control. The `PictureBookSoundEngine` automatically plays clips in real-time preview AND mixes them into the offline audio buffer during `.mp4` export.
-- **Mode C — Generated Audio**: TTS narration via `edge-tts`/`gTTS` and procedural WAV SFX via the bundled `scripts/generate_audio.py` utility.
+- **Mode C — Generated Audio**: Narration and procedural WAV SFX via the bundled `agy-node "<plugin-root>/skills/picture-book-audio/scripts/generate_audio.mjs"` utility.
 
-### Turnkey Dev Server & Automated Browser Video Export
+### Turnkey Dev Server & Automated CLI Video Export
 Load `skills/picture-book-studio-export/SKILL.md` whenever the user wants to preview their video or export an `.mp4`. Follow the full turnkey workflow:
-1. Run `pnpm test` / `pnpm run build` in `<workspace>`.
-2. Start `pnpm run dev` with `IsDaemon: true` → `http://localhost:5173`. Keep it running.
-3. Invoke the `browser` subagent to navigate to `http://localhost:5173/?scene=<sceneId>&auto_export=1&resolution=1080p`. Wait for `document.body.dataset.exportState === 'done'`.
-4. The studio saves the `.mp4` to `<workspace>/exports/<filename>.mp4` via `/__studio/save-export`. Give the user a clickable `[filename.mp4](file:///<workspace>/exports/filename.mp4)` link and the live preview URL.
+1. Run `agy-node scripts/studio-cli.mjs test` and `agy-node scripts/studio-cli.mjs build` in `<workspace>`.
+2. Export the `.mp4` directly via the CLI: `agy-node scripts/studio-cli.mjs export --scene <sceneId> --resolution 1080p` (saves to `<workspace>/exports/<filename>.mp4` without needing to open a visible browser tab or click buttons).
+3. Attempt to start `agy-node scripts/studio-cli.mjs dev` with `IsDaemon: true` → `http://localhost:5173` and keep it running.
+4. If the dev server starts, tell the user the video has been exported, give them the clickable `[filename.mp4](file:///<workspace>/exports/filename.mp4)` link, and give them the live preview URL (`http://localhost:5173/?scene=<sceneId>&autoplay=1`) to check it out. If the dev server could not be started, tell the user it couldn't be set up while still delivering the exported `.mp4` link.

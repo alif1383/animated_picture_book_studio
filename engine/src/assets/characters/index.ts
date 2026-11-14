@@ -1,4 +1,7 @@
+import { steppedOscillate } from '../../engine/clock';
 import { svgEl, svgTransform } from '../../engine/svgUtils';
+import type { CharacterKind } from '../../engine/schema';
+import { renderSwimFloatieRing } from '../props/swimFloatie';
 import type { CharacterRenderOptions } from './types';
 import { renderLittleGirl } from './littleGirl';
 import { renderMoon } from './moon';
@@ -34,11 +37,172 @@ export { renderAcornTwins } from './acornTwins';
 export { renderOliveSprout } from './oliveSprout';
 export { renderBirthdayStrawberry } from './birthdayStrawberry';
 
+interface CharacterFloatieFit {
+  cx: number;
+  waistY: number;
+  rx: number;
+  ry: number;
+  tubeR: number;
+  skirtBottomY: number;
+  defaultVariant: number;
+}
+
+const CHARACTER_FLOATIE_FITS: Record<CharacterKind, CharacterFloatieFit> = {
+  birthday_strawberry: {
+    cx: 0,
+    waistY: -26,
+    rx: 46,
+    ry: 10,
+    tubeR: 8.5,
+    skirtBottomY: 12,
+    defaultVariant: 0, // Golden rubber-ducky floatie!
+  },
+  crying_onion: {
+    cx: 0,
+    waistY: -16,
+    rx: 33,
+    ry: 7,
+    tubeR: 6,
+    skirtBottomY: 13,
+    defaultVariant: 1, // Candy red & white striped floatie
+  },
+  singing_radish: {
+    cx: -2,
+    waistY: -46,
+    rx: 46,
+    ry: 11,
+    tubeR: 8.5,
+    skirtBottomY: 10,
+    defaultVariant: 2, // Sky-blue & golden star floatie
+  },
+  watermelon_slice: {
+    cx: 1,
+    waistY: -30,
+    rx: 42,
+    ry: 9,
+    tubeR: 7.5,
+    skirtBottomY: 10,
+    defaultVariant: 2,
+  },
+  party_banana: {
+    cx: 8,
+    waistY: -11,
+    rx: 76,
+    ry: 9,
+    tubeR: 6.5,
+    skirtBottomY: 15,
+    defaultVariant: 3,
+  },
+  cherry_twins: {
+    cx: 1,
+    waistY: -10,
+    rx: 56,
+    ry: 8,
+    tubeR: 5.5,
+    skirtBottomY: 10,
+    defaultVariant: 4,
+  },
+  blue_party_cat: {
+    cx: 2,
+    waistY: -24,
+    rx: 42,
+    ry: 10,
+    tubeR: 7.5,
+    skirtBottomY: 11,
+    defaultVariant: 1,
+  },
+  olive_sprout: {
+    cx: 0,
+    waistY: -13,
+    rx: 28,
+    ry: 6.5,
+    tubeR: 5.5,
+    skirtBottomY: 12,
+    defaultVariant: 3,
+  },
+  hello_bug: {
+    cx: 0,
+    waistY: -28,
+    rx: 42,
+    ry: 10,
+    tubeR: 7.5,
+    skirtBottomY: 12,
+    defaultVariant: 2,
+  },
+  acorn_twins: {
+    cx: 0,
+    waistY: -10,
+    rx: 48,
+    ry: 8,
+    tubeR: 5.5,
+    skirtBottomY: 10,
+    defaultVariant: 4,
+  },
+  little_girl: {
+    cx: 0,
+    waistY: -18,
+    rx: 28,
+    ry: 8,
+    tubeR: 6,
+    skirtBottomY: 16,
+    defaultVariant: 0,
+  },
+  shopkeeper: {
+    cx: 0,
+    waistY: -22,
+    rx: 28,
+    ry: 8,
+    tubeR: 6,
+    skirtBottomY: 10,
+    defaultVariant: 1,
+  },
+  cat: {
+    cx: 0,
+    waistY: -3,
+    rx: 22,
+    ry: 6,
+    tubeR: 4.5,
+    skirtBottomY: 8,
+    defaultVariant: 2,
+  },
+  moon: {
+    cx: 0,
+    waistY: 52,
+    rx: 108,
+    ry: 20,
+    tubeR: 13,
+    skirtBottomY: 104,
+    defaultVariant: 2,
+  },
+  sun: {
+    cx: 0,
+    waistY: 48,
+    rx: 124,
+    ry: 20,
+    tubeR: 13,
+    skirtBottomY: 132,
+    defaultVariant: 3,
+  },
+};
+
 /**
  * Renders any 2D cutout character rig quantized to the stepped stop-motion frame index.
  */
 export function renderCharacter(options: CharacterRenderOptions): string {
-  const { id, x, y, scale, rotate, flipX, opacity, kind } = options;
+  const {
+    id,
+    x,
+    y,
+    scale,
+    rotate,
+    flipX,
+    opacity,
+    kind,
+    wearingFloatie,
+    floatieVariant,
+    frameIndex = 0,
+    fillMask,
+  } = options;
   const transform = svgTransform({ x, y, scale, rotate, flipX });
 
   let inner = '';
@@ -88,6 +252,49 @@ export function renderCharacter(options: CharacterRenderOptions): string {
     case 'birthday_strawberry':
       inner = renderBirthdayStrawberry(options);
       break;
+  }
+
+  if (wearingFloatie) {
+    const fit = CHARACTER_FLOATIE_FITS[kind];
+    const resolvedVariant = floatieVariant ?? fit.defaultVariant;
+    const waveBob = steppedOscillate(frameIndex, 8, 2.8, resolvedVariant * 2);
+    const waveTilt = steppedOscillate(frameIndex, 10, 2.2, resolvedVariant * 3);
+    inner = svgEl(
+      'g',
+      {
+        'data-part': 'character-floatie',
+        'data-floatie-variant': String(resolvedVariant),
+        transform: svgTransform({ y: waveBob, rotate: waveTilt }),
+      },
+      [
+        renderSwimFloatieRing({
+          cx: fit.cx,
+          cy: fit.waistY,
+          rx: fit.rx,
+          ry: fit.ry,
+          tubeR: fit.tubeR,
+          skirtBottomY: fit.skirtBottomY,
+          variant: resolvedVariant,
+          frameIndex,
+          layer: 'back',
+          fillMask,
+        }),
+        inner,
+        renderSwimFloatieRing({
+          cx: fit.cx,
+          cy: fit.waistY,
+          rx: fit.rx,
+          ry: fit.ry,
+          tubeR: fit.tubeR,
+          skirtBottomY: fit.skirtBottomY,
+          variant: resolvedVariant,
+          frameIndex,
+          layer: 'front',
+          showWaterSkirt: true,
+          fillMask,
+        }),
+      ]
+    );
   }
 
   if (!id && !transform && opacity === undefined) {

@@ -100,6 +100,8 @@ function renderSingleNode(
         frameIndex,
         wearingNightcap: state.wearingNightcap ?? node.wearingNightcap,
         holdingSheep: state.holdingSheep ?? node.holdingSheep,
+        wearingFloatie: state.wearingFloatie ?? node.wearingFloatie,
+        floatieVariant: state.floatieVariant ?? node.floatieVariant,
         fillMask: fillMaskUrl,
       });
     }

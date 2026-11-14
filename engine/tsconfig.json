@@ -10,7 +10,13 @@
     "noFallthroughCasesInSwitch": true,
     "isolatedModules": true,
     "skipLibCheck": true,
-    "noEmit": true
+    "noEmit": true,
+    "baseUrl": ".",
+    "paths": {
+      "mp4-muxer": ["./vendor/mp4-muxer/mp4-muxer.d.ts"],
+      "vitest": ["./vendor/vitest-shim/index.d.ts"],
+      "isomorphic-git": ["./vendor/isomorphic-git/index.d.ts"]
+    }
   },
-  "include": ["src", "tests"]
+  "include": ["src", "tests", "vendor/node-shim.d.ts"]
 }

@@ -48,7 +48,12 @@ export type PropKind =
   | 'fluffy_cloud'
   | 'meadow_flowers'
   | 'birthday_cake'
-  | 'party_confetti';
+  | 'party_confetti'
+  | 'beach_umbrella'
+  | 'ocean_waves'
+  | 'water_splash'
+  | 'swim_floatie'
+  | 'beach_ball';
 
 export interface ProgressiveFillOptions {
   /** Stop-motion mask reveal style ('top-down-bands' | 'diagonal-strokes' | 'radial-scribble') */
@@ -106,6 +111,10 @@ export interface CharacterNode extends BaseSceneNode {
   wearingNightcap?: boolean;
   /** Little girl option: holding fluffy white sheep plushie */
   holdingSheep?: boolean;
+  /** Ocean swim option: inflatable wax-crayon swim-ring floatie wrapped around waist with water skirt */
+  wearingFloatie?: boolean;
+  /** Floatie style variant (0 = rubber ducky, 1 = red/white stripes, 2 = blue/gold stars, 3 = pink/yellow stripes, 4 = emerald/gold) */
+  floatieVariant?: number;
 }
 
 export interface PropNode extends BaseSceneNode {
@@ -155,6 +164,8 @@ export interface NodeKeyframe {
   windowLit?: boolean;
   wearingNightcap?: boolean;
   holdingSheep?: boolean;
+  wearingFloatie?: boolean;
+  floatieVariant?: number;
   lit?: boolean;
   count?: number;
   /** If true, holds value until the next keyframe instead of stepped linear interpolation */
@@ -194,7 +205,10 @@ export type AudioCueKind =
   | 'cheer_applause'
   | 'candle_blow'
   | 'giggle'
-  | 'birthday_song';
+  | 'birthday_song'
+  | 'ocean_wave'
+  | 'water_splash'
+  | 'floatie_squeak';
 
 export interface AudioNoteCue {
   time: number;

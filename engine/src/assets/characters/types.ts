@@ -6,6 +6,8 @@ export interface CharacterRenderOptions {
   frameIndex?: number;
   wearingNightcap?: boolean;
   holdingSheep?: boolean;
+  wearingFloatie?: boolean;
+  floatieVariant?: number;
   fillMask?: string;
   id?: string;
   x?: number;

@@ -10,7 +10,7 @@ The **Picture-Book Crayon Video Engine** is a declarative 2D stop-motion storybo
   - `src/engine/filters.ts` — SVG `<defs>` generator (`renderEngineDefs`, `getPatternFill`) for `#crayon-stroke` and `#crayon-outline` stepped displacement filters, `#vibrant-grade` saturation/contrast filter, 21 dry-crayon `<pattern>` fills (with vibrant pigment opacity support), `#pat-marker-indigo-night` felt-tip wash, and Layer 3 `renderPaperCompositeLayer(width, height, enablePaperTexture, vibrant)`.
   - `src/engine/fillMask.ts` — Stop-motion progressive fill mask generator (`quantizeFillProgress`, `renderFillMaskDef`) supporting `'top-down-bands'` (with `wrapRightNegativeSpace` for partial-bleed sky around the Moon), `'diagonal-strokes'`, and `'radial-scribble'`.
   - `src/engine/clock.ts` — Quantized stepped clock (`evaluateSteppedClock`, `steppedOscillate`, `isSteppedBlinkFrame`, `steppedLoopProgress`) converting continuous playback time into discrete `6 FPS` stop-motion frame indices and line-boil seeds (`1..6`).
-  - `src/engine/schema.ts` — TypeScript interfaces for declarative scenes: `SceneDefinition` (with `vibrantMode?: boolean`, `audioClips?: AudioClipCue[]`), `AudioClipCue` (external/generated audio files with `src`, `startTime`, `duration`, `offsetSec`, `volume`, `label`), `StoryAct`, `BackgroundPatchNode`, `BuildingNode` (`'ochre_cottage' | 'corner_store'`), `CharacterNode` (15 character kinds), `PropNode`, `AnnotationNode`, `CameraKeyframe`, `NodeKeyframe`, `TimelineTrack`, and `AudioCueKind`.
+  - `src/engine/schema.ts` — TypeScript interfaces for declarative scenes: `SceneDefinition` (with `vibrantMode?: boolean`, `audioClips?: AudioClipCue[]`), `AudioClipCue` (external/generated audio files with `src`, `startTime`, `duration`, `offsetSec`, `volume`, `label`), `StoryAct`, `BackgroundPatchNode`, `BuildingNode` (`'ochre_cottage' | 'corner_store'`), `CharacterNode` (15 character kinds, with `wearingNightcap`, `holdingSheep`, `wearingFloatie`, `floatieVariant`), `PropNode` (18 prop kinds), `AnnotationNode`, `CameraKeyframe`, `NodeKeyframe`, `TimelineTrack`, and `AudioCueKind`.
   - `src/engine/timeline.ts` — Stepped keyframe evaluator (`evaluateSceneAtTime`, `interpolateKeyframes`, `evaluateCameraTrack`, `evaluateActiveAct`) that snaps `timeSec` via `evaluateSteppedClock` first so transforms, character states, progressive stop-motion fill masks, and camera pans/zooms update strictly on stepped ticks.
   - `src/engine/renderer.ts` — Declarative SVG scene graph renderer (`evaluateAndRenderScene`, `renderSceneToSvg`) implementing the Mandatory 3-Layer Stack, Vibrant Crayon Mode (`vibrant?: boolean`), zIndex sorting, camera rig transform, and automatic `<mask>` generation for progressive stop-motion coloring.
   - `src/engine/videoExporter.ts` — Full-screen 16:9 widescreen seekable `.mp4` video & WebAudio exporter (`exportSceneTo16x9Video`, `patchMp4Duration`, `rasterizeSvgToCanvas`, `prepareSvgFor16x9Canvas`, `selectSupportedVideoMimeType`, `buildVideoFilename`, `VIDEO_RESOLUTION_PRESETS` for `1080p` `1920×1080` and `720p` `1280×720` 16:9). Uses `mp4-muxer` (`fastStart: 'in-memory'`) + WebCodecs (`VideoEncoder` H.264 + `AudioEncoder` AAC) to write a non-fragmented ISO BMFF `.mp4` with complete `stbl` seek tables (`stts`, `stss`, `stsc`, `stsz`, `stco`) and exact `mvhd`/`tkhd`/`mdhd` duration headers so Windows Media Player displays total length and scrubs smoothly, plus `patchMp4Duration` for the `MediaRecorder` fallback. Passes `scene.audioClips` into `renderOfflineAudio()` so external/TTS audio files are mixed into exported MP4s.
@@ -31,12 +31,12 @@ The **Picture-Book Crayon Video Engine** is a declarative 2D stop-motion storybo
     - `src/assets/characters/bluePartyCat.ts` (`renderBluePartyCat`)
     - `src/assets/characters/helloBug.ts` (`renderHelloBug`)
     - `src/assets/characters/partyBanana.ts` (`renderPartyBanana`)
-    - `src/assets/characters/cryingOnion.ts` (`renderCryingOnion`)
+    - `src/assets/characters/cryingOnion.ts` (`renderCryingOnion`, classic worried teardrops in `'idle'` and happy cheering smile in `'waving' | 'singing'`)
     - `src/assets/characters/cherryTwins.ts` (`renderCherryTwins`)
     - `src/assets/characters/acornTwins.ts` (`renderAcornTwins`)
     - `src/assets/characters/oliveSprout.ts` (`renderOliveSprout`)
-    - `src/assets/characters/shared.ts` (`renderCutoutStickerHalo`, `renderSheepPlushie`), `src/assets/characters/types.ts`, & `src/assets/characters/index.ts`
-  - `src/assets/props/` (and barrel `src/assets/objects.ts`) — `renderProp()` plus 13 standalone prop modules and shared star geometry helper:
+    - `src/assets/characters/shared.ts` (`renderCutoutStickerHalo`, `renderSheepPlushie`), `src/assets/characters/types.ts`, & `src/assets/characters/index.ts` (including 2.5D `wearingFloatie` waist swim-ring + frothy ocean-water skirt rigging across all characters)
+  - `src/assets/props/` (and barrel `src/assets/objects.ts`) — `renderProp()` plus 18 standalone prop modules and shared star/floatie geometry helpers:
     - `src/assets/props/grassPatch.ts` (`renderGrassPatch`)
     - `src/assets/props/tree.ts` (`renderTree`)
     - `src/assets/props/musicNotes.ts` (`renderMusicNotes`)
@@ -50,6 +50,11 @@ The **Picture-Book Crayon Video Engine** is a declarative 2D stop-motion storybo
     - `src/assets/props/meadowFlowers.ts` (`renderMeadowFlowers`)
     - `src/assets/props/birthdayCake.ts` (`renderBirthdayCake`)
     - `src/assets/props/partyConfetti.ts` (`renderPartyConfetti`)
+    - `src/assets/props/beachUmbrella.ts` (`renderBeachUmbrella`)
+    - `src/assets/props/oceanWaves.ts` (`renderOceanWaves`)
+    - `src/assets/props/waterSplash.ts` (`renderWaterSplash`)
+    - `src/assets/props/swimFloatie.ts` (`renderSwimFloatie`, `renderSwimFloatieRing`)
+    - `src/assets/props/beachBall.ts` (`renderBeachBall`)
     - `src/assets/props/shared.ts` (`renderStarShape`), `src/assets/props/types.ts`, & `src/assets/props/index.ts`
   - `src/assets/annotations/` — `src/assets/annotations/pencilAnnotation.ts` (`renderAnnotation`) and `src/assets/annotations/index.ts` for hand-lettered pencil annotations & dashed motion paths.
   - `src/assets/index.ts` — Top-level barrel re-exporting all buildings, characters, props, and annotations.
@@ -57,16 +62,19 @@ The **Picture-Book Crayon Video Engine** is a declarative 2D stop-motion storybo
   - `src/scenes/shortSample1.ts` — `SHORT_SAMPLE_1_SCENE` (`30s`, `6 FPS`, `1280×720` 16:9, routed via `?short_sample=1`), a 5-act picture-book child story from morning sun to sleepy orange sunset, walking into the house, sun-to-moon handoff, and rooftop lullaby.
   - `src/scenes/moonlightStory.ts` — `MOONLIGHT_STORY_SCENE` (`28s`, `6 FPS`, `1280×720` 16:9, routed via `?short_sample=2`), a 5-act picture-book story featuring `"LUNE STORE"`, the Ochre Cottage, and the Sleepy Moon.
   - `src/scenes/meadowParty.ts` — `MEADOW_PARTY_SCENE` (`24s`, `6 FPS`, `1280×720` 16:9, `vibrantMode: true`, routed via `?short_sample=3` or `?short_sample=birthday`), a 4-act **Strawberry's Birthday Party** story (`arrival`, `song`, `cake`, `celebration`) where Singing Radish and all the cutout friends throw a birthday party for Birthday Strawberry, sing `"Happy Birthday to You"`, present a 2-tier Strawberry Birthday Cake whose candles Strawberry blows out at `t = 16.0s`, and celebrate with confetti, streamers, party horns, and cheers.
+  - `src/scenes/cornerStoreDay.ts` — `CORNER_STORE_DAY_SCENE`, daytime-to-evening village story outside `"LUNE STORE"` (`?scene=corner-store-day` / `?short_sample=4`).
+  - `src/scenes/moonlitGarden.ts` — `MOONLIT_GARDEN_SCENE`, tranquil moonlit garden story (`?scene=moonlit-garden`).
+  - `src/scenes/strawberryBeachBirthday.ts` — `STRAWBERRY_BEACH_BIRTHDAY_SCENE` (`46s`, `6 FPS`, `1280×720` 16:9, `vibrantMode: true`, routed via `?scene=strawberry-beach-birthday`, `?scene=beach-birthday`, or `?short_sample=5`), a 5-act **Strawberry's Beach Birthday Splash** story (`beach-party`, `scared-of-water`, `floatie-water-play`, `sunset-shore`, `moonlight-goodbye`) featuring a sunny beach birthday & candle blow, shoreline wave scare & friends bringing floaties, 13s of ocean floatie splashing & beach-ball tossing, sunset-to-twilight exiting the water & stacking floaties on the sand, and moonrise with twinkling stars & waving goodbye at night.
 - `src/audio/` — Procedural WebAudio synthesizer + external audio clip player:
-  - `src/audio/soundEngine.ts` — `PictureBookSoundEngine` generating music-box lullaby notes (`lullaby`), star chimes (`chime`), filtered dry-crayon paper-scribble foley (`crayon_scribble`), and birthday party sound effects (`birthday_song`, `party_horn`, `confetti_pop`, `candle_blow`, `cheer_applause`, `giggle`) synced to the stepped 6 FPS clock, plus:
+  - `src/audio/soundEngine.ts` — `PictureBookSoundEngine` generating music-box lullaby notes (`lullaby`), star chimes (`chime`), filtered dry-crayon paper-scribble foley (`crayon_scribble`), birthday party sound effects (`birthday_song`, `party_horn`, `confetti_pop`, `candle_blow`, `cheer_applause`, `giggle`), and beach/ocean foley (`ocean_wave`, `water_splash`, `floatie_squeak`) synced to the stepped 6 FPS clock, plus:
     - `renderOfflineAudio(cues, startSec, durSec, sampleRate, audioClips?)` — offline stereo `AudioBuffer` rendering for WebCodecs MP4 exports; mixes in `AudioClipCue[]` external audio files (fetches, decodes via `decodeAudioData`, schedules on `OfflineAudioContext`)
     - `triggerClipsForFrame(clips, prevTime, curTime)` — live playback trigger for external audio clips synced to stepped 6 FPS clock
     - `fetchAndDecodeClip(src)` / `preloadClips(clips)` — fetch + cache `AudioBuffer` for each `AudioClipCue.src`
     - `stopAllClips()` — stops all currently playing clip sources (call on seek/scene change)
     - `createRecordingStream()` / `stopRecordingStream()` for `MediaRecorder` fallback
 - `src/ui/` — Interactive Storybook Video Player Studio, URL Router, 16:9 Video Downloader & Asset Catalog:
-  - `src/ui/app.ts` — `mountStorybookStudio()`, `SCENE_REGISTRY` (keyed by both short ID and scene.id), `parseStudioUrlParams()`, `ASSET_CATALOG_ITEMS` (25 items), and `renderAssetPreviewSvg()` providing URL query parameter routing:
-    - `?short_sample=1|2|3|birthday` — select built-in scene (legacy)
+  - `src/ui/app.ts` — `mountStorybookStudio()`, `SCENE_REGISTRY` (keyed by both short ID `'1'..'5'` and `scene.id` / aliases including `'strawberry-beach-birthday'` and `'beach-birthday'`), `parseStudioUrlParams()`, `ASSET_CATALOG_ITEMS` (30 items), and `renderAssetPreviewSvg()` providing URL query parameter routing:
+    - `?short_sample=1|2|3|4|5|birthday|beach-birthday` — select built-in scene (legacy + beach alias)
     - `?scene=<id|key>` — select any scene from SCENE_REGISTRY by key or scene.id (new)
     - `?footage=<act-id|alias>` — loop a single act
     - `?vibrant=1|0` — Vibrant Crayon Mode
@@ -80,17 +88,31 @@ The **Picture-Book Crayon Video Engine** is a declarative 2D stop-motion storybo
     - `document.body.dataset.exportFilename` and `document.body.dataset.exportSavedPath` on completion
     - Vibrant Mode toggle, Birthday SFX Audition bar, 3-Layer Stack toggles, live Stop-Motion Coloring Scrubber, and interactive Asset Catalog grid
   - `src/main.ts` — Browser entrypoint parsing `window.location.search` via `parseStudioUrlParams` and mounting the studio into `#app`.
-- `public/audio/` — Static audio assets served at `/audio/<filename>` by Vite dev server and included in production build. Place narration MP3s, background music, and SFX files here. See `public/audio/README.md`.
-- `exports/` — Output directory where the Vite dev-server `/__studio/save-export` middleware saves exported MP4 files for agent access. Created automatically by the middleware.
+- `public/audio/` — Static audio assets served at `/audio/<filename>` by the dev server and included in production build. Place narration WAV/MP3s, background music, and SFX files here. See `public/audio/README.md`.
+- `exports/` — Output directory where the dev-server `/__studio/save-export` middleware saves exported MP4 files for agent access. Created automatically by the middleware.
+- `vendor/` — Pre-bundled pure-JS compilers and libraries enabling 100% standalone operation on any machine with only Antigravity (`agy-node`) installed (no external `node`, `npm`, `pnpm`, `python`, or `git` required):
+  - `vendor/typescript/` — Full TypeScript compiler (`lib/tsc.js`, `lib/typescript.js`) and standard `lib*.d.ts` definitions for strict `tsc --noEmit` typechecking and on-the-fly `.ts` transpilation.
+  - `vendor/mp4-muxer/` — Pure-JS H.264/AAC MP4 muxer (`mp4-muxer.mjs` & `mp4-muxer.d.ts`).
+  - `vendor/vitest-shim/` — Zero-dependency test runner & assertion engine (`index.mjs` & `index.d.ts`) implementing `describe`, `it`, `test`, `expect`, lifecycle hooks, and `vi.fn()`/`vi.spyOn()`.
+  - `vendor/isomorphic-git/` — Pure-JS Git object & `.git/index` v2 engine (`index.mjs` & `index.d.ts`) supporting `init`, `status`, `addAll`, `commit`, and `log` fully compatible with native `git`.
+  - `vendor/node-shim.d.ts` — Minimal ambient declarations for `node:*` built-in modules used by standalone runtime tests.
+- `scripts/` — Zero-dependency CLI tools executable directly via `agy-node`:
+  - `scripts/studio-cli.mjs` — Unified CLI supporting `typecheck` (bundled `tsc --noEmit`), `test` (runs `tests/**/*.test.ts` via `ts-loader-hooks.mjs` + `vitest-shim`), `build` (typechecks and compiles `dist/`), `dev` (HTTP server on `:5173` with on-the-fly `.ts` transpilation and `POST /__studio/save-export` MP4 saving), and `export` (`--scene <id> [--resolution 1080p|720p] [--footage <actId>]` headless CLI MP4 export).
+  - `scripts/ts-loader-hooks.mjs` — Node `module.register` customization hooks resolving extensionless `.ts` imports, `'mp4-muxer'`, `'vitest'`, and `'isomorphic-git'`, and transpiling TypeScript via `vendor/typescript`.
+  - `scripts/vcs.mjs` — Unified VCS CLI (`check`, `init`, `status`, `add`, `commit`, `log`) that automatically uses native `git` when installed or falls back to bundled `vendor/isomorphic-git`.
+  - `scripts/generate_audio.mjs` — Zero-Python audio CLI (`sfx`, `tone`, `tts`, `info`) generating WAV sound effects and narration clips.
+  - `scripts/analyze_reference_photo.mjs` — Zero-Python image analyzer extracting dominant RGB color clusters and mapping them to `TOKENS.colors` and `TOKENS.patterns`.
 
-## 3. Dev Server & Build
-- **Dev server**: `pnpm run dev` → Vite default port **5173** (`http://localhost:5173`)
-- **Build**: `pnpm run build` → `dist/` (tsc + vite build)
-- **Tests**: `pnpm run test` (vitest, node env)
-- **Typecheck**: `pnpm run typecheck`
+## 3. Standalone CLI, Dev Server, Build & Headless Export (`agy-node`)
+- **Typecheck**: `agy-node scripts/studio-cli.mjs typecheck` (or `pnpm run typecheck`) → runs bundled `tsc --noEmit`
+- **Tests**: `agy-node scripts/studio-cli.mjs test` (or `pnpm test`) → runs all test suites in `tests/`
+- **Build**: `agy-node scripts/studio-cli.mjs build` (or `pnpm run build`) → typechecks and outputs production bundle to `dist/`
+- **Direct CLI Video Export**: `agy-node scripts/studio-cli.mjs export --scene <sceneId> --resolution 1080p` → exports `.mp4` directly from the CLI in headless mode (auto-detecting OS Edge/Chrome/Chromium) and saves to `<workspace>/exports/<filename>.mp4`
+- **Dev server**: `agy-node scripts/studio-cli.mjs dev` (or `pnpm run dev`) → starts Studio HTTP server on port **5173** (`http://localhost:5173`)
+- **Git / VCS**: `agy-node scripts/vcs.mjs check` / `init` / `status` / `commit -m "..."` / `log`
 
 ## 4. Dev Server Middleware: `POST /__studio/save-export`
-Defined in `vite.config.ts` via the `studioSaveExportPlugin`. Available only during `pnpm run dev`.
+Built into `scripts/studio-cli.mjs dev` (and `vite.config.ts`).
 
 **Purpose**: Saves a video export blob to `<workspace>/exports/<filename>` so agent automation can retrieve the file from disk after a browser-triggered export.
 

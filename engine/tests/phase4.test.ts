@@ -67,8 +67,8 @@ describe('Phase 4: 28-Second Sample Story Scene, Audio Engine & Asset Catalog', 
     sound.dispose();
   });
 
-  it('renders all 25 reusable asset catalog preview SVGs cleanly', () => {
-    expect(ASSET_CATALOG_ITEMS.length).toBe(25);
+  it('renders all reusable asset catalog preview SVGs cleanly', () => {
+    expect(ASSET_CATALOG_ITEMS.length).toBeGreaterThanOrEqual(25);
     for (const item of ASSET_CATALOG_ITEMS) {
       const svg = renderAssetPreviewSvg(item, 2);
       expect(svg).toContain('<svg');

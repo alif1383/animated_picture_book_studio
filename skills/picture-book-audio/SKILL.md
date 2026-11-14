@@ -16,7 +16,7 @@ modes** in the Picture-Book Crayon Video Engine (`<workspace>`, scaffolded from 
 > The active engine workspace is `<workspace>`. Audio assets go in
 > `<workspace>/public/audio/`. Never modify engine source files
 > unless the task explicitly requires adding a new procedural synthesiser
-> kind — follow `coder-agent` standards for that.
+> kind — follow `picture-book-agent-coder` standards for that.
 
 ---
 
@@ -112,7 +112,7 @@ audioCues: [
    `<workspace>/src/audio/soundEngine.ts` following the existing
    patterns (create oscillators/buffers → gain envelope → `connectOutput`).
 3. Add an `else if` branch in `scheduleCueOnContext()`.
-4. Run `pnpm test` and `pnpm run build` in `<workspace>`.
+4. Run `agy-node scripts/studio-cli.mjs test` and `agy-node scripts/studio-cli.mjs build` in `<workspace>`.
 
 ---
 
@@ -191,30 +191,22 @@ interface AudioClipCue {
 - Keep clip durations tight — trim silence from the start/end.
 - Use `offsetSec` to skip an intro in a longer audio file.
 - Use `volume: 0.3` for background music so narration stays clear.
-- Use the `info` subcommand of `generate_audio.py` to inspect duration
+- Use the `info` subcommand of `generate_audio.mjs` to inspect duration
   and get a ready-to-paste `AudioClipCue` snippet.
 
 ---
 
-## Mode C — Generating Audio with `generate_audio.py`
+## Mode C — Generating Audio with `generate_audio.mjs`
 
-A bundled Python CLI at
-`<plugin-root>/skills/picture-book-audio/scripts/generate_audio.py`
-can **generate** narration and custom sound effects on demand.
-
-### Prerequisites
-
-- **Python 3.10+** (available on this system as `python`)
-- **edge-tts** (`pip install edge-tts`) — for TTS narration (installed ✅)
-- **gTTS** (`pip install gTTS`) — automatic fallback if edge-tts fails
-
-No other dependencies needed — SFX generation uses only Python builtins
-(`wave`, `math`, `struct`, `random`).
+A bundled zero-dependency Node CLI at
+`<plugin-root>/skills/picture-book-audio/scripts/generate_audio.mjs`
+(also scaffolded to `<workspace>/scripts/generate_audio.mjs`)
+can **generate** narration and custom WAV sound effects on demand via `agy-node` without requiring Python or any external packages.
 
 ### Subcommand: `tts` — Text-to-Speech Narration
 
 ```bash
-python generate_audio.py tts "<text>" --name <clip-name> [options]
+agy-node "<plugin-root>/skills/picture-book-audio/scripts/generate_audio.mjs" tts "<text>" --name <clip-name> [options]
 ```
 
 | Flag         | Default              | Description                         |
@@ -223,7 +215,7 @@ python generate_audio.py tts "<text>" --name <clip-name> [options]
 | `--voice`    | `en-US-AnaNeural`    | Voice name or shortcut              |
 | `--rate`     | `+0%`                | Speed adjustment (`+10%`, `-20%`)   |
 | `--pitch`    | `+0Hz`               | Pitch shift (`+2st`, `-3Hz`)        |
-| `--output`   | `public/audio/<name>.mp3` | Custom output path             |
+| `--output`   | `public/audio/<name>.wav` | Custom output path             |
 | `--start-time` | `0`                | startTime in the AudioClipCue snippet |
 
 **Voice shortcuts**: `ana` → `en-US-AnaNeural`, `aria` → `en-US-AriaNeural`,
@@ -232,20 +224,20 @@ python generate_audio.py tts "<text>" --name <clip-name> [options]
 **Example — Generate narration for each act:**
 
 ```bash
-python generate_audio.py tts "Once upon a time, in a tiny crayon village..." \
+agy-node "<plugin-root>/skills/picture-book-audio/scripts/generate_audio.mjs" tts "Once upon a time, in a tiny crayon village..." \
   --name act1-narration --voice ana --rate -10%
 
-python generate_audio.py tts "And so the little moon drifted off to sleep." \
+agy-node "<plugin-root>/skills/picture-book-audio/scripts/generate_audio.mjs" tts "And so the little moon drifted off to sleep." \
   --name act5-narration --voice sonia --start-time 22.0
 ```
 
-Output is saved to `./public/audio/act1-narration.mp3` in `<workspace>` and
+Output is saved to `./public/audio/act1-narration.wav` (or `.mp3` if `edge-tts` is available) in `<workspace>` and
 the script prints a ready-to-paste `AudioClipCue` TypeScript snippet.
 
 ### Subcommand: `sfx` / `tone` — Procedural WAV Sound Effects
 
 ```bash
-python generate_audio.py sfx <preset> --name <clip-name> [options]
+agy-node "<plugin-root>/skills/picture-book-audio/scripts/generate_audio.mjs" sfx <preset> --name <clip-name> [options]
 ```
 
 | Flag         | Default | Description                              |
@@ -275,19 +267,19 @@ python generate_audio.py sfx <preset> --name <clip-name> [options]
 
 ```bash
 # Page-turn whoosh
-python generate_audio.py sfx page_turn --duration 0.3 --name page-flip
+agy-node "<plugin-root>/skills/picture-book-audio/scripts/generate_audio.mjs" sfx page_turn --duration 0.3 --name page-flip
 
 # Wind ambient (3 seconds)
-python generate_audio.py sfx wind --duration 3.0 --name bg-wind --start-time 0
+agy-node "<plugin-root>/skills/picture-book-audio/scripts/generate_audio.mjs" sfx wind --duration 3.0 --name bg-wind --start-time 0
 
 # Magic sparkle
-python generate_audio.py sfx magic_sparkle --duration 1.5 --name act3-sparkle
+agy-node "<plugin-root>/skills/picture-book-audio/scripts/generate_audio.mjs" sfx magic_sparkle --duration 1.5 --name act3-sparkle
 
 # C-major chord
-python generate_audio.py sfx chord --freq 261.63 --duration 2.0 --name c-chord
+agy-node "<plugin-root>/skills/picture-book-audio/scripts/generate_audio.mjs" sfx chord --freq 261.63 --duration 2.0 --name c-chord
 
 # Frequency sweep 200→1200 Hz
-python generate_audio.py sfx sweep --freq 200 --freq-end 1200 --duration 1.0 --name whoosh
+agy-node "<plugin-root>/skills/picture-book-audio/scripts/generate_audio.mjs" sfx sweep --freq 200 --freq-end 1200 --duration 1.0 --name whoosh
 ```
 
 All files save to `./public/audio/<name>.wav` in `<workspace>` by default.
@@ -295,14 +287,14 @@ All files save to `./public/audio/<name>.wav` in `<workspace>` by default.
 ### Subcommand: `info` — Inspect Audio Files
 
 ```bash
-python generate_audio.py info <path> [--start-time <sec>] [--name <id>]
+agy-node "<plugin-root>/skills/picture-book-audio/scripts/generate_audio.mjs" info <path> [--start-time <sec>] [--name <id>]
 ```
 
 Prints format details (channels, sample rate, duration) and a
 ready-to-paste `AudioClipCue` TypeScript snippet:
 
 ```bash
-python generate_audio.py info ./public/audio/narration.mp3 --start-time 2.5
+agy-node "<plugin-root>/skills/picture-book-audio/scripts/generate_audio.mjs" info ./public/audio/narration.wav --start-time 2.5
 ```
 
 ---
@@ -313,17 +305,17 @@ python generate_audio.py info ./public/audio/narration.mp3 --start-time 2.5
 
 ```bash
 # 1. Generate narration clips
-python generate_audio.py tts "The sun rose over the crayon village" \
+agy-node "<plugin-root>/skills/picture-book-audio/scripts/generate_audio.mjs" tts "The sun rose over the crayon village" \
   --name sunrise-narration --voice ana --rate -5%
 
-python generate_audio.py tts "As evening fell, the moon appeared" \
+agy-node "<plugin-root>/skills/picture-book-audio/scripts/generate_audio.mjs" tts "As evening fell, the moon appeared" \
   --name sunset-narration --voice sonia --start-time 6.0
 
-python generate_audio.py tts "Goodnight little moon, goodnight" \
+agy-node "<plugin-root>/skills/picture-book-audio/scripts/generate_audio.mjs" tts "Goodnight little moon, goodnight" \
   --name goodnight-narration --voice ana --rate -15% --start-time 22.0
 
 # 2. Generate a custom SFX
-python generate_audio.py sfx magic_sparkle --duration 1.2 --name star-appear --start-time 10.5
+agy-node "<plugin-root>/skills/picture-book-audio/scripts/generate_audio.mjs" sfx magic_sparkle --duration 1.2 --name star-appear --start-time 10.5
 ```
 
 Then add the clips to the scene definition:

@@ -24,10 +24,10 @@ Use `read_file` to view the user's photo and note:
 
 ### 1b. Run the automated analysis script
 
-Run the helper script to extract objective color data and map it to official TOKENS palette colors:
+Run the zero-dependency helper script via `agy-node` to extract objective color data and map it to official TOKENS palette colors:
 
 ```bash
-python "<plugin-root>/skills/photo-to-crayon-asset/scripts/analyze_reference_photo.py" "<path_to_photo>"
+agy-node "<plugin-root>/skills/photo-to-crayon-asset/scripts/analyze_reference_photo.mjs" "<path_to_photo>"
 ```
 
 The script outputs a structured report with:
@@ -221,12 +221,14 @@ To make the new asset appear in the Studio's interactive Asset Catalog grid, add
 
 ```bash
 cd <workspace>
-pnpm run test     # all unit tests pass
-pnpm run build    # strict TypeScript compilation succeeds
+agy-node scripts/studio-cli.mjs typecheck   # strict TypeScript compilation succeeds
+agy-node scripts/studio-cli.mjs test        # all unit tests pass
+agy-node scripts/studio-cli.mjs build       # production build succeeds
+agy-node scripts/vcs.mjs commit -m "feat(assets): add <assetName> cutout asset"
 ```
 
 > [!WARNING]
-> These steps **must** follow `coder-agent` development principles. If you are not the `picture-book-agent-coder` or `coder-agent`, delegate the code changes to one of them.
+> These steps **must** follow `picture-book-agent-coder` development principles. If you are not `picture-book-agent-coder` or `picture-book-coder`, delegate the code changes to one of them.
 
 ---
 

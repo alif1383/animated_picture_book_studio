@@ -21,16 +21,26 @@ import {
 import { MOONLIGHT_STORY_SCENE } from '../scenes/moonlightStory';
 import { SHORT_SAMPLE_1_SCENE } from '../scenes/shortSample1';
 import { MEADOW_PARTY_SCENE } from '../scenes/meadowParty';
+import { CORNER_STORE_DAY_SCENE } from '../scenes/cornerStoreDay';
+import { MOONLIT_GARDEN_SCENE } from '../scenes/moonlitGarden';
+import { STRAWBERRY_BEACH_BIRTHDAY_SCENE } from '../scenes/strawberryBeachBirthday';
 
-export type ShortSampleId = '1' | '2' | '3';
+export type ShortSampleId = '1' | '2' | '3' | '4' | '5';
 
 export const SCENE_REGISTRY: Record<string, SceneDefinition> = {
   '1': SHORT_SAMPLE_1_SCENE,
   '2': MOONLIGHT_STORY_SCENE,
   '3': MEADOW_PARTY_SCENE,
+  '4': CORNER_STORE_DAY_SCENE,
+  '5': STRAWBERRY_BEACH_BIRTHDAY_SCENE,
   [SHORT_SAMPLE_1_SCENE.id]: SHORT_SAMPLE_1_SCENE,
   [MOONLIGHT_STORY_SCENE.id]: MOONLIGHT_STORY_SCENE,
   [MEADOW_PARTY_SCENE.id]: MEADOW_PARTY_SCENE,
+  [CORNER_STORE_DAY_SCENE.id]: CORNER_STORE_DAY_SCENE,
+  [MOONLIT_GARDEN_SCENE.id]: MOONLIT_GARDEN_SCENE,
+  'moonlit-garden': MOONLIT_GARDEN_SCENE,
+  [STRAWBERRY_BEACH_BIRTHDAY_SCENE.id]: STRAWBERRY_BEACH_BIRTHDAY_SCENE,
+  'beach-birthday': STRAWBERRY_BEACH_BIRTHDAY_SCENE,
 };
 
 export interface ParsedStudioParams {
@@ -105,12 +115,24 @@ export function parseStudioUrlParams(
   }
 
   if (!resolvedScene) {
-    if (rawSample === '3' || rawSample === 'birthday') {
+    if (
+      rawSample === '5' ||
+      rawSample === 'beach-birthday' ||
+      rawSample === 'strawberry-beach-birthday'
+    ) {
+      shortSample = '5';
+    } else if (rawSample === '4') {
+      shortSample = '4';
+    } else if (rawSample === '3' || rawSample === 'birthday') {
       shortSample = '3';
     } else if (rawSample === '2') {
       shortSample = '2';
     } else if (rawSample === '1') {
       shortSample = '1';
+    } else if (fallbackScene?.id === STRAWBERRY_BEACH_BIRTHDAY_SCENE.id) {
+      shortSample = '5';
+    } else if (fallbackScene?.id === CORNER_STORE_DAY_SCENE.id) {
+      shortSample = '4';
     } else if (fallbackScene?.id === MEADOW_PARTY_SCENE.id) {
       shortSample = '3';
     } else if (fallbackScene?.id === MOONLIGHT_STORY_SCENE.id) {
@@ -119,7 +141,9 @@ export function parseStudioUrlParams(
     resolvedScene = SCENE_REGISTRY[shortSample];
   } else {
     // Map resolvedScene back to a shortSample id for canonical URL building
-    if (resolvedScene.id === MEADOW_PARTY_SCENE.id) shortSample = '3';
+    if (resolvedScene.id === STRAWBERRY_BEACH_BIRTHDAY_SCENE.id) shortSample = '5';
+    else if (resolvedScene.id === CORNER_STORE_DAY_SCENE.id) shortSample = '4';
+    else if (resolvedScene.id === MEADOW_PARTY_SCENE.id) shortSample = '3';
     else if (resolvedScene.id === MOONLIGHT_STORY_SCENE.id) shortSample = '2';
     else shortSample = '1';
   }
@@ -194,7 +218,7 @@ export function parseStudioUrlParams(
     ? `?short_sample=${shortSample}&footage=${footageId}`
     : `?short_sample=${shortSample}`;
   const canonicalQuery =
-    rawVibrant !== null && shortSample !== '3'
+    rawVibrant !== null && !scene.vibrantMode
       ? `${baseQuery}&vibrant=${vibrant ? '1' : '0'}`
       : baseQuery;
 
@@ -533,6 +557,56 @@ export const ASSET_CATALOG_ITEMS: readonly AssetCatalogItem[] = [
     renderInner: (frameIndex) =>
       renderProp({ kind: 'party_confetti', frameIndex, count: 18 }),
   },
+  {
+    id: 'cat-beach-umbrella',
+    title: 'Striped Crayon Beach Umbrella',
+    category: 'Prop',
+    caption: 'Scalloped red, yellow & sky-blue crayon umbrella on an angled wooden beach pole.',
+    viewBox: '-125 -192 230 210',
+    jumpToTimeSec: 2.0,
+    renderInner: (frameIndex) =>
+      renderProp({ kind: 'beach_umbrella', frameIndex, variant: 1 }),
+  },
+  {
+    id: 'cat-ocean-waves',
+    title: 'Scalloped Ocean Waves & Sea Foam',
+    category: 'Prop',
+    caption: 'Stepped 6 FPS rolling turquoise wave crests & frothy white shoreline foam.',
+    viewBox: '-160 -32 320 140',
+    jumpToTimeSec: 20.0,
+    renderInner: (frameIndex) =>
+      renderProp({ kind: 'ocean_waves', frameIndex, variant: 1, count: 3 }),
+  },
+  {
+    id: 'cat-water-splash',
+    title: 'Bubbly Crayon Water Splash',
+    category: 'Prop',
+    caption: 'Stepped 6 FPS splash crown, flying water droplets & expanding ripple rings.',
+    viewBox: '-80 -75 160 98',
+    jumpToTimeSec: 12.0,
+    renderInner: (frameIndex) =>
+      renderProp({ kind: 'water_splash', frameIndex, variant: 1, count: 7 }),
+  },
+  {
+    id: 'cat-swim-floatie',
+    title: 'Rubber-Ducky & Striped Swim Floatie',
+    category: 'Prop',
+    caption: 'Inflatable wax-crayon swim ring worn around characters in the ocean or stacked on sand.',
+    viewBox: '-60 -52 120 76',
+    jumpToTimeSec: 22.0,
+    renderInner: (frameIndex) =>
+      renderProp({ kind: 'swim_floatie', frameIndex, variant: 0 }),
+  },
+  {
+    id: 'cat-beach-ball',
+    title: 'Colorful 6-Panel Crayon Beach Ball',
+    category: 'Prop',
+    caption: 'Spinning multi-panel wax-crayon beach ball tossed between friends in the waves.',
+    viewBox: '-38 -38 76 76',
+    jumpToTimeSec: 24.0,
+    renderInner: (frameIndex) =>
+      renderProp({ kind: 'beach_ball', frameIndex, variant: 1 }),
+  },
 ];
 
 /**
@@ -650,6 +724,8 @@ export function mountStorybookStudio(
           <a href="?short_sample=3&footage=song" class="btn btn-sm" data-url-query="?short_sample=3&footage=song">🎵 ?short_sample=3&footage=song</a>
           <a href="?short_sample=3&footage=cake" class="btn btn-sm" data-url-query="?short_sample=3&footage=cake">🕯️ ?short_sample=3&footage=cake</a>
           <a href="?short_sample=3&footage=celebration" class="btn btn-sm" data-url-query="?short_sample=3&footage=celebration">🎊 ?short_sample=3&footage=celebration</a>
+          <a href="?scene=corner-store-day" class="btn btn-sm" data-url-query="?scene=corner-store-day">🏪 ?scene=corner-store-day (Corner Store Day)</a>
+          <a href="?scene=strawberry-beach-birthday" class="btn btn-sm" data-url-query="?scene=strawberry-beach-birthday">🏖️ ?scene=strawberry-beach-birthday</a>
         </div>
       </nav>
 
@@ -771,6 +847,9 @@ export function mountStorybookStudio(
               <button class="btn btn-sm" data-sfx-kind="cheer_applause" data-sfx-freq="523.25" data-sfx-dur="0.8" type="button">👏 Cheer & Clap</button>
               <button class="btn btn-sm" data-sfx-kind="giggle" data-sfx-freq="659.25" data-sfx-dur="0.32" type="button">😄 Giggle</button>
               <button class="btn btn-sm" data-sfx-kind="birthday_song" data-sfx-freq="523.25" data-sfx-dur="0.55" type="button">🎵 Birthday Note</button>
+              <button class="btn btn-sm" data-sfx-kind="ocean_wave" data-sfx-freq="220" data-sfx-dur="1.2" type="button">🌊 Ocean Wave</button>
+              <button class="btn btn-sm" data-sfx-kind="water_splash" data-sfx-freq="460" data-sfx-dur="0.48" type="button">💦 Water Splash</button>
+              <button class="btn btn-sm" data-sfx-kind="floatie_squeak" data-sfx-freq="740" data-sfx-dur="0.34" type="button">🦆 Floatie Squeak</button>
             </div>
           </div>
 
@@ -1010,7 +1089,7 @@ export function mountStorybookStudio(
     ];
     if (strawberryState) {
       rows.push(
-        `<div>• <b>birthday-strawberry</b>: state="${strawberryState.state}" @ (${strawberryState.x}, ${strawberryState.y})</div>`
+        `<div>• <b>birthday-strawberry</b>: state="${strawberryState.state}" | floatie=${strawberryState.wearingFloatie ? 'on 🦆' : 'off'} @ (${strawberryState.x}, ${strawberryState.y})</div>`
       );
     }
     if (cakeState) {
@@ -1261,6 +1340,12 @@ export function mountStorybookStudio(
       videoExportStatusEl.textContent = msg;
       if (typeof document !== 'undefined') {
         document.body.dataset.exportState = 'error';
+        document.body.dataset.exportError = msg;
+      }
+      try {
+        await fetch('/__studio/export-error', { method: 'POST', body: msg });
+      } catch {
+        // Ignore if not on dev server
       }
     } finally {
       exportAbortController = null;

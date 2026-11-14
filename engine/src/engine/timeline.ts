@@ -37,6 +37,8 @@ export interface EvaluatedNodeState {
   windowLit?: boolean;
   wearingNightcap?: boolean;
   holdingSheep?: boolean;
+  wearingFloatie?: boolean;
+  floatieVariant?: number;
   lit?: boolean;
   count?: number;
   /** SVG transform attribute string built via svgTransform() */
@@ -195,6 +197,12 @@ function evaluateSingleNode(
   const holdingSheep =
     combined.holdingSheep ??
     (node.type === 'character' ? node.holdingSheep : undefined);
+  const wearingFloatie =
+    combined.wearingFloatie ??
+    (node.type === 'character' ? node.wearingFloatie : undefined);
+  const floatieVariant =
+    combined.floatieVariant ??
+    (node.type === 'character' ? node.floatieVariant : undefined);
   const lit = combined.lit ?? (node.type === 'prop' ? node.lit : undefined);
   const rawCount =
     combined.count ?? (node.type === 'prop' ? node.count : undefined);
@@ -216,6 +224,8 @@ function evaluateSingleNode(
     windowLit,
     wearingNightcap,
     holdingSheep,
+    wearingFloatie,
+    floatieVariant,
     lit,
     count,
     transform: svgTransform({ x, y, rotate, scale, flipX }),
