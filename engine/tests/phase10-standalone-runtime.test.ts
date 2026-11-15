@@ -175,4 +175,18 @@ describe('Phase 10: Option B Standalone Runtime, Isomorphic-Git & Zero-Python Ut
       fs.rmSync(tmpDir, { recursive: true, force: true });
     }
   });
+
+  it('includes cross-platform bootstrap-node scripts that resolve Antigravity built-in Node via ANTIGRAVITY_AGENTAPI_EXE', () => {
+    const cmdPath = path.resolve(process.cwd(), 'scripts', 'bootstrap-node.cmd');
+    const shPath = path.resolve(process.cwd(), 'scripts', 'bootstrap-node.sh');
+    expect(fs.existsSync(cmdPath)).toBe(true);
+    expect(fs.existsSync(shPath)).toBe(true);
+
+    const cmdContent = fs.readFileSync(cmdPath, 'utf8');
+    const shContent = fs.readFileSync(shPath, 'utf8');
+    expect(cmdContent).toContain('ANTIGRAVITY_AGENTAPI_EXE');
+    expect(cmdContent).toContain('ELECTRON_RUN_AS_NODE=1');
+    expect(shContent).toContain('ANTIGRAVITY_AGENTAPI_EXE');
+    expect(shContent).toContain('ELECTRON_RUN_AS_NODE=1');
+  });
 });

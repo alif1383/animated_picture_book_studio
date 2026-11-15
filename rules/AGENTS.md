@@ -4,13 +4,22 @@ These rules are always active when the Animated Picture Book Studio plugin is en
 
 ---
 
-## 100% Standalone Bundled Engine & Zero-Dependency Runtime (`agy-node`)
+## 100% Standalone Bundled Engine & Zero-Dependency Runtime (`agy-node` & `bootstrap-node`)
 
-The **entire Picture-Book Studio engine source code** (`src/`, `docs/`, `tests/`, `public/`, `exports/`, `index.html`, `package.json`, `tsconfig.json`, `vite.config.ts`) **plus pre-bundled pure-JS compilers and dependencies** (`vendor/typescript`, `vendor/mp4-muxer`, `vendor/vitest-shim`, `vendor/isomorphic-git`) and zero-dependency CLI scripts (`scripts/studio-cli.mjs`, `scripts/vcs.mjs`, `scripts/generate_audio.mjs`, `scripts/analyze_reference_photo.mjs`) are **bundled directly inside this plugin** at `<plugin-root>/engine/` (`~/.gemini/config/plugins/animated_picture_book_studio/engine/`).
+The **entire Picture-Book Studio engine source code** (`src/`, `docs/`, `tests/`, `public/`, `exports/`, `index.html`, `package.json`, `tsconfig.json`, `vite.config.ts`) **plus pre-bundled pure-JS compilers and dependencies** (`vendor/typescript`, `vendor/mp4-muxer`, `vendor/vitest-shim`, `vendor/isomorphic-git`) and zero-dependency CLI scripts (`scripts/bootstrap-node.cmd`, `scripts/bootstrap-node.sh`, `scripts/studio-cli.mjs`, `scripts/vcs.mjs`, `scripts/generate_audio.mjs`, `scripts/analyze_reference_photo.mjs`) are **bundled directly inside this plugin** at `<plugin-root>/engine/` (`~/.gemini/config/plugins/animated_picture_book_studio/engine/`).
 
-- **Zero External Host Dependencies**: Users only need **Antigravity** installed. They do **not** need `node`, `npm`, `pnpm`, `git`, or `python` installed on their machine. Always execute scripts using Antigravity's built-in **`agy-node`** binary (which is always on `PATH` in Antigravity).
-
-When resolving which engine directory (`<workspace>`) to run commands, file edits, and Git/VCS operations in, run:
+- **Zero External Host Dependencies (`bootstrap-node` -> `agy-node`)**: Users only need **Antigravity** installed. They do **not** need `node`, `npm`, `pnpm`, `git`, or `python` installed on their machine.
+  - Antigravity itself is an Electron app whose main binary (`Antigravity.exe` on Windows, `Antigravity.app/Contents/MacOS/Antigravity` on macOS, `antigravity` on Linux — always discoverable two levels above `$ANTIGRAVITY_AGENTAPI_EXE`) contains a full Node.js runtime when invoked with `ELECTRON_RUN_AS_NODE=1`.
+  - On a fresh Antigravity install where `agy-node` is not yet on `PATH`, run the bundled bootstrapper once (or pass the script directly to it) to automatically create the `agy-node` shim inside `$ANTIGRAVITY_APP_DATA_DIR/bin` (which Antigravity always puts on `PATH`):
+    - **Windows (PowerShell)**:
+      ```powershell
+      & "<plugin-root>/scripts/bootstrap-node.cmd" "<plugin-root>/scripts/ensure_engine.mjs" --workspace "<workspace>"
+      ```
+    - **macOS / Linux (sh/bash)**:
+      ```bash
+      sh "<plugin-root>/scripts/bootstrap-node.sh" "<plugin-root>/scripts/ensure_engine.mjs" --workspace "<workspace>"
+      ```
+  - Once bootstrapped (or if `agy-node` is already on `PATH`), all subsequent commands can run via `agy-node` (or via `scripts/bootstrap-node.cmd` / `scripts/bootstrap-node.sh`):
 
 ```bash
 agy-node "<plugin-root>/scripts/ensure_engine.mjs" --workspace "<workspace>"
