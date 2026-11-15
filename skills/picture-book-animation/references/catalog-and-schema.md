@@ -6,7 +6,7 @@
 
 ---
 
-## 1. CharacterKind (15 built-in characters)
+## 1. CharacterKind (19 built-in characters)
 
 | Kind literal | Render function | File | Description |
 |---|---|---|---|
@@ -15,6 +15,10 @@
 | `moon` | `renderMoon` | `src/assets/characters/moon.ts` | Storybook Crescent Moon with dangling & twinkling companion stars (`data-part="moon-stars"`), orange cheeks, diagonal hatching, optional nightcap (`wearingNightcap`) |
 | `sun` | `renderSun` | `src/assets/characters/sun.ts` | Bright yellow morning sun, turns warm orange at sunset, yawns sleepily |
 | `cat` | `renderCat` | `src/assets/characters/cat.ts` | White/cream kitten with dark brown/grey tabby patches, pink inner ears & golden collar bell — curious, walking, waving, sleeping, or idle |
+| `knight` | `renderKnight` | `src/assets/characters/knight.ts` | Sir Leo the Brave Crayon Knight on Horseback (`+X` facing): sky-blue armor, red cape, star shield, lance & trotting cream steed |
+| `soldier` | `renderSoldier` | `src/assets/characters/soldier.ts` | Royal Mounted Soldier on Horseback (`+X` facing): royal-blue tunic, kettle helmet, round wooden star shield & pennant spear |
+| `dragon` | `renderDragon` | `src/assets/characters/dragon.ts` | Barnaby the Cute Forest Dragon (`+X` facing): emerald-green body, ochre belly, scalloped wings, crooked tooth with bramble, fire puff & dizzy stars |
+| `villager` | `renderVillager` | `src/assets/characters/villager.ts` | Castle Herald & Medieval Villager (`+X` facing): feathered beret cap, terracotta/sage tunic & herald scroll |
 | `singing_radish` | `renderSingingRadish` | `src/assets/characters/singingRadish.ts` | Red-orange radish with emerald leaf ponytails, blue hair ties & crayon microphone |
 | `birthday_strawberry` | `renderBirthdayStrawberry` | `src/assets/characters/birthdayStrawberry.ts` | Plump red strawberry with yellow seeds, leafy green calyx collar & golden birthday crown |
 | `watermelon_slice` | `renderWatermelonSlice` | `src/assets/characters/watermelonSlice.ts` | Red-pink watermelon slice with black seeds, emerald rind & red pom-pom party hat |
@@ -49,12 +53,14 @@ Not every character implements every state; unsupported states fall back to `idl
 
 ---
 
-## 2. BuildingKind (2 built-in buildings)
+## 2. BuildingKind (4 built-in buildings)
 
 | Kind literal | Render function | File | Description |
 |---|---|---|---|
 | `ochre_cottage` | `renderOchreCottage` | `src/assets/buildings/ochreCottage.ts` | Cute & cozy storybook cottage: scalloped terracotta roof, welcome wreath door with heart window, overflowing window flower boxes, teal shutters, climbing garden vines & optional right ladder |
 | `corner_store` | `renderCornerStore` | `src/assets/buildings/cornerStore.ts` | Pastel teal storefront, red-and-cream striped crayon awning, default sign "LUNE STORE" |
+| `royal_castle` | `renderRoyalCastle` | `src/assets/buildings/royalCastle.ts` | Royal Crayon Stone Castle: warm stone keep, twin crenellated towers with conical roofs, golden star flags, portcullis gate & festive bunting |
+| `scorched_cottage` | `renderScorchedCottage` | `src/assets/buildings/scorchedCottage.ts` | Scorched Village Cottage: damaged roof tiles, charcoal soot smudges, tilted shutter & rising smoke wisps |
 
 ### BuildingNode-specific fields
 
@@ -68,7 +74,7 @@ Not every character implements every state; unsupported states fall back to `idl
 
 ---
 
-## 3. PropKind (13 built-in props)
+## 3. PropKind (21 built-in props)
 
 | Kind literal | Render function | File | Description |
 |---|---|---|---|
@@ -86,6 +92,9 @@ Not every character implements every state; unsupported states fall back to `idl
 | `birthday_cake` | `renderBirthdayCake` | `src/assets/props/birthdayCake.ts` | Two-tier strawberry birthday cake with 3 flickering candles that can be blown out |
 | `party_confetti` | `renderPartyConfetti` | `src/assets/props/partyConfetti.ts` | Colorful crayon ribbons, stars & paper diamonds at 6 FPS |
 | `pizza_slice` | `renderPizzaSlice` | `src/assets/props/pizzaSlice.ts` | Warm cheesy pepperoni pizza slice with steam (`variant: 1`) or open pizza counter box (`variant: 2`) |
+| `campfire` | `renderCampfire` | `src/assets/props/campfire.ts` | Striped medieval knight's tent & crackling log campfire with flickering crayon flames |
+| `spooky_tree` | `renderSpookyTree` | `src/assets/props/spookyTree.ts` | Gnarled Whispering Woods tree with peeking golden firefly eyes |
+| `dragon_fire` | `renderDragonFire` | `src/assets/props/dragonFire.ts` | Swirling red/orange/yellow crayon flame plume & golden star clash sparks |
 
 ### PropNode-specific fields
 

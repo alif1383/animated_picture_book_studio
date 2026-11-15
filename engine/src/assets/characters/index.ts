@@ -19,6 +19,10 @@ import { renderCherryTwins } from './cherryTwins';
 import { renderAcornTwins } from './acornTwins';
 import { renderOliveSprout } from './oliveSprout';
 import { renderBirthdayStrawberry } from './birthdayStrawberry';
+import { renderKnight } from './knight';
+import { renderSoldier } from './soldier';
+import { renderDragon } from './dragon';
+import { renderVillager } from './villager';
 
 export type { CharacterRenderOptions } from './types';
 export { renderCutoutStickerHalo, renderSheepPlushie } from './shared';
@@ -37,6 +41,10 @@ export { renderCherryTwins } from './cherryTwins';
 export { renderAcornTwins } from './acornTwins';
 export { renderOliveSprout } from './oliveSprout';
 export { renderBirthdayStrawberry } from './birthdayStrawberry';
+export { renderKnight } from './knight';
+export { renderSoldier } from './soldier';
+export { renderDragon } from './dragon';
+export { renderVillager } from './villager';
 
 interface CharacterFloatieFit {
   cx: number;
@@ -184,6 +192,42 @@ const CHARACTER_FLOATIE_FITS: Record<CharacterKind, CharacterFloatieFit> = {
     skirtBottomY: 132,
     defaultVariant: 3,
   },
+  knight: {
+    cx: 0,
+    waistY: -36,
+    rx: 56,
+    ry: 12,
+    tubeR: 9,
+    skirtBottomY: 6,
+    defaultVariant: 2,
+  },
+  soldier: {
+    cx: 0,
+    waistY: -32,
+    rx: 52,
+    ry: 11,
+    tubeR: 8,
+    skirtBottomY: 6,
+    defaultVariant: 2,
+  },
+  dragon: {
+    cx: 0,
+    waistY: -34,
+    rx: 60,
+    ry: 13,
+    tubeR: 10,
+    skirtBottomY: 8,
+    defaultVariant: 4,
+  },
+  villager: {
+    cx: 0,
+    waistY: -28,
+    rx: 28,
+    ry: 7,
+    tubeR: 6,
+    skirtBottomY: 6,
+    defaultVariant: 1,
+  },
 };
 
 /**
@@ -209,6 +253,10 @@ export const CHARACTER_SPEECH_ANCHORS: Record<
   acorn_twins: { x: 0, y: -88 },
   olive_sprout: { x: 0, y: -82 },
   birthday_strawberry: { x: 0, y: -108 },
+  knight: { x: 0, y: -128 },
+  soldier: { x: 0, y: -118 },
+  dragon: { x: 10, y: -142 },
+  villager: { x: 0, y: -104 },
 };
 
 /**
@@ -280,6 +328,18 @@ export function renderCharacter(options: CharacterRenderOptions): string {
       break;
     case 'birthday_strawberry':
       inner = renderBirthdayStrawberry(options);
+      break;
+    case 'knight':
+      inner = renderKnight(options);
+      break;
+    case 'soldier':
+      inner = renderSoldier(options);
+      break;
+    case 'dragon':
+      inner = renderDragon(options);
+      break;
+    case 'villager':
+      inner = renderVillager(options);
       break;
   }
 

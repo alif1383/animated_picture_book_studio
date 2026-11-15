@@ -19,6 +19,9 @@ import { renderWaterSplash } from './waterSplash';
 import { renderSwimFloatie } from './swimFloatie';
 import { renderBeachBall } from './beachBall';
 import { renderPizzaSlice } from './pizzaSlice';
+import { renderCampfire } from './campfire';
+import { renderSpookyTree } from './spookyTree';
+import { renderDragonFire } from './dragonFire';
 
 export type { PropRenderOptions } from './types';
 export { renderStarShape } from './shared';
@@ -42,6 +45,9 @@ export { renderSwimFloatie, renderSwimFloatieRing } from './swimFloatie';
 export type { SwimFloatieRingOptions } from './swimFloatie';
 export { renderBeachBall } from './beachBall';
 export { renderPizzaSlice, renderHandheldPizzaSlice } from './pizzaSlice';
+export { renderCampfire } from './campfire';
+export { renderSpookyTree } from './spookyTree';
+export { renderDragonFire } from './dragonFire';
 
 /**
  * Renders any reusable prop (`'grass_patch' | 'tree' | 'music_notes' | 'star_cluster' |
@@ -109,6 +115,15 @@ export function renderProp(options: PropRenderOptions): string {
       break;
     case 'pizza_slice':
       inner = renderPizzaSlice(options);
+      break;
+    case 'campfire':
+      inner = renderCampfire(options);
+      break;
+    case 'spooky_tree':
+      inner = renderSpookyTree(options);
+      break;
+    case 'dragon_fire':
+      inner = renderDragonFire(options);
       break;
   }
 

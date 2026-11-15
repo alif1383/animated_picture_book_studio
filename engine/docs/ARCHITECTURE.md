@@ -19,13 +19,19 @@ The **Picture-Book Crayon Video Engine** is a declarative 2D stop-motion storybo
   - `src/assets/buildings/` (and barrel `src/assets/buildings.ts`) — `renderBuilding()` plus individual building modules:
     - `src/assets/buildings/ochreCottage.ts` (`renderOchreCottage` — Cute & Cozy Cottage with scalloped terracotta roof, welcome wreath door, overflowing flower boxes, shutters, climbing garden vines & optional ladder)
     - `src/assets/buildings/cornerStore.ts` (`renderCornerStore`, "LUNE STORE")
+    - `src/assets/buildings/royalCastle.ts` (`renderRoyalCastle` — Royal Crayon Stone Castle with twin crenellated towers, conical roofs, golden star flags, portcullis gate & festive bunting)
+    - `src/assets/buildings/scorchedCottage.ts` (`renderScorchedCottage` — Scorched Village Cottage with soot marks, crooked roof tiles, tilted shutter & rising smoke wisps)
     - `src/assets/buildings/types.ts` & `src/assets/buildings/index.ts`
-  - `src/assets/characters/` (and barrel `src/assets/characters.ts`) — `renderCharacter()` plus 15 standalone 2D cutout character rig modules and shared helpers:
-    - `src/assets/characters/littleGirl.ts` (`renderLittleGirl` — wavy brown hair with pink hairclip, purple star sweater, cream wide-leg trousers, white sneakers, plus `holdingSheep` and `holdingPizza` support)
-    - `src/assets/characters/moon.ts` (`renderMoon` — Storybook Crescent Moon with dangling & twinkling companion stars, expressive faces, and nightcap)
+  - `src/assets/characters/` (and barrel `src/assets/characters.ts`) — `renderCharacter()` plus 19 standalone 2D cutout character rig modules and shared helpers:
+    - `src/assets/characters/littleGirl.ts` (`renderLittleGirl` — wavy brown hair with pink hairclip, purple star sweater, cream wide-leg trousers, white sneakers, dedicated 3/4 `+X` walking profile, plus `holdingSheep` and `holdingPizza` support)
+    - `src/assets/characters/moon.ts` (`renderMoon` — Storybook Crescent Moon with dangling & twinkling companion stars, expressive faces, and full-brim nightcap)
     - `src/assets/characters/sun.ts` (`renderSun`)
     - `src/assets/characters/shopkeeper.ts` (`renderShopkeeper`)
     - `src/assets/characters/cat.ts` (`renderCat` — soft white-and-tabby patched kitten across `idle`, `curious`/`walking`, `waving`, and `sleeping` states)
+    - `src/assets/characters/knight.ts` (`renderKnight` — Sir Leo the Brave Crayon Knight on Horseback facing `+X`, with sky-blue armor, red cape, star shield, lance & trotting cream steed)
+    - `src/assets/characters/soldier.ts` (`renderSoldier` — Royal Mounted Soldier on Horseback facing `+X`, with kettle helmet, round wooden star shield & pennant spear)
+    - `src/assets/characters/dragon.ts` (`renderDragon` — Barnaby the Cute Storybook Forest Dragon facing `+X`, with emerald-green body, ochre belly, scalloped wings, crooked tooth with bramble, fire puff & dizzy stars)
+    - `src/assets/characters/villager.ts` (`renderVillager` — Castle Herald & Medieval Villager facing `+X`, with feathered beret cap, terracotta/sage tunic & herald scroll)
     - `src/assets/characters/singingRadish.ts` (`renderSingingRadish`)
     - `src/assets/characters/birthdayStrawberry.ts` (`renderBirthdayStrawberry`)
     - `src/assets/characters/watermelonSlice.ts` (`renderWatermelonSlice`)
@@ -36,8 +42,8 @@ The **Picture-Book Crayon Video Engine** is a declarative 2D stop-motion storybo
     - `src/assets/characters/cherryTwins.ts` (`renderCherryTwins`)
     - `src/assets/characters/acornTwins.ts` (`renderAcornTwins`)
     - `src/assets/characters/oliveSprout.ts` (`renderOliveSprout`)
-    - `src/assets/characters/shared.ts` (`renderCutoutStickerHalo`, `renderSheepPlushie`), `src/assets/characters/types.ts`, & `src/assets/characters/index.ts` (including 2.5D `wearingFloatie` waist swim-ring + frothy ocean-water skirt rigging across all characters)
-  - `src/assets/props/` (and barrel `src/assets/objects.ts`) — `renderProp()` plus 18 standalone prop modules and shared star/floatie geometry helpers:
+    - `src/assets/characters/shared.ts` (`renderCutoutStickerHalo`, `renderSheepPlushie`), `src/assets/characters/types.ts`, & `src/assets/characters/index.ts` (including `CHARACTER_SPEECH_ANCHORS` and 2.5D `wearingFloatie` waist swim-ring + frothy ocean-water skirt rigging across all characters)
+  - `src/assets/props/` (and barrel `src/assets/objects.ts`) — `renderProp()` plus 21 standalone prop modules and shared star/floatie geometry helpers:
     - `src/assets/props/grassPatch.ts` (`renderGrassPatch`)
     - `src/assets/props/tree.ts` (`renderTree`)
     - `src/assets/props/musicNotes.ts` (`renderMusicNotes`)
@@ -57,6 +63,9 @@ The **Picture-Book Crayon Video Engine** is a declarative 2D stop-motion storybo
     - `src/assets/props/swimFloatie.ts` (`renderSwimFloatie`, `renderSwimFloatieRing`)
     - `src/assets/props/beachBall.ts` (`renderBeachBall`)
     - `src/assets/props/pizzaSlice.ts` (`renderPizzaSlice`, `renderHandheldPizzaSlice`)
+    - `src/assets/props/campfire.ts` (`renderCampfire` — Striped medieval knight's tent & crackling log campfire with flickering crayon flames)
+    - `src/assets/props/spookyTree.ts` (`renderSpookyTree` — Gnarled Whispering Woods tree with peeking golden firefly eyes)
+    - `src/assets/props/dragonFire.ts` (`renderDragonFire` — Swirling red/orange/yellow crayon flame plume & golden star clash sparks)
     - `src/assets/props/shared.ts` (`renderStarShape`), `src/assets/props/types.ts`, & `src/assets/props/index.ts`
   - `src/assets/annotations/` — `src/assets/annotations/pencilAnnotation.ts` (`renderAnnotation`) and `src/assets/annotations/index.ts` for hand-lettered pencil annotations, dashed motion paths, rounded speech bubbles (`bubbleStyle: 'speech'`), and scalloped cloud thought bubbles (`bubbleStyle: 'thought'`).
   - `src/assets/index.ts` — Top-level barrel re-exporting all buildings, characters, props, and annotations.
@@ -67,6 +76,7 @@ The **Picture-Book Crayon Video Engine** is a declarative 2D stop-motion storybo
   - `src/scenes/cornerStoreDay.ts` — `CORNER_STORE_DAY_SCENE` (`32s`, `6 FPS`, `1280×720` 16:9, routed via `?scene=corner-store-day` or `?short_sample=4`), a 5-act **The Corner Store Pizza Run** storybook scene with `bookFrame` intro/outro, the Cute Cozy Cottage on the far left and `"LUNE STORE"` on the far right, the Little Girl and her tabby-patched Cat walking to the store, speech-bubble dialogue with the Shopkeeper, a `"Yum!! So cheesy! ★"` thought bubble while eating hot pizza, and walking back home under the Crescent Moon and twinkling stars.
   - `src/scenes/moonlitGarden.ts` — `MOONLIT_GARDEN_SCENE`, tranquil moonlit garden story (`?scene=moonlit-garden`).
   - `src/scenes/strawberryBeachBirthday.ts` — `STRAWBERRY_BEACH_BIRTHDAY_SCENE` (`46s`, `6 FPS`, `1280×720` 16:9, `vibrantMode: true`, routed via `?scene=strawberry-beach-birthday`, `?scene=beach-birthday`, or `?short_sample=5`), a 5-act **Strawberry's Beach Birthday Splash** story (`beach-party`, `scared-of-water`, `floatie-water-play`, `sunset-shore`, `moonlight-goodbye`) featuring a sunny beach birthday & candle blow, shoreline wave scare & friends bringing floaties, 13s of ocean floatie splashing & beach-ball tossing, sunset-to-twilight exiting the water & stacking floaties on the sand, and moonrise with twinkling stars & waving goodbye at night.
+  - `src/scenes/knightDragonQuest.ts` — `KNIGHT_DRAGON_QUEST_SCENE` (`54s`, `6 FPS`, `1280×720` 16:9, routed via `?scene=knight-dragon-quest`, `?scene=dragon-quest`, or `?short_sample=6`), a 5-act **Sir Leo & the Dragon of Whispering Woods** fantasy adventure (`act-1-castle-call`, `act-2-campfire-night`, `act-3-destroyed-village`, `act-4-dragon-battle`, `act-5-victory-parade`) featuring the Royal Castle call to arms, riding out on horseback with 3 royal soldiers, starry woodland campfire night, dawn at the scorched village, battling & taming Barnaby the Dragon in the Dark Woods, and a celebratory Victory Parade in the Castle Streets.
 - `src/audio/` — Procedural WebAudio synthesizer + external audio clip player:
   - `src/audio/soundEngine.ts` — `PictureBookSoundEngine` generating music-box lullaby notes (`lullaby`), star chimes (`chime`), filtered dry-crayon paper-scribble foley (`crayon_scribble`), birthday party sound effects (`birthday_song`, `party_horn`, `confetti_pop`, `candle_blow`, `cheer_applause`, `giggle`), and beach/ocean foley (`ocean_wave`, `water_splash`, `floatie_squeak`) synced to the stepped 6 FPS clock, plus:
     - `renderOfflineAudio(cues, startSec, durSec, sampleRate, audioClips?)` — offline stereo `AudioBuffer` rendering for WebCodecs MP4 exports; mixes in `AudioClipCue[]` external audio files (fetches, decodes via `decodeAudioData`, schedules on `OfflineAudioContext`)

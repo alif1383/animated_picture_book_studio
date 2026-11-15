@@ -24,8 +24,9 @@ import { MEADOW_PARTY_SCENE } from '../scenes/meadowParty';
 import { CORNER_STORE_DAY_SCENE } from '../scenes/cornerStoreDay';
 import { MOONLIT_GARDEN_SCENE } from '../scenes/moonlitGarden';
 import { STRAWBERRY_BEACH_BIRTHDAY_SCENE } from '../scenes/strawberryBeachBirthday';
+import { KNIGHT_DRAGON_QUEST_SCENE } from '../scenes/knightDragonQuest';
 
-export type ShortSampleId = '1' | '2' | '3' | '4' | '5';
+export type ShortSampleId = '1' | '2' | '3' | '4' | '5' | '6';
 
 export const SCENE_REGISTRY: Record<string, SceneDefinition> = {
   '1': SHORT_SAMPLE_1_SCENE,
@@ -33,6 +34,7 @@ export const SCENE_REGISTRY: Record<string, SceneDefinition> = {
   '3': MEADOW_PARTY_SCENE,
   '4': CORNER_STORE_DAY_SCENE,
   '5': STRAWBERRY_BEACH_BIRTHDAY_SCENE,
+  '6': KNIGHT_DRAGON_QUEST_SCENE,
   [SHORT_SAMPLE_1_SCENE.id]: SHORT_SAMPLE_1_SCENE,
   [MOONLIGHT_STORY_SCENE.id]: MOONLIGHT_STORY_SCENE,
   [MEADOW_PARTY_SCENE.id]: MEADOW_PARTY_SCENE,
@@ -41,6 +43,8 @@ export const SCENE_REGISTRY: Record<string, SceneDefinition> = {
   'moonlit-garden': MOONLIT_GARDEN_SCENE,
   [STRAWBERRY_BEACH_BIRTHDAY_SCENE.id]: STRAWBERRY_BEACH_BIRTHDAY_SCENE,
   'beach-birthday': STRAWBERRY_BEACH_BIRTHDAY_SCENE,
+  [KNIGHT_DRAGON_QUEST_SCENE.id]: KNIGHT_DRAGON_QUEST_SCENE,
+  'dragon-quest': KNIGHT_DRAGON_QUEST_SCENE,
 };
 
 export interface ParsedStudioParams {
@@ -118,6 +122,12 @@ export function parseStudioUrlParams(
 
   if (!resolvedScene) {
     if (
+      rawSample === '6' ||
+      rawSample === 'dragon-quest' ||
+      rawSample === 'knight-dragon-quest'
+    ) {
+      shortSample = '6';
+    } else if (
       rawSample === '5' ||
       rawSample === 'beach-birthday' ||
       rawSample === 'strawberry-beach-birthday'
@@ -131,6 +141,8 @@ export function parseStudioUrlParams(
       shortSample = '2';
     } else if (rawSample === '1') {
       shortSample = '1';
+    } else if (fallbackScene?.id === KNIGHT_DRAGON_QUEST_SCENE.id) {
+      shortSample = '6';
     } else if (fallbackScene?.id === STRAWBERRY_BEACH_BIRTHDAY_SCENE.id) {
       shortSample = '5';
     } else if (fallbackScene?.id === CORNER_STORE_DAY_SCENE.id) {
@@ -143,7 +155,8 @@ export function parseStudioUrlParams(
     resolvedScene = SCENE_REGISTRY[shortSample];
   } else {
     // Map resolvedScene back to a shortSample id for canonical URL building
-    if (resolvedScene.id === STRAWBERRY_BEACH_BIRTHDAY_SCENE.id) shortSample = '5';
+    if (resolvedScene.id === KNIGHT_DRAGON_QUEST_SCENE.id) shortSample = '6';
+    else if (resolvedScene.id === STRAWBERRY_BEACH_BIRTHDAY_SCENE.id) shortSample = '5';
     else if (resolvedScene.id === CORNER_STORE_DAY_SCENE.id) shortSample = '4';
     else if (resolvedScene.id === MEADOW_PARTY_SCENE.id) shortSample = '3';
     else if (resolvedScene.id === MOONLIGHT_STORY_SCENE.id) shortSample = '2';
@@ -633,6 +646,104 @@ export const ASSET_CATALOG_ITEMS: readonly AssetCatalogItem[] = [
     renderInner: (frameIndex) =>
       renderProp({ kind: 'pizza_slice', frameIndex, variant: 1, lit: true }),
   },
+  {
+    id: 'cat-knight',
+    title: 'Sir Leo the Crayon Knight on Horseback',
+    category: 'Character',
+    caption: 'Brave mounted knight in sky-blue armor, plumed helmet, star shield & lance on a cream steed.',
+    viewBox: '-75 -132 150 142',
+    jumpToTimeSec: 6.8,
+    states: ['walking', 'waving', 'sitting', 'idle'],
+    defaultState: 'walking',
+    renderInner: (frameIndex, state = 'walking') =>
+      renderCharacter({ kind: 'knight', state, frameIndex }),
+  },
+  {
+    id: 'cat-soldier',
+    title: 'Royal Mounted Soldier on Horseback',
+    category: 'Character',
+    caption: 'Loyal mounted soldier in royal-blue tunic, kettle helmet, round shield & pennant spear.',
+    viewBox: '-70 -122 140 132',
+    jumpToTimeSec: 9.0,
+    states: ['walking', 'waving', 'sitting', 'idle'],
+    defaultState: 'walking',
+    renderInner: (frameIndex, state = 'walking') =>
+      renderCharacter({ kind: 'soldier', state, frameIndex }),
+  },
+  {
+    id: 'cat-dragon',
+    title: 'Barnaby the Cute Forest Dragon',
+    category: 'Character',
+    caption: 'Emerald-green storybook dragon with ochre belly, scalloped wings, crooked tooth & dizzy stars.',
+    viewBox: '-115 -152 230 165',
+    jumpToTimeSec: 33.5,
+    states: ['waving', 'awake', 'grumpy', 'sitting', 'walking'],
+    defaultState: 'waving',
+    renderInner: (frameIndex, state = 'waving') =>
+      renderCharacter({ kind: 'dragon', state, frameIndex }),
+  },
+  {
+    id: 'cat-villager',
+    title: 'Castle Herald & Medieval Villager',
+    category: 'Character',
+    caption: 'Medieval villager & herald in terracotta/sage tunic, feathered beret cap & parchment scroll.',
+    viewBox: '-36 -105 72 115',
+    jumpToTimeSec: 4.5,
+    states: ['waving', 'walking', 'grumpy', 'singing', 'idle'],
+    defaultState: 'waving',
+    renderInner: (frameIndex, state = 'waving') =>
+      renderCharacter({ kind: 'villager', state, frameIndex }),
+  },
+  {
+    id: 'cat-royal-castle',
+    title: 'Royal Crayon Stone Castle',
+    category: 'Building',
+    caption: 'Crenellated stone keep, twin turret towers with conical roofs, portcullis gate & festive banners.',
+    viewBox: '-195 -338 390 348',
+    jumpToTimeSec: 2.0,
+    renderInner: () =>
+      renderBuilding({ kind: 'royal_castle', windowLit: true }),
+  },
+  {
+    id: 'cat-scorched-cottage',
+    title: 'Scorched Village Cottage',
+    category: 'Building',
+    caption: 'Damaged village cottage with soot smudges, crooked roof tiles, tilted shutter & rising smoke wisps.',
+    viewBox: '-160 -272 320 282',
+    jumpToTimeSec: 25.0,
+    renderInner: () =>
+      renderBuilding({ kind: 'scorched_cottage', windowLit: false }),
+  },
+  {
+    id: 'cat-campfire',
+    title: "Woodland Campfire & Knight's Tent",
+    category: 'Prop',
+    caption: 'Striped ochre & terracotta medieval tent with crackling campfire logs & flickering crayon flames.',
+    viewBox: '-165 -140 215 155',
+    jumpToTimeSec: 16.0,
+    renderInner: (frameIndex) =>
+      renderProp({ kind: 'campfire', frameIndex, lit: true }),
+  },
+  {
+    id: 'cat-spooky-tree',
+    title: 'Gnarled Whispering Woods Tree',
+    category: 'Prop',
+    caption: 'Twisted woodland tree with reaching branches, dark foliage & peeking golden firefly eyes.',
+    viewBox: '-95 -205 190 215',
+    jumpToTimeSec: 34.0,
+    renderInner: (frameIndex) =>
+      renderProp({ kind: 'spooky_tree', frameIndex, variant: 1 }),
+  },
+  {
+    id: 'cat-dragon-fire',
+    title: 'Crayon Dragon Fire & Clash Sparks',
+    category: 'Prop',
+    caption: 'Swirling red, orange & yellow wax-crayon flame plume with golden star clash sparks.',
+    viewBox: '-95 -58 160 105',
+    jumpToTimeSec: 34.0,
+    renderInner: (frameIndex) =>
+      renderProp({ kind: 'dragon_fire', frameIndex, lit: true }),
+  },
 ];
 
 /**
@@ -753,6 +864,7 @@ export function mountStorybookStudio(
           <a href="?short_sample=3&footage=celebration" class="btn btn-sm" data-url-query="?short_sample=3&footage=celebration">🎊 ?short_sample=3&footage=celebration</a>
           <a href="?scene=corner-store-day" class="btn btn-sm" data-url-query="?scene=corner-store-day">🏪 ?scene=corner-store-day (Corner Store Day)</a>
           <a href="?scene=strawberry-beach-birthday" class="btn btn-sm" data-url-query="?scene=strawberry-beach-birthday">🏖️ ?scene=strawberry-beach-birthday</a>
+          <a href="?scene=knight-dragon-quest" class="btn btn-sm" data-url-query="?scene=knight-dragon-quest">🐉 ?scene=knight-dragon-quest (Sir Leo &amp; Dragon Quest)</a>
         </div>
       </nav>
 

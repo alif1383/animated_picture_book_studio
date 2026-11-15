@@ -2,22 +2,37 @@ import { svgEl, svgTransform } from '../../engine/svgUtils';
 import type { BuildingRenderOptions } from './types';
 import { renderOchreCottage } from './ochreCottage';
 import { renderCornerStore } from './cornerStore';
+import { renderRoyalCastle } from './royalCastle';
+import { renderScorchedCottage } from './scorchedCottage';
 
 export type { BuildingRenderOptions } from './types';
 export { renderOchreCottage } from './ochreCottage';
 export { renderCornerStore } from './cornerStore';
+export { renderRoyalCastle } from './royalCastle';
+export { renderScorchedCottage } from './scorchedCottage';
 
 /**
- * Renders a reusable architectural building cutout (`'ochre_cottage'` or `'corner_store'`)
+ * Renders a reusable architectural building cutout (`'ochre_cottage' | 'corner_store' | 'royal_castle' | 'scorched_cottage'`)
  * with textured crayon fills, charcoal pencil outlines, and optional progressive stop-motion fill mask.
  */
 export function renderBuilding(options: BuildingRenderOptions): string {
   const { id, x, y, scale, rotate, flipX, opacity, kind } = options;
   const transform = svgTransform({ x, y, scale, rotate, flipX });
-  const inner =
-    kind === 'ochre_cottage'
-      ? renderOchreCottage(options)
-      : renderCornerStore(options);
+  let inner = '';
+  switch (kind) {
+    case 'ochre_cottage':
+      inner = renderOchreCottage(options);
+      break;
+    case 'corner_store':
+      inner = renderCornerStore(options);
+      break;
+    case 'royal_castle':
+      inner = renderRoyalCastle(options);
+      break;
+    case 'scorched_cottage':
+      inner = renderScorchedCottage(options);
+      break;
+  }
 
   if (!id && !transform && opacity === undefined) {
     return inner;

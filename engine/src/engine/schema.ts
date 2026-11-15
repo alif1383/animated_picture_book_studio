@@ -23,7 +23,11 @@ export type CharacterKind =
   | 'cherry_twins'
   | 'acorn_twins'
   | 'olive_sprout'
-  | 'birthday_strawberry';
+  | 'birthday_strawberry'
+  | 'knight'
+  | 'soldier'
+  | 'dragon'
+  | 'villager';
 
 export type CharacterState =
   | 'idle'
@@ -40,7 +44,11 @@ export type CharacterState =
   | 'blinking'
   | 'sleeping';
 
-export type BuildingKind = 'ochre_cottage' | 'corner_store';
+export type BuildingKind =
+  | 'ochre_cottage'
+  | 'corner_store'
+  | 'royal_castle'
+  | 'scorched_cottage';
 
 export type PropKind =
   | 'tree'
@@ -61,7 +69,10 @@ export type PropKind =
   | 'water_splash'
   | 'swim_floatie'
   | 'beach_ball'
-  | 'pizza_slice';
+  | 'pizza_slice'
+  | 'campfire'
+  | 'spooky_tree'
+  | 'dragon_fire';
 
 export type BubbleStyle = 'none' | 'speech' | 'thought';
 

@@ -52,13 +52,17 @@ function defaultBoundsForNode(node: SceneNode): FillMaskBounds {
     case 'building':
       return (
         node.bounds ??
-        (node.kind === 'ochre_cottage'
+        (node.kind === 'royal_castle'
+          ? { x: -195, y: -335, width: 390, height: 345 }
+          : node.kind === 'ochre_cottage' || node.kind === 'scorched_cottage'
           ? { x: -180, y: -260, width: 360, height: 265 }
           : { x: -145, y: -210, width: 315, height: 215 })
       );
     case 'character':
       return node.kind === 'moon' || node.kind === 'sun'
         ? { x: -135, y: -180, width: 270, height: 315 }
+        : node.kind === 'dragon' || node.kind === 'knight' || node.kind === 'soldier'
+        ? { x: -115, y: -155, width: 230, height: 195 }
         : { x: -30, y: -100, width: 65, height: 110 };
     case 'prop':
       return (
