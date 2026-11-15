@@ -25,9 +25,10 @@ The **entire Picture-Book Studio engine source code** (`src/`, `docs/`, `tests/`
 agy-node "<plugin-root>/scripts/ensure_engine.mjs" --workspace "<workspace>"
 ```
 
-1. **Current workspace has the engine**: If the active `<workspace>` already contains `src/engine/schema.ts`, `ensure_engine.mjs` ensures `vendor/` and `scripts/` are synced and ready immediately (no `pnpm install` needed).
-2. **Scaffold into `<workspace>` from the bundled `engine/`**: If `<workspace>/src/engine/schema.ts` does not exist yet (or `--scaffold` is passed), `ensure_engine.mjs` copies `<plugin-root>/engine/` (including `vendor/` and `scripts/`) into `<workspace>`.
-3. **In-place mode (`--in-place`)**: Pass `--in-place` to `ensure_engine.mjs` to work directly inside `<plugin-root>/engine`.
+1. **Current workspace already has the engine**: If the active `<workspace>` already contains `src/engine/schema.ts`, `ensure_engine.mjs` ensures `vendor/` and `scripts/` are synced and ready immediately (no `pnpm install` needed) and returns `<workspace>`.
+2. **No workspace open or workspace is not a Picture-Book project (Default — Per-Conversation `scratch/` Workspace)**: Whenever a conversation starts without a workspace/project open (or `<workspace>/src/engine/schema.ts` does not exist and `--scaffold` was not passed), `ensure_engine.mjs` automatically copies the full `<plugin-root>/engine/` into the conversation's isolated scratch folder (`<appDataDir>/brain/<conversation-id>/scratch/picture-book-studio`) and prints `Engine ready at: <resolved_path>`. Always use that returned `<resolved_path>` as `<workspace>` for all custom characters, scenes, audio files, Git/VCS commits, dev server, and `.mp4` exports so each conversation is 100% isolated and never modifies `<plugin-root>/engine/` or an unrelated folder!
+3. **Explicit Project Initialization (`--workspace "<dir>" --scaffold`)**: If the user explicitly asks to initialize a specific project directory on disk, pass `--workspace "<dir>" --scaffold` to copy `<plugin-root>/engine/` into `<dir>`.
+4. **In-place plugin mode (`--in-place`)**: Only pass `--in-place` when explicitly editing the plugin's bundled template itself.
 
 ---
 

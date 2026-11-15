@@ -16,10 +16,10 @@ Engine.
 > [!IMPORTANT]
 > **100% Standalone Bundled Engine**: All of the engine source code plus pre-bundled pure-JS compilers and dependencies (`vendor/typescript`, `vendor/mp4-muxer`, `vendor/vitest-shim`, `vendor/isomorphic-git`) are bundled directly inside this plugin at `<plugin-root>/engine/`
 > (`~/.gemini/config/plugins/animated_picture_book_studio/engine/`).
-> - Run `agy-node "<plugin-root>/scripts/ensure_engine.mjs" --workspace "<workspace>"`
->   to verify or automatically scaffold `<plugin-root>/engine/` into the active
->   `<workspace>` (no `pnpm install` or external `node` required).
-> - Alternatively, pass `--in-place` to run directly inside `<plugin-root>/engine`.
+> - Run `agy-node "<plugin-root>/scripts/ensure_engine.mjs" --workspace "<workspace>"`:
+>   - If `<workspace>/src/engine/schema.ts` exists, it uses `<workspace>` directly.
+>   - If no workspace is open (or `<workspace>` is not a Picture-Book project), it automatically copies `<plugin-root>/engine/` into the conversation's isolated scratch folder (`<appDataDir>/brain/<conversation-id>/scratch/picture-book-studio`) and prints `Engine ready at: <resolved_path>`. Use that returned `<resolved_path>` as `<workspace>` for all commands.
+>   - Pass `--workspace "<dir>" --scaffold` only when explicitly initializing a new project folder on disk.
 >
 > This skill does NOT modify scene source files — it only resolves the engine
 > workspace, starts the dev server, opens the browser, and orchestrates video
