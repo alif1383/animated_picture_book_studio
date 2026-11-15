@@ -21,11 +21,18 @@
 import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-import isoGit from '../vendor/isomorphic-git/index.mjs';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const ENGINE_ROOT = path.resolve(__dirname, '..');
+const ENGINE_ROOT = fs.existsSync(path.resolve(__dirname, '../vendor'))
+  ? path.resolve(__dirname, '..')
+  : path.resolve(__dirname, '../engine');
+
+async function loadIsoGit() {
+  const isoPath = path.join(ENGINE_ROOT, 'vendor/isomorphic-git/index.mjs');
+  const mod = await import(pathToFileURL(isoPath).href);
+  return mod.default;
+}
 
 function hasNativeGit(forceIsomorphic = false) {
   if (forceIsomorphic || process.env.PICTURE_BOOK_FORCE_ISOMORPHIC_GIT === '1') {
@@ -65,6 +72,7 @@ async function main() {
   const cmd = rawArgs[0] || 'status';
   const useNative = hasNativeGit(forceIsomorphic);
   const backend = useNative ? 'native-git' : 'isomorphic-git';
+  const isoGit = await loadIsoGit();
 
   if (cmd === 'check') {
     console.log(JSON.stringify({ backend, nativeGitAvailable: useNative, dir }, null, 2));

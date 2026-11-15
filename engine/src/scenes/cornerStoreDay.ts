@@ -1073,10 +1073,12 @@ export const CORNER_STORE_DAY_SCENE: SceneDefinition = {
   bookFrame: {
     enabled: true,
     coverTitle: 'The Corner Store Pizza Run',
-    coverSubtitle: 'A Crayon Storybook Adventure with the Little Girl & Her Cat',
+    coverSubtitle:
+      "Made by Ali Farahbakhsh with Antigravity's Picture-Book Studio Plugin — Coming Soon!",
     creditText: 'Illustrated in Wax Crayon & Oil Pastel',
     endingTitle: 'The End ★',
-    endingCredit: 'The Corner Store Pizza Run · Goodnight, Little Village',
+    endingCredit:
+      "Made by Ali Farahbakhsh · Antigravity's Picture-Book Studio Plugin — Coming Soon!",
     coverMaterial: 'crayonTerracotta',
     openDurationSec: 3.5,
     closeDurationSec: 4.5,

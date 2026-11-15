@@ -199,6 +199,20 @@ describe('Storybook Cover Opening & Ending/Credits Book-Frame (bookFrame)', () =
       expect(wrappedSubtitle.lines.length).toBeGreaterThanOrEqual(2);
       expect(wrappedSubtitle.lines.length).toBeLessThanOrEqual(3);
 
+      const wrappedCredit = wrapAndFitCoverText({
+        text: "Made by Ali Farahbakhsh with Antigravity's Picture-Book Studio Plugin — Coming Soon!",
+        maxWidthPx: 450,
+        baseFontSize: 19,
+        minFontSize: 14,
+        maxLines: 3,
+        charWidthRatio: 0.53,
+      });
+      expect(wrappedCredit.lines.length).toBeGreaterThanOrEqual(2);
+      expect(wrappedCredit.lines.length).toBeLessThanOrEqual(3);
+      expect(wrappedCredit.lines.join(' ')).toBe(
+        "Made by Ali Farahbakhsh with Antigravity's Picture-Book Studio Plugin — Coming Soon!"
+      );
+
       const cornerStoreCover = evaluateAndRenderScene(
         CORNER_STORE_DAY_SCENE,
         0
@@ -210,6 +224,8 @@ describe('Storybook Cover Opening & Ending/Credits Book-Frame (bookFrame)', () =
       );
       expect(cornerStoreCover.svg).toContain('<tspan');
       expect(cornerStoreCover.svg).toContain('The Corner Store Pizza Run');
+      expect(cornerStoreCover.svg).toContain('Made by Ali Farahbakhsh');
+      expect(cornerStoreCover.svg).toContain('Coming Soon!');
     });
 
     it('animates genuine 3D rotateY(0deg -> 180deg) book opening with clipped left edge and turning flyleaf pages', () => {

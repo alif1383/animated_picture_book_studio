@@ -190,6 +190,8 @@ describe('Photo-Modeled Asset Upgrades, Speech/Thought Bubbles, Pizza Prop & Cor
     expect(openFrame.bookFrame.phase).toBe('opening');
     expect(openFrame.svg).toContain('id="book-front-cover"');
     expect(openFrame.svg).toContain('The Corner Store Pizza Run');
+    expect(openFrame.svg).toContain('Made by Ali Farahbakhsh');
+    expect(openFrame.svg).toContain('Coming Soon!');
 
     // Act I (t = 5.0s): Daytime Sun shining, Girl & Cat walking rightward from cottage toward store with character-attached speech bubble
     const act1 = evaluateAndRenderScene(CORNER_STORE_DAY_SCENE, 5.0);
