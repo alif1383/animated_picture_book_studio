@@ -79,6 +79,29 @@ Background patches and certain props can reveal their crayon color progressively
 
 Set `fillProgress` (0..1) and `fillSteps` (default 10) on nodes, and animate `fillProgress` via timeline keyframes.
 
+### Mandatory Two-Tier Terrain Coloring, Natural Crayon Seams & Outer Overbleed
+Every visible environment region on the `1280×720` stage (`Sky` in the upper zone + `Ground / Ocean / Beach / Floor` in the lower zone) **MUST** be colored using a **Two-Tier Terrain Architecture** so no terrain zone is left as uncolored white paper:
+
+1. **Props Alone Are NEVER a Background (Two-Tier Rule)**:
+   - **Tier 1 — Full-Zone Crayon Base (`background_patch`)**: First cover the entire terrain zone with a textured `background_patch` (`getPatternFill(material)`).
+   - **Tier 2 — Surface Texture & Detail Props (`prop` / `building` at higher `zIndex`)**: Layer detail props (`grass_patch`, `ocean_waves`, `meadow_flowers`, `beach_umbrella`, etc.) *on top* of that colored base patch.
+
+| Environment Zone | Tier 1: Mandatory Base `background_patch` | Tier 2: Detail Props & Accents on Top (`zIndex` above base) | Forbidden Mistake |
+| :--- | :--- | :--- | :--- |
+| **Sky (Day / Sunset / Night)** | Full sky `background_patch` (`crayonSkyBlue`, `crayonSunsetOrange`, or `markerIndigoNight`) covering from the top edge down to the horizon. | `fluffy_cloud`, `sun`, `moon`, `star_cluster`, `chimney_puffs`. | Leaving the sky completely missing a `background_patch`. |
+| **Grass / Meadow / Forest Floor** | Full ground `background_patch` (`crayonGrassGreen`, `crayonMeadowLight`, or `crayonForestGreen`) covering from the horizon to the bottom edge. | `grass_patch` tufts, `meadow_flowers`, `tree`, `spooky_tree`, `campfire`, plus optional dirt road `background_patch` (`crayonOchre`). | Dropping 2–3 floating `grass_patch` props onto blank white paper with no green ground `background_patch` underneath. |
+| **Ocean / Sea / Lake / River** | Full water-body `background_patch` (`crayonCatBlue`, `crayonSkyBlue`, or `crayonRoyalBlue`) covering the entire water area from the horizon down to the bottom edge. | `ocean_waves` crests, `water_splash`, `swim_floatie`, shallows patch (`crayonSkyBlue`), or moon shimmer (`crayonWarmMoon`). | Drawing `ocean_waves` line art over uncolored white paper with no blue water fill underneath. |
+| **Beach / Sand / Desert / Dirt Yard** | Full sandy shore `background_patch` (`crayonOchre` or `crayonWarmMoon`) covering the entire beach/sand zone down to the bottom edge. | `beach_umbrella`, `beach_ball`, `swim_floatie`, `birthday_cake`, shoreline `ocean_waves` foam. | Leaving the beach area as uncolored paper and assuming the warm paper color counts as sand. |
+| **Village Street / Castle Yard / Floor** | Full ground/courtyard base `background_patch` (`crayonGrassGreen`, `crayonOchre`, or `crayonSoftTerracotta`) + optional road strip. | `ochre_cottage`, `corner_store`, `royal_castle`, `street_lantern`, `apple_crate`, `bicycle`, `grass_patch`. | Leaving the entire village ground between buildings as raw uncolored paper. |
+
+2. **Natural Crayon Seams (`0–25px` max) & Full Vertical Coverage**:
+   - Vertically from top to bottom, the upper sky zone and the lower ground/water/sand zone must cover the stage so the bottom half of the screen is never left uncolored.
+   - Between major zones (e.g., between sky and grass, sky and ocean water, or beach sand and water), a small organic hand-drawn crayon seam (`0–25px`) or gentle overlap is completely natural and preserves the authentic hand-drawn crayon look—just never leave large vertical bands (`> 25px`) or entire half-screens uncolored.
+
+3. **Outer Canvas Overbleed (Automatically Clipped Inside `bookFrame`)**:
+   - Extend the outer edges of full-screen sky and ground/water/beach `background_patch` paths and `bounds` slightly beyond `0..1280 × 0..720` (e.g., `x: -60..1340`, `y: -40..760`) so camera pans, zooms, and `#crayon-stroke` edge turbulence never expose blank white margins along the screen edges during the story.
+   - Because `bookFrame` (`src/engine/bookFrame.ts`) wraps the entire scene inside `<svg id="book-page-container" width="1280" height="720" overflow="hidden">` and `<g id="book-page-clip-group" clip-path="url(#book-open-page-clip)">`, any outer overbleed is strictly clipped to the curved notebook pages during the intro and outro book sequences and will **never** bleed outside the notebook.
+
 ### Storybook Cover Opening & Ending/Credits Book-Frame (`bookFrame`, `src/engine/bookFrame.ts`)
 Every scene in the Picture-Book Studio is framed inside an animated hand-drawn physical storybook (`bookFrame` enabled by default):
 1. **Opening Cover & Zoom-In (`0 .. openDurationSec`, default `3.5s`, `phase: 'opening'`)**:

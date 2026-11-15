@@ -62,7 +62,17 @@ Every scene rendered by the engine must pass through three visual layers:
 ### 5. Scene Authoring Contract, Audio Catalog Check & Storybook Book-Frame (`bookFrame`)
 When creating a new scene, structure it declaratively using shared engine primitives:
 - **Check `docs/AUDIO_CATALOG.md` First (Mandatory Scene Audio Plan)**: Before authoring a scene, always inspect `<workspace>/docs/AUDIO_CATALOG.md` (and `skills/picture-book-audio/references/audio-catalog.md`) to see what existing background music and sound effects fit the story's theme and what new theme-appropriate BGM/SFX must be created.
-- Define **Background Patches** (SVG paths with organic, uneven edges + marker/crayon fill patterns).
+- **Define Two-Tier Terrain Background Patches & Detail Props (Props Alone Are Never a Background)**:
+  - Every visible environment zone (`Sky` in the upper zone + `Ground / Ocean / Beach / Floor` in the lower zone) MUST have a **Tier 1 textured crayon `background_patch` base** covering the entire zone, plus **Tier 2 detail props** layered on top (`zIndex` above the base). Never leave an entire environment region (such as the ocean, beach sand, grassy meadow, or village ground) as uncolored white paper with only floating line-art props (`ocean_waves`, `grass_patch`, etc.).
+  - **Examples Across Environment Types**:
+    - **Sky (Day / Sunset / Night)**: Tier 1 full sky `background_patch` (`crayonSkyBlue`, `crayonSunsetOrange`, or `markerIndigoNight`) + Tier 2 `fluffy_cloud`, `sun`, `moon`, `star_cluster`, `chimney_puffs`.
+    - **Grass / Meadow / Forest Floor**: Tier 1 full ground `background_patch` (`crayonGrassGreen`, `crayonMeadowLight`, or `crayonForestGreen`) + Tier 2 `grass_patch` tufts, `meadow_flowers`, `tree`, `spooky_tree`, `campfire`, and optional dirt road `background_patch` (`crayonOchre`).
+    - **Ocean / Sea / Lake / River**: Tier 1 full water-body `background_patch` (`crayonCatBlue`, `crayonSkyBlue`, or `crayonRoyalBlue`) covering from the horizon to the bottom of the screen + Tier 2 `ocean_waves`, `water_splash`, `swim_floatie`, and shallows/shimmer patches on top.
+    - **Beach / Sand / Desert / Dirt Yard**: Tier 1 full sandy shore `background_patch` (`crayonOchre` or `crayonWarmMoon`) + Tier 2 `beach_umbrella`, `beach_ball`, `swim_floatie`, and shoreline `ocean_waves`.
+    - **Village Street / Castle Courtyard / Indoor Floor**: Tier 1 full ground/courtyard `background_patch` (`crayonGrassGreen`, `crayonOchre`, or `crayonSoftTerracotta`) + Tier 2 buildings, lanterns, market crates, bicycles, and grass tufts.
+  - **Natural Crayon Seams (`0–25px` max) & Safe Outer Overbleed**:
+    - Between major zones (e.g., sky and grass, sky and water, or beach and water), a small organic hand-drawn crayon seam (`0–25px`) or gentle overlap is fine and preserves the authentic hand-drawn crayon look—just never leave large vertical bands (`> 25px`) or entire half-screens uncolored.
+    - Extend outer edges of full-screen sky and ground/water/beach `background_patch` paths slightly beyond `0..1280 × 0..720` (e.g., `x: -60..1340`, `y: -40..760`) so camera pans and `#crayon-stroke` jitter never expose blank margins during the story (`bookFrame`'s `#book-page-container` and `#book-open-page-clip` automatically clip any overbleed inside the notebook pages during the intro and outro).
 - Place **Props & Architecture** (layered back-to-front with crayon displacement applied).
 - Place **Character Rigs** with named state triggers (`idle`, `singing`, `blinking`, `looking_up`).
 - Define a **Timeline** of stepped keyframes synced to timestamps or narration cues.
