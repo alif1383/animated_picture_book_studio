@@ -192,6 +192,14 @@ export class PictureBookSoundEngine {
       this.synthesizeWaterSplash(ctx, freq, duration, t0);
     } else if (kind === 'floatie_squeak') {
       this.synthesizeFloatieSqueak(ctx, freq, duration, t0);
+    } else if (kind === 'fire_crackle') {
+      this.synthesizeFireCrackle(ctx, freq, duration, t0);
+    } else if (kind === 'dragon_fire') {
+      this.synthesizeDragonFire(ctx, freq, duration, t0);
+    } else if (kind === 'spear_clink') {
+      this.synthesizeSpearClink(ctx, freq, duration, t0);
+    } else if (kind === 'medieval_lute') {
+      this.synthesizeMedievalLute(ctx, freq, duration, t0);
     } else {
       this.synthesizeMusicBoxNote(ctx, freq, duration, 'triangle', 2, 0.22, t0);
     }
@@ -833,6 +841,124 @@ export class PictureBookSoundEngine {
 
     scheduleChirp(now, 1.0);
     scheduleChirp(chirp2Start, 1.12);
+  }
+
+  /**
+   * Warm crackling campfire embers & sizzling roasting meat (`'fire_crackle'`).
+   */
+  private synthesizeFireCrackle(
+    ctx: BaseAudioContext,
+    freq: number,
+    duration: number,
+    startTime: number = ctx.currentTime
+  ): void {
+    const now = startTime;
+    const dur = Math.max(0.2, duration);
+    // Warm lowpass ember bed
+    this.scheduleFilteredNoise(ctx, {
+      duration: dur,
+      startTime: now,
+      filterType: 'lowpass',
+      startFreq: Math.max(180, freq * 0.65),
+      endFreq: Math.max(140, freq * 0.45),
+      q: 0.9,
+      peakGain: 0.14,
+      attackSec: dur * 0.2,
+      envelope: (i, count) => Math.sin((i / count) * Math.PI),
+    });
+    // Crisp wood-snap crackles & meat sizzle pops
+    const snapCount = 4;
+    for (let i = 0; i < snapCount; i++) {
+      const snapTime = now + (i + 0.35) * (dur / (snapCount + 0.5));
+      this.scheduleFilteredNoise(ctx, {
+        duration: 0.045,
+        startTime: snapTime,
+        filterType: 'bandpass',
+        startFreq: 1400 + (i % 3) * 450,
+        q: 2.6,
+        peakGain: 0.18,
+        attackSec: 0.005,
+      });
+    }
+  }
+
+  /**
+   * Deep roaring filtered-noise flame whoosh + low dragon throat rumble (`'dragon_fire'`).
+   */
+  private synthesizeDragonFire(
+    ctx: BaseAudioContext,
+    freq: number,
+    duration: number,
+    startTime: number = ctx.currentTime
+  ): void {
+    const now = startTime;
+    const dur = Math.max(0.25, duration);
+    const base = Math.max(95, Math.min(360, freq));
+    // Roaring flame billow
+    this.scheduleFilteredNoise(ctx, {
+      duration: dur,
+      startTime: now,
+      filterType: 'bandpass',
+      startFreq: base * 1.6,
+      peakFreq: { freq: base * 3.4, atRatio: 0.35 },
+      endFreq: base * 0.95,
+      q: 1.15,
+      peakGain: 0.25,
+      attackSec: dur * 0.18,
+      envelope: (i, count) => Math.sin((i / count) * Math.PI),
+    });
+    // Low dragon throat rumble
+    this.schedulePitchBlip(
+      ctx,
+      'sawtooth',
+      base * 0.72,
+      base * 0.48,
+      dur * 0.85,
+      0.12,
+      now
+    );
+  }
+
+  /**
+   * Crisp metallic spear-on-tooth clink + upward bramble pop (`'spear_clink'`).
+   */
+  private synthesizeSpearClink(
+    ctx: BaseAudioContext,
+    freq: number,
+    duration: number,
+    startTime: number = ctx.currentTime
+  ): void {
+    const now = startTime;
+    const dur = Math.max(0.18, duration);
+    const base = Math.max(520, freq);
+    // Crisp metallic spear clink harmonic pair
+    this.synthesizeMusicBoxNote(ctx, base * 1.5, dur * 0.55, 'sine', 2.76, 0.22, now);
+    this.synthesizeMusicBoxNote(ctx, base * 2.1, dur * 0.4, 'triangle', 2, 0.16, now + 0.02);
+    // Upward cork-pop when the thorny bramble pops free!
+    this.schedulePitchBlip(
+      ctx,
+      'sine',
+      260,
+      780,
+      Math.min(0.12, dur * 0.45),
+      0.24,
+      now + dur * 0.35
+    );
+  }
+
+  /**
+   * Plucked medieval lute / harp string note with warm harmonics (`'medieval_lute'`).
+   */
+  private synthesizeMedievalLute(
+    ctx: BaseAudioContext,
+    freq: number,
+    duration: number,
+    startTime: number = ctx.currentTime
+  ): void {
+    const now = startTime;
+    const dur = Math.max(0.15, duration);
+    this.synthesizeMusicBoxNote(ctx, freq, dur, 'triangle', 2, 0.22, now);
+    this.synthesizeMusicBoxNote(ctx, freq * 0.5, dur * 0.9, 'sine', 3, 0.1, now);
   }
 
   /**

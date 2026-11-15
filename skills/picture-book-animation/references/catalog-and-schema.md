@@ -15,9 +15,9 @@
 | `moon` | `renderMoon` | `src/assets/characters/moon.ts` | Storybook Crescent Moon with dangling & twinkling companion stars (`data-part="moon-stars"`), orange cheeks, diagonal hatching, optional nightcap (`wearingNightcap`) |
 | `sun` | `renderSun` | `src/assets/characters/sun.ts` | Bright yellow morning sun, turns warm orange at sunset, yawns sleepily |
 | `cat` | `renderCat` | `src/assets/characters/cat.ts` | White/cream kitten with dark brown/grey tabby patches, pink inner ears & golden collar bell — curious, walking, waving, sleeping, or idle |
-| `knight` | `renderKnight` | `src/assets/characters/knight.ts` | Sir Leo the Brave Crayon Knight on Horseback (`+X` facing): sky-blue armor, red cape, star shield, lance & trotting cream steed |
-| `soldier` | `renderSoldier` | `src/assets/characters/soldier.ts` | Royal Mounted Soldier on Horseback (`+X` facing): royal-blue tunic, kettle helmet, round wooden star shield & pennant spear |
-| `dragon` | `renderDragon` | `src/assets/characters/dragon.ts` | Barnaby the Cute Forest Dragon (`+X` facing): emerald-green body, ochre belly, scalloped wings, crooked tooth with bramble, fire puff & dizzy stars |
+| `knight` | `renderKnight` | `src/assets/characters/knight.ts` | Sir Leo the Brave Crayon Knight (`+X` facing) both on horseback (`mounted: true`, default) and on foot (`mounted: false`), including mounting (`climbing`), camp-log sitting (`sitting`), and low crouched upward spear-reach (`reaching`) |
+| `soldier` | `renderSoldier` | `src/assets/characters/soldier.ts` | Royal Soldier (`+X` facing) both on horseback (`mounted: true`, default) and on foot (`mounted: false`), including mounting (`climbing`) and camp-log sitting (`sitting`) |
+| `dragon` | `renderDragon` | `src/assets/characters/dragon.ts` | Barnaby the Cute Forest Dragon (`+X` facing): emerald-green body, ochre belly, scalloped wings, crooked tooth with bramble, elevated fire puff & dizzy stars |
 | `villager` | `renderVillager` | `src/assets/characters/villager.ts` | Castle Herald & Medieval Villager (`+X` facing): feathered beret cap, terracotta/sage tunic & herald scroll |
 | `singing_radish` | `renderSingingRadish` | `src/assets/characters/singingRadish.ts` | Red-orange radish with emerald leaf ponytails, blue hair ties & crayon microphone |
 | `birthday_strawberry` | `renderBirthdayStrawberry` | `src/assets/characters/birthdayStrawberry.ts` | Plump red strawberry with yellow seeds, leafy green calyx collar & golden birthday crown |
@@ -30,10 +30,10 @@
 | `acorn_twins` | `renderAcornTwins` | `src/assets/characters/acornTwins.ts` | Golden-ochre acorn buddies holding hands with brown caps & green leaf sprouts |
 | `olive_sprout` | `renderOliveSprout` | `src/assets/characters/oliveSprout.ts` | Small dark-green oval with white tummy face & red-tipped topknot |
 
-### CharacterState (13 states)
+### CharacterState (14 states)
 
 ```
-idle | walking | climbing | sitting | singing | waving | looking_up | awake | sleepy | curious | grumpy | blinking | sleeping
+idle | walking | climbing | sitting | singing | waving | reaching | looking_up | awake | sleepy | curious | grumpy | blinking | sleeping
 ```
 
 Not every character implements every state; unsupported states fall back to `idle`.
@@ -44,6 +44,7 @@ Not every character implements every state; unsupported states fall back to `idl
 |---|---|---|
 | `kind` | `CharacterKind` | Which character rig to render |
 | `state` | `CharacterState` | Current pose/animation state |
+| `mounted?` | `boolean` | Knight & Soldier option — whether riding on horseback (`true`, default) or on foot (`false`) |
 | `wearingNightcap?` | `boolean` | Moon only — blue-and-white striped sleeping nightcap |
 | `holdingSheep?` | `boolean` | Little girl only — fluffy white sheep plushie |
 | `holdingPizza?` | `boolean` | Little girl only — warm cheesy pepperoni pizza slice |

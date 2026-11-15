@@ -1,6 +1,6 @@
 import { steppedOscillate } from '../../engine/clock';
 import { svgEl, svgTransform } from '../../engine/svgUtils';
-import type { CharacterKind } from '../../engine/schema';
+import type { CharacterKind, CharacterState } from '../../engine/schema';
 import { renderAnnotation } from '../annotations/pencilAnnotation';
 import { renderSwimFloatieRing } from '../props/swimFloatie';
 import type { CharacterRenderOptions } from './types';
@@ -260,6 +260,33 @@ export const CHARACTER_SPEECH_ANCHORS: Record<
 };
 
 /**
+ * Resolves the local `(x, y)` speech/thought bubble head-top anchor for `kind`,
+ * adjusting for on-foot (`mounted: false`) and crouched (`state: 'reaching'`) poses.
+ */
+export function getCharacterSpeechAnchor(
+  kind: CharacterKind,
+  options?: { state?: CharacterState; mounted?: boolean }
+): { x: number; y: number } {
+  const isMounted = options?.mounted ?? true;
+  const state = options?.state;
+  if (kind === 'knight' && !isMounted) {
+    if (state === 'reaching') return { x: 6, y: -74 };
+    if (state === 'sitting' || state === 'sleeping' || state === 'sleepy') {
+      return { x: 0, y: -90 };
+    }
+    return { x: 0, y: -102 };
+  }
+  if (kind === 'soldier' && !isMounted) {
+    if (state === 'reaching') return { x: 4, y: -72 };
+    if (state === 'sitting' || state === 'sleeping' || state === 'sleepy') {
+      return { x: 0, y: -82 };
+    }
+    return { x: 0, y: -92 };
+  }
+  return CHARACTER_SPEECH_ANCHORS[kind];
+}
+
+/**
  * Renders any 2D cutout character rig quantized to the stepped stop-motion frame index.
  */
 export function renderCharacter(options: CharacterRenderOptions): string {
@@ -387,7 +414,10 @@ export function renderCharacter(options: CharacterRenderOptions): string {
   }
 
   if (speechText && speechText.trim().length > 0) {
-    const anchor = CHARACTER_SPEECH_ANCHORS[kind];
+    const anchor = getCharacterSpeechAnchor(kind, {
+      state: options.state,
+      mounted: options.mounted,
+    });
     const bubbleMarkup = renderAnnotation({
       x: anchor.x,
       y: anchor.y,

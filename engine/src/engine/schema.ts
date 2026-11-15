@@ -36,6 +36,7 @@ export type CharacterState =
   | 'sitting'
   | 'singing'
   | 'waving'
+  | 'reaching'
   | 'looking_up'
   | 'awake'
   | 'sleepy'
@@ -145,6 +146,8 @@ export interface CharacterNode extends BaseSceneNode {
   wearingFloatie?: boolean;
   /** Floatie style variant (0 = rubber ducky, 1 = red/white stripes, 2 = blue/gold stars, 3 = pink/yellow stripes, 4 = emerald/gold) */
   floatieVariant?: number;
+  /** Knight & Soldier option: whether riding on horseback (default: true) or on foot (false) */
+  mounted?: boolean;
   /** Optional speech or thought bubble text anchored directly above this character's head */
   speechText?: string;
   /** Style of the character-attached bubble ('speech' | 'thought', default: 'speech') */
@@ -211,6 +214,7 @@ export interface NodeKeyframe {
   holdingPizza?: boolean;
   wearingFloatie?: boolean;
   floatieVariant?: number;
+  mounted?: boolean;
   speechText?: string;
   speechStyle?: 'speech' | 'thought';
   speechTail?: 'bottom-center' | 'bottom-left' | 'bottom-right';
@@ -259,7 +263,11 @@ export type AudioCueKind =
   | 'birthday_song'
   | 'ocean_wave'
   | 'water_splash'
-  | 'floatie_squeak';
+  | 'floatie_squeak'
+  | 'fire_crackle'
+  | 'dragon_fire'
+  | 'spear_clink'
+  | 'medieval_lute';
 
 export interface AudioNoteCue {
   time: number;

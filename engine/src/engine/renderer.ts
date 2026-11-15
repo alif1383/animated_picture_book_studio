@@ -19,7 +19,7 @@ import {
 import type { SceneDefinition, SceneNode } from './schema';
 import { renderBuilding } from '../assets/buildings';
 import {
-  CHARACTER_SPEECH_ANCHORS,
+  getCharacterSpeechAnchor,
   renderCharacter,
 } from '../assets/characters';
 import { renderAnnotation, renderProp } from '../assets/objects';
@@ -118,6 +118,7 @@ function renderSingleNode(
         holdingPizza: state.holdingPizza ?? node.holdingPizza,
         wearingFloatie: state.wearingFloatie ?? node.wearingFloatie,
         floatieVariant: state.floatieVariant ?? node.floatieVariant,
+        mounted: state.mounted ?? node.mounted,
         fillMask: fillMaskUrl,
       });
     }
@@ -248,7 +249,10 @@ export function evaluateAndRenderScene(
     if (node.type === 'character') {
       const speechText = (nodeState.speechText ?? node.speechText ?? '').trim();
       if (speechText.length > 0) {
-        const anchor = CHARACTER_SPEECH_ANCHORS[node.kind];
+        const anchor = getCharacterSpeechAnchor(node.kind, {
+          state: nodeState.state ?? node.state,
+          mounted: nodeState.mounted ?? node.mounted,
+        });
         const headX = round2(
           nodeState.x +
             (nodeState.flipX ? -anchor.x : anchor.x) * nodeState.scale

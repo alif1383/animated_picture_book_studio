@@ -212,17 +212,18 @@ export function renderDragon(options: CharacterRenderOptions): string {
         }),
   ]);
 
-  // 6. Crayon Fire Puff when waving/roaring (`data-part="dragon-breath"`)
+  // 6. Elevated Crayon Fire Puff when waving/roaring (`data-part="dragon-breath"`)
+  // Angled upward-forward (ly: -92 .. -126) so the sore tooth (lx=38..40, ly=-84..-87) has clear space below
   const fireBreath =
     state === 'waving'
       ? svgEl('g', { 'data-part': 'dragon-breath' }, [
           crayonPath(
-            'M 58 -94 C 74 -106, 96 -104, 104 -90 C 96 -76, 74 -78, 58 -88 Z',
+            'M 54 -96 C 68 -116, 94 -128, 108 -116 C 102 -100, 78 -94, 54 -92 Z',
             sunsetOrange,
             { strokeWidth: outlineMedium }
           ),
           crayonPath(
-            'M 64 -92 C 76 -98, 90 -96, 94 -90 C 88 -84, 74 -84, 64 -89 Z',
+            'M 60 -96 C 72 -110, 90 -118, 98 -112 C 92 -102, 76 -96, 60 -93 Z',
             bananaYellow,
             { strokeWidth: outlineThin }
           ),

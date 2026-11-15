@@ -10,9 +10,11 @@ import type { PropRenderOptions } from './types';
 import { renderStarShape } from './shared';
 
 /**
- * Renders the Crayon Fire Breath & Clash Sparks (`'dragon_fire'`).
- * - Swirling red/orange/yellow wax-crayon flame cloud (`data-part="flame-plume"`)
- *   and golden star clash bursts (`data-part="clash-sparks"`) for the dragon battle.
+ * Renders the Elevated Crayon Fire Breath & Tooth-Pop Sparks (`'dragon_fire'`).
+ * - Swirling red/orange/yellow wax-crayon flame stream (`data-part="flame-plume"`)
+ *   that arches upward-left (`y: -6 .. -64`) so Sir Leo on foot can duck safely
+ *   underneath it and angle his spear upward into the Dragon's mouth!
+ * - Golden star clash/tooth-pop bursts (`data-part="clash-sparks"`).
  */
 export function renderDragonFire(
   options: PropRenderOptions = { kind: 'dragon_fire' }
@@ -33,9 +35,11 @@ export function renderDragonFire(
   }
 
   const pulse = round2(1 + steppedOscillate(frameIndex, 6, 0.12));
-  const jitterY = round2(steppedOscillate(frameIndex, 6, 5));
+  const jitterY = round2(steppedOscillate(frameIndex, 6, 4.5));
 
-  // 1. Swirling Wax-Crayon Flame Cloud (`data-part="flame-plume"`)
+  // 1. Elevated Swirling Wax-Crayon Flame Stream (`data-part="flame-plume"`)
+  // Jets from right nozzle (56, -4) and billows UPWARD-LEFT to (-112, -62..-10),
+  // leaving a tall clear ducking & spear-reach corridor underneath!
   const flamePlume = svgEl(
     'g',
     {
@@ -43,41 +47,41 @@ export function renderDragonFire(
       transform: svgTransform({ y: jitterY, scale: pulse }),
     },
     [
-      // Outer red-orange dragon flame billow
+      // Outer red-orange overhead dragon flame billow
       crayonPath(
-        'M 54 -10 C 20 -42, -32 -52, -74 -28 C -56 -12, -88 8, -58 26 C -22 42, 24 28, 54 6 Z',
+        'M 56 -6 C 28 -36, -28 -64, -96 -58 C -78 -38, -114 -22, -86 -10 C -46 -4, 14 -2, 56 2 Z',
         radishRed,
         { strokeWidth: outlineHeavy, paperUnderlay: true }
       ),
       // Middle sunset-orange swirl
       crayonPath(
-        'M 44 -6 C 16 -28, -22 -34, -52 -16 C -38 -4, -58 10, -38 20 C -14 28, 20 18, 44 4 Z',
+        'M 48 -5 C 22 -28, -24 -48, -76 -44 C -60 -30, -88 -18, -64 -11 C -32 -6, 14 -3, 48 0 Z',
         sunsetOrange,
         { strokeWidth: outlineMedium }
       ),
       // Inner golden-yellow hot core
       crayonPath(
-        'M 34 -4 C 12 -16, -12 -20, -32 -8 C -20 2, -12 12, 34 2 Z',
+        'M 40 -4 C 16 -20, -18 -34, -52 -30 C -38 -18, -14 -8, 40 -1 Z',
         bananaYellow,
         { strokeWidth: outlineThin }
       ),
     ]
   );
 
-  // 2. Action Star Clash Sparks (`data-part="clash-sparks"`)
+  // 2. Action Star Clash & Tooth-Pop Sparks (`data-part="clash-sparks"`)
   const clashSparks = svgEl('g', { 'data-part': 'clash-sparks' }, [
     crayonPath(
-      renderStarShape(-76, round2(-26 + jitterY), 12, frameIndex * 18),
+      renderStarShape(-92, round2(-46 + jitterY), 12, frameIndex * 18),
       bananaYellow,
       { strokeWidth: outlineMedium, paperUnderlay: true }
     ),
     crayonPath(
-      renderStarShape(-52, round2(28 - jitterY), 10, -frameIndex * 15),
+      renderStarShape(-56, round2(-14 - jitterY), 10, -frameIndex * 15),
       warmMoon,
       { strokeWidth: outlineThin, paperUnderlay: true }
     ),
     crayonPath(
-      renderStarShape(-18, round2(-38 - jitterY * 0.6), 9, 12),
+      renderStarShape(38, round2(-24 - jitterY * 0.6), 9, 12),
       starWhite,
       { strokeWidth: outlineThin, paperUnderlay: true }
     ),

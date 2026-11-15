@@ -55,8 +55,20 @@ export function renderAnnotation(node: Partial<AnnotationNode>): string {
       const halfW = round2(boxW / 2);
       const halfH = round2(boxH / 2);
       const tailH = anchorAtTailTip ? 18 : 20;
-      const x0 = -halfW;
-      const x1 = halfW;
+      let boxShiftX = 0;
+      if (anchorAtTailTip && typeof node.x === 'number' && node.x > 60) {
+        const minWorldX = 24;
+        const maxWorldX = TOKENS.canvas.width - 24;
+        if (node.x - halfW < minWorldX) {
+          boxShiftX = round2(minWorldX - (node.x - halfW));
+        } else if (node.x + halfW > maxWorldX) {
+          boxShiftX = round2(maxWorldX - (node.x + halfW));
+        }
+        const maxShift = Math.max(0, round2(halfW - 36));
+        boxShiftX = Math.max(-maxShift, Math.min(maxShift, boxShiftX));
+      }
+      const x0 = round2(-halfW + boxShiftX);
+      const x1 = round2(halfW + boxShiftX);
       const y0 = anchorAtTailTip ? round2(-(boxH + tailH)) : -halfH;
       const y1 = anchorAtTailTip ? -tailH : halfH;
       const centerY = round2((y0 + y1) / 2);
@@ -173,9 +185,9 @@ export function renderAnnotation(node: Partial<AnnotationNode>): string {
         );
       } else {
         // Scalloped cloud thought bubble + trailing thought puffs
-        const xm = 0;
-        const xl = round2(x0 * 0.48);
-        const xr = round2(x1 * 0.48);
+        const xm = boxShiftX;
+        const xl = round2(boxShiftX - halfW * 0.48);
+        const xr = round2(boxShiftX + halfW * 0.48);
 
         const cloudPath = [
           `M ${x0 + 12} ${y0 + 8}`,
@@ -296,7 +308,7 @@ export function renderAnnotation(node: Partial<AnnotationNode>): string {
           svgEl(
             'text',
             {
-              x: 0,
+              x: boxShiftX,
               y: round2(startY + i * lineHeight),
               'text-anchor': 'middle',
               'font-family': TOKENS.typography.fontFamilyHand,

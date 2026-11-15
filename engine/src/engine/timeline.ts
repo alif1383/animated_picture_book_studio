@@ -42,6 +42,7 @@ export interface EvaluatedNodeState {
   holdingPizza?: boolean;
   wearingFloatie?: boolean;
   floatieVariant?: number;
+  mounted?: boolean;
   speechText?: string;
   speechStyle?: 'speech' | 'thought';
   speechTail?: 'bottom-center' | 'bottom-left' | 'bottom-right';
@@ -235,6 +236,9 @@ function evaluateSingleNode(
   const floatieVariant =
     combined.floatieVariant ??
     (node.type === 'character' ? node.floatieVariant : undefined);
+  const mounted =
+    combined.mounted ??
+    (node.type === 'character' ? node.mounted : undefined);
   const speechText =
     combined.speechText !== undefined
       ? combined.speechText
@@ -279,6 +283,7 @@ function evaluateSingleNode(
     holdingPizza,
     wearingFloatie,
     floatieVariant,
+    mounted,
     speechText,
     speechStyle,
     speechTail,
