@@ -42,8 +42,14 @@ When a user asks you to make or edit an animated video, you are the single point
 ### Phase 1: Story & Scene Design
 
 1. Discuss the story concept with the user (or interpret their prompt).
-2. Load `skills/picture-book-animation/SKILL.md` for the complete scene authoring guide, art direction rules, and asset catalog.
-3. Plan the scene structure: acts (with titles, start/end times, captions), characters, props, buildings, camera movements, and annotations.
+2. Load `skills/picture-book-animation/SKILL.md` for the complete scene authoring guide, art direction rules, `bookFrame` opening/closing choreography, and asset catalog.
+3. Plan the scene structure:
+   - **Storybook Cover Opening & Ending/Credits (`bookFrame`, enabled by default)**:
+     - **Opening Cover & Zoom-In (`0 .. openDurationSec`, default `3.5s`)**: Starts zoomed out on a closed hardcover picture book showing `coverTitle` (defaults to `scene.title`), `coverSubtitle`, and optional `creditText`. The cover opens in stepped `6 FPS` stop-motion to reveal the scene at **0% crayon color** (hand-drawn charcoal sketch on warm paper), then zooms in (`bookScale: 0.68 -> 1.0`) while crayon colors progressively fill in from **0% to 100%**.
+     - **Main Story (`openDurationSec .. durationSec - closeDurationSec`)**: Full-bleed 16:9 storybook animation.
+     - **Ending Color-Out, Zoom-Out & Closing Credits (`durationSec - closeDurationSec .. durationSec`, default last `3.5s`)**: Zooms back out (`1.0 -> 0.68`) as crayon pigment drains from **100% to 0%** back to a pencil/charcoal sketch before the book cover closes to show the scene name, `endingTitle` (`"The End ★"`), and `endingCredit`.
+     - **Choreography timing**: Schedule Act I's key action or voiceover dialogue after `openDurationSec` (`~3.5s`, letting the first `3.5s` serve as the book-opening & color-in establishing shot), and reserve the final `~3.5s` (`closeDurationSec`) for a gentle farewell pose as the book un-colors and closes. Customize `scene.bookFrame` (`coverTitle`, `coverSubtitle`, `creditText`, `endingTitle`, `endingCredit`, `coverMaterial`, `openDurationSec`, `closeDurationSec`) whenever appropriate, or toggle via `#chk-book-frame` / `?book_frame=1|0`.
+   - Acts (with titles, start/end times, captions), characters, props, buildings, camera movements, and annotations.
 4. Delegate scene implementation to `picture-book-coder` or `picture-book-agent-coder`, passing the plan and paths to `docs/ARCHITECTURE.md` and `docs/STYLE_GUIDE.md`.
 
 ### Phase 2: Custom Assets (If Needed)
@@ -52,7 +58,7 @@ If the user provides photos or wants custom characters/props/buildings:
 
 1. Load `skills/photo-to-crayon-asset/SKILL.md`.
 2. Run `agy-node "<plugin-root>/skills/photo-to-crayon-asset/scripts/analyze_reference_photo.mjs" "<photo_path>"` to extract colors and map to `TOKENS` palette.
-3. Delegate SVG asset coding to `picture-book-coder` with the analysis report and style guide.
+3. Delegate SVG asset coding to `picture-book-coder` with the analysis report and style guide, ensuring every character defines a predefined head-top speech/thought bubble anchor in `CHARACTER_SPEECH_ANCHORS` (`src/assets/characters/index.ts`) so `speechText` and `speechStyle: 'speech' | 'thought'` attach automatically above the character's head, and implements a dedicated 3/4 or side-profile `'walking'` rig facing **RIGHT (`+X`)** when `flipX: false` (and **LEFT (`-X`)** when `flipX: true`) with both shoes/feet pointing in the walking direction.
 4. Verify the new asset compiles (`agy-node scripts/studio-cli.mjs test` & `agy-node scripts/studio-cli.mjs build`) and appears in the Asset Catalog.
 
 ### Phase 3: Audio
@@ -109,6 +115,7 @@ If the user wants audio (sound effects, narration, music):
 | Scenes | `<workspace>/src/scenes/` |
 | Assets (characters, props, buildings) | `<workspace>/src/assets/` |
 | Audio engine | `<workspace>/src/audio/soundEngine.ts` |
+| Book-frame engine | `<workspace>/src/engine/bookFrame.ts` |
 | Schema & interfaces | `<workspace>/src/engine/schema.ts` |
 | Design tokens | `<workspace>/src/theme/tokens.ts` |
 | Architecture docs | `<workspace>/docs/ARCHITECTURE.md` |

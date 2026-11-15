@@ -39,7 +39,7 @@ Because a user's machine may not have native `git` installed, the engine bundles
 
 ---
 
-## Animation & Scene Design Routing
+## Animation & Scene Design Routing (Including Default `bookFrame` Opening & Ending Sequence)
 
 Whenever deciding how to design, choreograph, or edit animations, scenes, acts, camera movements, timelines, keyframes, visual aesthetics, or the render pipeline, **ALWAYS** load and follow the `picture-book-animation` skill before proceeding:
 
@@ -47,7 +47,23 @@ Whenever deciding how to design, choreograph, or edit animations, scenes, acts, 
 skills/picture-book-animation/SKILL.md
 ```
 
-This skill contains the complete art direction rules, scene authoring contract, 3-layer render pipeline, stop-motion animation methodology, all available `CharacterKind`/`PropKind`/`BuildingKind` catalogs, `SceneDefinition` schema reference, and scene registration instructions.
+This skill contains the complete art direction rules, scene authoring contract, 3-layer render pipeline, stop-motion animation methodology, **Storybook Cover Opening & Ending/Credits Book-Frame (`bookFrame`) choreography**, all available `CharacterKind`/`PropKind`/`BuildingKind` catalogs, `SceneDefinition` schema reference, and scene registration instructions.
+
+### Default Storybook Book-Frame (`bookFrame`) Behavior & Choreography Rules
+Every scene in the Picture-Book Studio is automatically framed inside a physical hardcover storybook (`bookFrame` enabled by default):
+1. **Opening Cover & Color-In Zoom (`0 .. openDurationSec`, default `3.5s`)**:
+   - Starts zoomed out (`bookScale: 0.68`) on a closed hardcover picture book showing the scene's title (`coverTitle`, defaulting to `scene.title`), subtitle (`coverSubtitle`), and optional credit (`creditText`).
+   - The book cover opens in stepped `6 FPS` stop-motion to reveal the scene inside the book pages starting at **0% crayon color** (hand-drawn charcoal outline sketch on warm paper).
+   - As the camera zooms into the book spread (`bookScale: 0.68 -> 1.0`), the crayon colors progressively fill in from **0% to 100%** (`colorFillMultiplier: 0 -> 1`).
+2. **Main Story (`openDurationSec .. durationSec - closeDurationSec`)**:
+   - Full-bleed 16:9 storybook animation (`bookScale: 1.0`, `colorFillMultiplier: 1.0`, 100% identical to standard scene rendering).
+3. **Ending Color-Out, Zoom-Out & Closing Credits (`durationSec - closeDurationSec .. durationSec`, default last `3.5s`)**:
+   - Zooms back out into the open book spread (`1.0 -> 0.68`) as crayon pigment drains from **100% down to 0%**, returning to a charcoal sketch before the book cover closes to display the scene name, `endingTitle` (`"The End ★"`), and `endingCredit` / credits card.
+4. **Agent Choreography & Configuration**:
+   - Keep Act I's main character dialogue/key action starting after `openDurationSec` (or let the first `~3.5s` serve as the book-opening & color-in establishing shot, optionally paired with a `crayon_scribble` or `chime` audio cue).
+   - Let the final `~3.5s` (`closeDurationSec`) serve as a gentle farewell pose as the scene zooms out, un-colors to sketch, and closes the book (optionally paired with a `lullaby` cue).
+   - **Character-Attached Speech & Thought Bubbles (`speechText` & `speechStyle`)**: Whenever a character speaks or thinks, set `speechText` and `speechStyle: 'speech' | 'thought'` directly on the character's `CharacterNode` or `NodeKeyframe` (and `speechText: ''` to clear it) rather than guessing manual `(x, y)` coordinates on a standalone annotation node. The engine automatically anchors the bubble tail/thought puffs directly above that character's head via `CHARACTER_SPEECH_ANCHORS`.
+   - Customize cover titles, credits, cover material, or durations via `scene.bookFrame: BookFrameConfig` (or set `bookFrame: false` to disable), toggle live in the Studio UI via `#chk-book-frame`, or pass `?book_frame=1|0` in the URL.
 
 ---
 
@@ -57,6 +73,8 @@ Whenever writing or modifying TypeScript code—including scenes, engine modules
 
 - **Centralized design tokens**: Import all colors, dimensions, frame rates, filter IDs, and style constants from `src/theme/tokens.ts`. Never hardcode magic numbers or hex values.
 - **Modular DRY architecture**: Reuse existing engine primitives (`svgUtils.ts`, `filters.ts`, `fillMask.ts`, `timeline.ts`, `clock.ts`) before writing new code. Actively eliminate duplication.
+- **Predefined character speech/thought bubble anchors (`CHARACTER_SPEECH_ANCHORS`)**: Every character model in `src/assets/characters/` MUST register a predefined head-top anchor `{ x, y }` in `CHARACTER_SPEECH_ANCHORS` (`src/assets/characters/index.ts`), modeled after existing characters (`little_girl: { x: 0, y: -102 }`, `shopkeeper: { x: 0, y: -105 }`, `cat: { x: 10, y: -44 }`), so setting `speechText` and `speechStyle: 'speech' | 'thought'` on any `CharacterNode` or `NodeKeyframe` automatically attaches the speech or thought bubble right above that character's head.
+- **Mandatory `+X` character facing & 3/4 walking profile convention**: Every character rig MUST face **RIGHT (`+X`)** when `flipX: false` and **LEFT (`-X`)** when `flipX: true`. For `state === 'walking'`, always implement a dedicated 3/4 or side-profile walking rig facing right (`+X`) where both legs pivot from the hip center (`x ≈ 0`), both shoes/paws point right (`+X`), and the torso/head/eyes face right (`+X`) — never reuse a flat front-facing rig with sideways-scissoring legs for walking. Set `flipX: false` when walking right (`dx > 0`) and `flipX: true` when walking left (`dx < 0`).
 - **Living documentation**: Update `docs/ARCHITECTURE.md` whenever files, modules, or public APIs are added, modified, or removed.
 - **Minimalism & reuse checks**: Before implementing anything new, audit the codebase for existing utilities that can be extended or composed.
 - **Strict TypeScript + Test verification (Zero-Dependency CLI)**: All code must compile under `strict: true`. After every change, run in `<workspace>`:
@@ -77,7 +95,7 @@ Whenever the user provides photos or images (or asks the agent to generate refer
 skills/photo-to-crayon-asset/SKILL.md
 ```
 
-This skill contains the complete workflow for visual inspection, palette mapping to `TOKENS` colors (`agy-node "<plugin-root>/skills/photo-to-crayon-asset/scripts/analyze_reference_photo.mjs" "<photo_path>"`), SVG cutout decomposition using engine primitives, multi-state rigging, and the registration checklist (schema union types, render wiring, asset catalog, build verification).
+This skill contains the complete workflow for visual inspection, palette mapping to `TOKENS` colors (`agy-node "<plugin-root>/skills/photo-to-crayon-asset/scripts/analyze_reference_photo.mjs" "<photo_path>"`), SVG cutout decomposition using engine primitives, multi-state rigging, **mandatory predefined head-top speech/thought bubble anchor registration in `CHARACTER_SPEECH_ANCHORS` (`src/assets/characters/index.ts`)**, and the registration checklist (schema union types, render wiring, asset catalog, build verification).
 
 ---
 

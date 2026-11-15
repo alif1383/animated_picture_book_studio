@@ -53,6 +53,7 @@ export interface ParsedStudioParams {
   autoExport: boolean;
   autoExportResolution: VideoExportResolution;
   vibrant: boolean;
+  bookFrame: boolean;
   canonicalQuery: string;
 }
 
@@ -86,6 +87,7 @@ const FOOTAGE_ALIASES: Record<string, number> = {
  *   `?scene=<id|key>` — select any scene from SCENE_REGISTRY by key or scene.id
  *   `?footage=<act-id|alias>` — loop a single act
  *   `?vibrant=1|0` — enable/disable Vibrant Crayon Mode
+ *   `?book_frame=1|0` — enable/disable Storybook Cover Opening & Ending/Credits Book-Frame
  *   `?t=<seconds>` — seek to a specific time
  *   `?autoplay=1|0` — autoplay on mount
  *   `?auto_export=1` — automatically trigger video export on mount
@@ -212,6 +214,19 @@ export function parseStudioUrlParams(
     vibrant = false;
   }
 
+  const rawBookFrame = params.get('book_frame') ?? params.get('bookFrame');
+  let bookFrame =
+    scene.bookFrame === false
+      ? false
+      : typeof scene.bookFrame === 'object' && scene.bookFrame !== null
+      ? scene.bookFrame.enabled ?? true
+      : true;
+  if (rawBookFrame === '1' || rawBookFrame === 'true') {
+    bookFrame = true;
+  } else if (rawBookFrame === '0' || rawBookFrame === 'false') {
+    bookFrame = false;
+  }
+
   const baseQuery = rawScene
     ? `?scene=${encodeURIComponent(rawScene)}`
     : footageId
@@ -232,6 +247,7 @@ export function parseStudioUrlParams(
     autoExport,
     autoExportResolution,
     vibrant,
+    bookFrame,
     canonicalQuery,
   };
 }
@@ -267,9 +283,9 @@ export const ASSET_CATALOG_ITEMS: readonly AssetCatalogItem[] = [
   },
   {
     id: 'cat-moon',
-    title: 'Crayon Moon & Nightcap',
+    title: 'Crescent Moon with Stars & Nightcap',
     category: 'Character',
-    caption: 'Warm yellow pastel Moon with orange cheeks, diagonal hatching & nightcap.',
+    caption: 'Warm yellow pastel Crescent Moon with dangling & twinkling stars, rosy cheeks & nightcap.',
     viewBox: '-115 -185 230 290',
     jumpToTimeSec: 27.5,
     states: ['sleeping', 'grumpy', 'awake', 'curious', 'blinking'],
@@ -284,9 +300,9 @@ export const ASSET_CATALOG_ITEMS: readonly AssetCatalogItem[] = [
   },
   {
     id: 'cat-little-girl',
-    title: 'Little Girl & Sheep Plushie',
+    title: 'Little Girl in Star Sweater',
     category: 'Character',
-    caption: '2D cutout rig with brown bob hair, pink crayon dress & fluffy white sheep.',
+    caption: 'Wavy brown hair with pink hairclip, purple star sweater, cream wide-leg trousers & sheep/pizza.',
     viewBox: '-36 -95 72 108',
     jumpToTimeSec: 22.0,
     states: ['singing', 'climbing', 'waving', 'walking', 'looking_up'],
@@ -301,10 +317,10 @@ export const ASSET_CATALOG_ITEMS: readonly AssetCatalogItem[] = [
   },
   {
     id: 'cat-ochre-cottage',
-    title: 'Ochre Cottage & Ladder',
+    title: 'Cute & Cozy Ochre Cottage',
     category: 'Building',
-    caption: 'Terracotta crayon roof, round attic window, pink-curtained room & right ladder.',
-    viewBox: '-190 -265 375 275',
+    caption: 'Scalloped terracotta roof, welcome wreath door, overflowing flower boxes, shutters & ladder.',
+    viewBox: '-190 -272 375 282',
     jumpToTimeSec: 8.5,
     renderInner: () =>
       renderBuilding({
@@ -345,9 +361,9 @@ export const ASSET_CATALOG_ITEMS: readonly AssetCatalogItem[] = [
   },
   {
     id: 'cat-village-cat',
-    title: 'Cozy Village Cat',
+    title: 'Cozy Patched Kitten',
     category: 'Character',
-    caption: 'Terracotta tabby cat watching the Moon or curled up asleep.',
+    caption: 'Soft cream-white kitten with dark tabby patches, pink inner ears & golden collar bell.',
     viewBox: '-30 -38 60 46',
     jumpToTimeSec: 4.0,
     states: ['curious', 'sleeping', 'idle'],
@@ -607,6 +623,16 @@ export const ASSET_CATALOG_ITEMS: readonly AssetCatalogItem[] = [
     renderInner: (frameIndex) =>
       renderProp({ kind: 'beach_ball', frameIndex, variant: 1 }),
   },
+  {
+    id: 'cat-pizza-slice',
+    title: 'Hot Cheesy Pepperoni Pizza Slice',
+    category: 'Prop',
+    caption: 'Golden-crust pepperoni pizza slice with melted cheese, basil leaf & rising steam wisps.',
+    viewBox: '-38 -70 76 78',
+    jumpToTimeSec: 12.0,
+    renderInner: (frameIndex) =>
+      renderProp({ kind: 'pizza_slice', frameIndex, variant: 1, lit: true }),
+  },
 ];
 
 /**
@@ -683,6 +709,7 @@ export function mountStorybookStudio(
     enablePaperTexture: true,
     enableProgressiveFill: true,
     vibrant: studioConfig.vibrant,
+    enableBookFrame: studioConfig.bookFrame,
     overrideFillProgress: undefined,
   };
 
@@ -801,6 +828,12 @@ export function mountStorybookStudio(
               <label style="font-weight: 700; color: var(--terracotta);">
                 <input type="checkbox" id="chk-vibrant-mode" ${renderOptions.vibrant ? 'checked' : ''} />
                 🌈 Vibrant Crayon Mode (#vibrant-grade)
+              </label>
+            </div>
+            <div class="control-row">
+              <label style="font-weight: 700; color: var(--charcoal);">
+                <input type="checkbox" id="chk-book-frame" ${renderOptions.enableBookFrame !== false ? 'checked' : ''} />
+                📖 Book Cover & Credits (Opening/Ending)
               </label>
             </div>
           </div>
@@ -924,6 +957,8 @@ export function mountStorybookStudio(
     container.querySelector<HTMLInputElement>('#chk-paper-texture')!;
   const chkVibrantMode =
     container.querySelector<HTMLInputElement>('#chk-vibrant-mode')!;
+  const chkBookFrame =
+    container.querySelector<HTMLInputElement>('#chk-book-frame')!;
   const chkProgressiveFill = container.querySelector<HTMLInputElement>(
     '#chk-progressive-fill'
   )!;
@@ -1026,6 +1061,7 @@ export function mountStorybookStudio(
       renderOptions.enablePaperTexture,
       renderOptions.enableProgressiveFill,
       renderOptions.vibrant ?? false,
+      renderOptions.enableBookFrame ?? true,
       renderOptions.overrideFillProgress ?? 'auto',
     ].join('|');
 
@@ -1038,7 +1074,7 @@ export function mountStorybookStudio(
     }
     lastRenderedKey = renderKey;
 
-    const { svg, frame } = evaluateAndRenderScene(
+    const { svg, frame, bookFrame } = evaluateAndRenderScene(
       activeScene,
       currentTimeSec,
       renderOptions
@@ -1086,6 +1122,7 @@ export function mountStorybookStudio(
 
     const rows: string[] = [
       `<div>• <b>color-mode</b>: ${renderOptions.vibrant ? '🌈 vibrant (#vibrant-grade)' : 'classic watercolor paper'}</div>`,
+      `<div>• <b>book-frame</b>: ${bookFrame.enabled ? `📖 ${bookFrame.phase} (scale=${bookFrame.bookScale}, color=${Math.round(bookFrame.colorFillMultiplier * 100)}%)` : 'disabled'}</div>`,
     ];
     if (strawberryState) {
       rows.push(
@@ -1186,7 +1223,9 @@ export function mountStorybookStudio(
     currentTimeSec = studioConfig.initialTimeSec;
     prevQuantizedTime = currentTimeSec - 0.01;
     renderOptions.vibrant = studioConfig.vibrant;
+    renderOptions.enableBookFrame = studioConfig.bookFrame;
     chkVibrantMode.checked = studioConfig.vibrant;
+    chkBookFrame.checked = studioConfig.bookFrame;
 
     headerTitleEl.textContent = `🖍️ ${activeScene.title}`;
     headerSubtitleEl.textContent = activeScene.subtitle ?? '';
@@ -1390,6 +1429,11 @@ export function mountStorybookStudio(
 
   chkVibrantMode.addEventListener('change', () => {
     renderOptions.vibrant = chkVibrantMode.checked;
+    updateStage(true);
+  });
+
+  chkBookFrame.addEventListener('change', () => {
+    renderOptions.enableBookFrame = chkBookFrame.checked;
     updateStage(true);
   });
 

@@ -3,6 +3,8 @@ import { clamp01, round2, svgTransform } from './svgUtils';
 import { quantizeFillProgress } from './fillMask';
 import { evaluateSteppedClock, SteppedClockState } from './clock';
 import type {
+  BubbleStyle,
+  BubbleTailDirection,
   CameraKeyframe,
   CharacterState,
   NodeKeyframe,
@@ -37,10 +39,17 @@ export interface EvaluatedNodeState {
   windowLit?: boolean;
   wearingNightcap?: boolean;
   holdingSheep?: boolean;
+  holdingPizza?: boolean;
   wearingFloatie?: boolean;
   floatieVariant?: number;
+  speechText?: string;
+  speechStyle?: 'speech' | 'thought';
+  speechTail?: 'bottom-center' | 'bottom-left' | 'bottom-right';
   lit?: boolean;
   count?: number;
+  text?: string;
+  bubbleStyle?: BubbleStyle;
+  tailDirection?: BubbleTailDirection;
   /** SVG transform attribute string built via svgTransform() */
   transform: string;
 }
@@ -178,7 +187,7 @@ function evaluateSingleNode(
   const y = combined.y ?? node.y;
   const rotate = combined.rotate ?? node.rotate ?? 0;
   const scale = combined.scale ?? node.scale ?? 1;
-  const flipX = combined.flipX ?? node.flipX ?? false;
+  let flipX = combined.flipX ?? node.flipX ?? false;
   const opacity = combined.opacity ?? node.opacity ?? 1;
   const visible = combined.visible ?? node.visible ?? true;
 
@@ -188,6 +197,26 @@ function evaluateSingleNode(
 
   const state =
     combined.state ?? (node.type === 'character' ? node.state : undefined);
+
+  // Automatic walking direction safeguard: when a character is in 'walking' state across a
+  // horizontal motion segment (prev.x -> next.x), always face the direction of travel
+  // (flipX = false when walking right +X, flipX = true when walking left -X).
+  if (node.type === 'character' && state === 'walking' && keyframes.length >= 2) {
+    for (let i = 0; i < keyframes.length - 1; i++) {
+      const prev = keyframes[i];
+      const next = keyframes[i + 1];
+      if (qTime >= prev.time - 1e-6 && qTime <= next.time + 1e-6 && !prev.hold) {
+        if (
+          typeof prev.x === 'number' &&
+          typeof next.x === 'number' &&
+          Math.abs(next.x - prev.x) > 1
+        ) {
+          flipX = next.x < prev.x;
+          break;
+        }
+      }
+    }
+  }
   const windowLit =
     combined.windowLit ??
     (node.type === 'building' ? node.windowLit : undefined);
@@ -197,16 +226,39 @@ function evaluateSingleNode(
   const holdingSheep =
     combined.holdingSheep ??
     (node.type === 'character' ? node.holdingSheep : undefined);
+  const holdingPizza =
+    combined.holdingPizza ??
+    (node.type === 'character' ? node.holdingPizza : undefined);
   const wearingFloatie =
     combined.wearingFloatie ??
     (node.type === 'character' ? node.wearingFloatie : undefined);
   const floatieVariant =
     combined.floatieVariant ??
     (node.type === 'character' ? node.floatieVariant : undefined);
+  const speechText =
+    combined.speechText !== undefined
+      ? combined.speechText
+      : node.type === 'character'
+      ? node.speechText
+      : undefined;
+  const speechStyle =
+    combined.speechStyle ??
+    (node.type === 'character' ? node.speechStyle : undefined);
+  const speechTail =
+    combined.speechTail ??
+    (node.type === 'character' ? node.speechTail : undefined);
   const lit = combined.lit ?? (node.type === 'prop' ? node.lit : undefined);
   const rawCount =
     combined.count ?? (node.type === 'prop' ? node.count : undefined);
   const count = rawCount !== undefined ? Math.round(rawCount) : undefined;
+  const text =
+    combined.text ?? (node.type === 'annotation' ? node.text : undefined);
+  const bubbleStyle =
+    combined.bubbleStyle ??
+    (node.type === 'annotation' ? node.bubbleStyle : undefined);
+  const tailDirection =
+    combined.tailDirection ??
+    (node.type === 'annotation' ? node.tailDirection : undefined);
 
   return {
     id: node.id,
@@ -224,10 +276,17 @@ function evaluateSingleNode(
     windowLit,
     wearingNightcap,
     holdingSheep,
+    holdingPizza,
     wearingFloatie,
     floatieVariant,
+    speechText,
+    speechStyle,
+    speechTail,
     lit,
     count,
+    text,
+    bubbleStyle,
+    tailDirection,
     transform: svgTransform({ x, y, rotate, scale, flipX }),
   };
 }

@@ -6,8 +6,12 @@ export interface CharacterRenderOptions {
   frameIndex?: number;
   wearingNightcap?: boolean;
   holdingSheep?: boolean;
+  holdingPizza?: boolean;
   wearingFloatie?: boolean;
   floatieVariant?: number;
+  speechText?: string;
+  speechStyle?: 'speech' | 'thought';
+  speechTail?: 'bottom-center' | 'bottom-left' | 'bottom-right';
   fillMask?: string;
   id?: string;
   x?: number;

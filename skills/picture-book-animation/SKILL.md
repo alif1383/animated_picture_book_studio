@@ -79,6 +79,38 @@ Background patches and certain props can reveal their crayon color progressively
 
 Set `fillProgress` (0..1) and `fillSteps` (default 10) on nodes, and animate `fillProgress` via timeline keyframes.
 
+### Storybook Cover Opening & Ending/Credits Book-Frame (`bookFrame`, `src/engine/bookFrame.ts`)
+Every scene in the Picture-Book Studio is framed inside an animated hand-drawn physical storybook (`bookFrame` enabled by default):
+1. **Opening Cover & Zoom-In (`0 .. openDurationSec`, default `3.5s`, `phase: 'opening'`)**:
+   - Starts zoomed out (`bookScale: 0.68`) on a closed hardcover picture book (`#book-front-cover`) showing the scene's title (`coverTitle`, defaulting to `scene.title`), subtitle (`coverSubtitle`), and optional credit (`creditText`).
+   - The book cover opens in stepped `6 FPS` stop-motion (`coverOpenProgress: 0 -> 1`) to reveal the scene inside the open book spread (`#book-frame-spread`) starting at **0% crayon color** (`colorFillMultiplier: 0` — hand-drawn charcoal outline sketch on warm paper).
+   - As the camera zooms into the book spread (`bookScale: 0.68 -> 1.0`), the crayon colors progressively fill in from **0% to 100%** (`colorFillMultiplier: 0 -> 1`).
+2. **Main Story (`openDurationSec .. durationSec - closeDurationSec`, `phase: 'story'`)**:
+   - Full-bleed 16:9 storybook animation (`bookScale: 1.0`, `colorFillMultiplier: 1.0`, 100% identical to standard scene rendering).
+3. **Ending Color-Out, Zoom-Out & Closing Credits (`durationSec - closeDurationSec .. durationSec`, default last `3.5s`, `phase: 'closing'`)**:
+   - The view zooms back out into the open book spread (`1.0 -> 0.68`) as the crayon pigment drains from **100% down to 0%** (`colorFillMultiplier: 1 -> 0`), returning to a pencil/charcoal sketch before the book cover closes (`coverCloseProgress: 0 -> 1`, `#book-ending-cover`) to display the scene name, `endingTitle` (`"The End ★"`), and `endingCredit` / credits card.
+
+#### `BookFrameConfig` Interface & `SceneDefinition` Configuration
+```typescript
+export interface BookFrameConfig {
+  enabled?: boolean;            // default: true
+  coverTitle?: string;          // defaults to scene.title
+  coverSubtitle?: string;       // defaults to scene.subtitle
+  creditText?: string;          // optional author/illustrator credit on front/back cover
+  endingTitle?: string;         // defaults to 'The End ★'
+  endingCredit?: string;        // defaults to scene.title + optional credit line
+  coverMaterial?: CrayonMaterialId;  // default: 'crayonTerracotta'
+  accentMaterial?: CrayonMaterialId; // optional accent crayon fill
+  openDurationSec?: number;     // default: 3.5
+  closeDurationSec?: number;    // default: 3.5
+}
+```
+
+#### Choreography Best Practices for `bookFrame`
+- **Opening (`0 .. openDurationSec`, default `~3.5s`)**: Keep Act I's main character dialogue or key action starting after `openDurationSec` (or let the first `~3.5s` serve as the book-opening & color-in establishing shot, optionally paired with a `crayon_scribble` or `chime` audio cue).
+- **Ending (`durationSec - closeDurationSec .. durationSec`, default final `~3.5s`)**: Let the final `~3.5s` serve as a gentle farewell pose as the scene zooms out, un-colors to sketch, and closes the book (optionally paired with a `lullaby` cue).
+- **Customization & Toggles**: Customize cover titles, credits, cover material, or open/close durations via `scene.bookFrame` (or pass `bookFrame: false` to disable), toggle the book frame live in the Studio UI (`#chk-book-frame`), or pass `?book_frame=1|0` in the URL.
+
 ---
 
 ## 4. Creating a New Scene
@@ -189,6 +221,17 @@ export const MY_SCENE: SceneDefinition = {
   height: TOKENS.canvas.height,   // 720
   fps: TOKENS.timing.fps,         // 6
   vibrantMode: false,
+  bookFrame: {
+    enabled: true,
+    coverTitle: 'My New Scene',
+    coverSubtitle: 'A delightful crayon storybook animation',
+    creditText: 'Illustrated in Crayon & Pastel',
+    endingTitle: 'The End ★',
+    endingCredit: 'My New Scene · Thank You for Watching',
+    coverMaterial: 'crayonTerracotta',
+    openDurationSec: 3.5,
+    closeDurationSec: 3.5,
+  },
   acts: MY_SCENE_ACTS,
   nodes: MY_SCENE_NODES,
   timeline: MY_SCENE_TIMELINE,
@@ -270,6 +313,13 @@ Keyframe `time` values are in seconds. The engine quantizes them to the 6 FPS st
 - `state` is applied as a step function at or after the keyframe time.
 - `visible`, `flipX`, `windowLit`, `wearingNightcap`, `holdingSheep`, `lit` are stepped (no interpolation).
 
+> [!IMPORTANT]
+> **Mandatory `+X` Forward Walking & Facing Convention**:
+> - Every character rig faces **RIGHT (`+X`)** when `flipX: false` and **LEFT (`-X`)** when `flipX: true`.
+> - **Walking Right (`next.x > prev.x`)**: Set `state: 'walking'` and `flipX: false` so the character's 3/4 walking profile, chest, eyes, and shoes face right (`+X`).
+> - **Walking Left (`next.x < prev.x`)**: Set `state: 'walking'` and `flipX: true` so the character faces left (`-X`). (The engine's `evaluateSingleNode` in `src/engine/timeline.ts` also automatically enforces `flipX = next.x < prev.x` during horizontal `'walking'` segments so a character can never walk backwards!)
+> - **Dialogue Facing**: When two characters talk to each other, set `flipX: false` on the character on the left (facing right) and `flipX: true` on the character on the right if they have a directional profile.
+
 ### 5.3 Changing character states
 
 Set `state` in keyframes to trigger pose changes:
@@ -300,15 +350,57 @@ camera: [
 - `hold: true`: Step-hold — no interpolation until next keyframe (creates a "cut").
 - All values are stepped to 6 FPS during evaluation.
 
-### 5.5 Adding pencil annotations (`AnnotationNode`)
+### 5.5 Adding character-attached speech/thought bubbles (`speechText` & `speechStyle`) & pencil annotations (`AnnotationNode`)
+
+> [!IMPORTANT]
+> **Always use `speechText` and `speechStyle` directly on the speaking character (`CharacterNode` or `NodeKeyframe`)** for character dialogue and thoughts! Every character has a predefined head-top anchor (`CHARACTER_SPEECH_ANCHORS` in `src/assets/characters/index.ts`), so the engine automatically renders the bubble with its tail tip or thought puffs pointing directly above that character's head, tracks the character as they walk, never flips text backwards when `flipX: true`, and renders above all buildings/props.
 
 ```typescript
+// Recommended: Character-attached speech & thought bubbles on a character timeline track:
+{
+  nodeId: 'little-girl',
+  keyframes: [
+    // Walking while speaking — bubble automatically follows the Little Girl's head!
+    {
+      time: 3.5,
+      x: 265, y: 642,
+      state: 'walking',
+      speechText: "Let's get pizza, Kitty! ★",
+      speechStyle: 'speech',
+    },
+    // Clear the bubble by setting speechText: ''
+    { time: 7.0, x: 815, y: 642, state: 'idle', speechText: '', hold: true },
+    // Ordering at the store
+    {
+      time: 9.5,
+      x: 815, y: 642,
+      state: 'waving',
+      speechText: 'One cheesy slice, please!',
+      speechStyle: 'speech',
+      hold: true,
+    },
+    { time: 11.8, x: 815, y: 642, state: 'looking_up', speechText: '', hold: true },
+    // Thinking "Yum!!" with a scalloped cloud thought bubble while holding pizza
+    {
+      time: 14.2,
+      x: 815, y: 642,
+      state: 'waving',
+      holdingPizza: true,
+      speechText: 'Yum!! So cheesy! ★',
+      speechStyle: 'thought',
+      hold: true,
+    },
+    { time: 19.5, x: 815, y: 642, state: 'idle', holdingPizza: false, speechText: '', hold: true },
+  ],
+},
+
+// Plain hand-lettered text annotation (for scene titles/captions not attached to a character):
 {
   id: 'sound-effect-text',
   type: 'annotation',
   zIndex: 35,
   x: 400, y: 200,
-  text: 'WHOOSH! ★',
+  text: 'Goodnight, Little Village ★',
   color: TOKENS.colors.charcoalOutline,
   fontSize: 24,
   visible: false,  // animate visibility via timeline
@@ -392,7 +484,7 @@ cd <workspace>
 agy-node scripts/studio-cli.mjs dev    # → http://localhost:5173
 ```
 
-URL parameters for testing: `?short_sample=1|2|3|birthday`, `?footage=<actId>`, `?autoplay=1`, `?vibrant=1|0`, `?t=<seconds>`.
+URL parameters for testing: `?short_sample=1|2|3|birthday`, `?scene=<sceneId>`, `?footage=<actId>`, `?autoplay=1`, `?vibrant=1|0`, `?book_frame=1|0`, `?t=<seconds>`.
 
 ---
 

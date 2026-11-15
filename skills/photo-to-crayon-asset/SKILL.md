@@ -85,6 +85,7 @@ import { svgEl, crayonPath, crayonStrokeAttrs, svgTransform } from '../../engine
 3. **Face** — Paper-white eye ovals with offset black pupils (for expression), small curved mouth, rosy cheek circles
 4. **Accessories** — Party hats, crowns, held objects as separate `svgEl` shapes
 5. **Limbs / appendages** — Simple stub arms/legs or leaf fronds as small `crayonPath` shapes
+6. **Canonical Forward Orientation (`+X` Right when `flipX: false`)** — Always orient characters so their default forward-walking / profile direction is **RIGHT (`+X`)** when `flipX: false` (and **LEFT (`-X`)** when `flipX: true`). Never draw a left foot pointing left (`-X`) in a walking or neutral pose when `flipX: false`.
 
 > [!TIP]
 > Study existing character files like `src/assets/characters/singingRadish.ts` or `birthdayStrawberry.ts` for the exact pattern to follow.
@@ -140,6 +141,24 @@ const wobbleX = deterministicJitter(0, frameIndex, 1.2);
 const wobbleY = deterministicJitter(1, frameIndex, 0.8);
 ```
 
+### Mandatory Facing & Walking Direction Convention (`+X` Forward Rule)
+
+Every character model in `src/assets/characters/` **MUST** obey the canonical **`+X` Forward Rule** so characters never look like they are walking backwards or sideways:
+1. **Canonical Forward Direction (`flipX: false` = Facing Right `+X`)**:
+   - When `flipX: false` (default), a character's forward walking/facing direction is **RIGHT (`+X`)**.
+   - When `flipX: true`, the engine mirrors the character horizontally (`scale(-1, 1)`) so they face and walk **LEFT (`-X`)**.
+2. **Dedicated 3/4 or Side-Profile Walk Cycle (`state === 'walking'`)**:
+   - **NEVER** reuse a flat symmetric front-facing pose with sideways-scissoring legs for `state === 'walking'`.
+   - In `state === 'walking'`, render a dedicated **3/4 or side-profile walking rig facing RIGHT (`+X`)** (see `src/assets/characters/littleGirl.ts` and `src/assets/characters/cat.ts` for reference):
+     - Both legs (`left-leg` and `right-leg`) pivot from the hip center (`pivotX ≈ 0`) and stride forward/backward along the X axis (`rotate: -walkSwing` and `rotate: walkSwing`).
+     - **Both shoes/feet/paws MUST point forward toward `+X` (right)** (heel on the left `x < 0`, rounded toe cap extending right `x > 0`). Never draw a shoe pointing left (`-X`) when `flipX: false`!
+     - Shift the chest motif (e.g., sweater star), eyes, nose tick, mouth, and hair volume into a 3/4 right-facing profile (`data-facing="right"`, `data-walk-profile="true"`), with the back arm swinging behind the torso and the front arm swinging in front.
+
+### Predefined Speech & Thought Bubble Anchor (`CHARACTER_SPEECH_ANCHORS` — Mandatory for Every Character)
+
+Every character model in `src/assets/characters/` **MUST** define a predefined local head-top anchor `(x, y)` (relative to the character's ground-feet origin `(0, 0)`) in `CHARACTER_SPEECH_ANCHORS` inside `src/assets/characters/index.ts`, modeled after our built-in characters (`little_girl: { x: 0, y: -102 }`, `shopkeeper: { x: 0, y: -105 }`, `cat: { x: 10, y: -44 }`, etc.).
+- This allows any scene to set `speechText` and `speechStyle: 'speech' | 'thought'` (plus optional `speechTail: 'bottom-center' | 'bottom-left' | 'bottom-right'`) directly on the character's `CharacterNode` or `NodeKeyframe` (`speechText: ''` to clear), and the engine automatically anchors the speech tail tip or lowest thought puff directly above that character's head without manual coordinate guessing!
+
 ---
 
 ## Step 4: Registration Checklist
@@ -188,7 +207,21 @@ import { renderMyAsset } from './myAsset';
 // 2. Add export
 export { renderMyAsset } from './myAsset';
 
-// 3. Add case to renderCharacter() switch
+// 3. Add predefined head-top speech/thought bubble anchor in CHARACTER_SPEECH_ANCHORS (MANDATORY!)
+export const CHARACTER_SPEECH_ANCHORS: Record<
+  CharacterKind,
+  { x: number; y: number }
+> = {
+  little_girl: { x: 0, y: -102 },
+  shopkeeper: { x: 0, y: -105 },
+  cat: { x: 10, y: -44 },
+  // ... existing characters ...
+  my_new_character: { x: 0, y: -96 }, // ← exact local (x, y) right above this character's head!
+};
+
+// 4. Add floatie fit in CHARACTER_FLOATIE_FITS
+
+// 5. Add case to renderCharacter() switch (which also automatically attaches speechText/speechStyle via CHARACTER_SPEECH_ANCHORS)
 case 'my_new_character':
   inner = renderMyAsset(options);
   break;

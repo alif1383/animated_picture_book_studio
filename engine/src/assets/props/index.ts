@@ -18,6 +18,7 @@ import { renderOceanWaves } from './oceanWaves';
 import { renderWaterSplash } from './waterSplash';
 import { renderSwimFloatie } from './swimFloatie';
 import { renderBeachBall } from './beachBall';
+import { renderPizzaSlice } from './pizzaSlice';
 
 export type { PropRenderOptions } from './types';
 export { renderStarShape } from './shared';
@@ -40,6 +41,7 @@ export { renderWaterSplash } from './waterSplash';
 export { renderSwimFloatie, renderSwimFloatieRing } from './swimFloatie';
 export type { SwimFloatieRingOptions } from './swimFloatie';
 export { renderBeachBall } from './beachBall';
+export { renderPizzaSlice, renderHandheldPizzaSlice } from './pizzaSlice';
 
 /**
  * Renders any reusable prop (`'grass_patch' | 'tree' | 'music_notes' | 'star_cluster' |
@@ -104,6 +106,9 @@ export function renderProp(options: PropRenderOptions): string {
       break;
     case 'beach_ball':
       inner = renderBeachBall(options);
+      break;
+    case 'pizza_slice':
+      inner = renderPizzaSlice(options);
       break;
   }
 

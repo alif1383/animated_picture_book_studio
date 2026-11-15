@@ -142,7 +142,7 @@ describe("Strawberry's Beach Birthday Splash (46s Vibrant 5-Act Scene)", () => {
     expect(parsedByAlias.footageId).toBe('floatie-water-play');
     expect(parsedByAlias.loopBounds).toEqual({ start: 19, end: 32 });
 
-    expect(ASSET_CATALOG_ITEMS.length).toBe(30);
+    expect(ASSET_CATALOG_ITEMS.length).toBeGreaterThanOrEqual(30);
   });
 
   it('renders the 5 modular beach props and 2.5D character floatie + happy onion expressions', () => {

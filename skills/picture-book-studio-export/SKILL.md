@@ -100,6 +100,7 @@ The server starts on **http://localhost:5173**.
 | `?t=<sec>`             | `?t=12.5`                           | Seek to timestamp                       |
 | `?autoplay=1`          | `?autoplay=1`                       | Auto-play on load                       |
 | `?vibrant=1`           | `?vibrant=1`                        | Force vibrant crayon mode               |
+| `?book_frame=1|0`      | `?book_frame=1`                     | Toggle Storybook Cover Opening & Ending/Credits Book-Frame (`#chk-book-frame`, default `1`) |
 | `?auto_export=1`       | `?auto_export=1&resolution=1080p`   | Auto-start video export on page load    |
 | `?resolution=<preset>` | `?resolution=720p`                  | Export resolution (default: 1080p)      |
 

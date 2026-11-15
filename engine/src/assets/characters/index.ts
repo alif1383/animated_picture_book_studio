@@ -1,6 +1,7 @@
 import { steppedOscillate } from '../../engine/clock';
 import { svgEl, svgTransform } from '../../engine/svgUtils';
 import type { CharacterKind } from '../../engine/schema';
+import { renderAnnotation } from '../annotations/pencilAnnotation';
 import { renderSwimFloatieRing } from '../props/swimFloatie';
 import type { CharacterRenderOptions } from './types';
 import { renderLittleGirl } from './littleGirl';
@@ -186,6 +187,31 @@ const CHARACTER_FLOATIE_FITS: Record<CharacterKind, CharacterFloatieFit> = {
 };
 
 /**
+ * Predefined local speech/thought bubble anchor coordinates `(x, y)` directly above
+ * each character's head (relative to the character's ground-feet origin `(0, 0)`).
+ */
+export const CHARACTER_SPEECH_ANCHORS: Record<
+  CharacterKind,
+  { x: number; y: number }
+> = {
+  little_girl: { x: 0, y: -102 },
+  shopkeeper: { x: 0, y: -105 },
+  cat: { x: 10, y: -44 },
+  moon: { x: 0, y: -152 },
+  sun: { x: 0, y: -150 },
+  singing_radish: { x: 0, y: -115 },
+  watermelon_slice: { x: 0, y: -95 },
+  blue_party_cat: { x: 0, y: -98 },
+  hello_bug: { x: 0, y: -95 },
+  party_banana: { x: 0, y: -105 },
+  crying_onion: { x: 0, y: -90 },
+  cherry_twins: { x: 0, y: -90 },
+  acorn_twins: { x: 0, y: -88 },
+  olive_sprout: { x: 0, y: -82 },
+  birthday_strawberry: { x: 0, y: -108 },
+};
+
+/**
  * Renders any 2D cutout character rig quantized to the stepped stop-motion frame index.
  */
 export function renderCharacter(options: CharacterRenderOptions): string {
@@ -200,6 +226,9 @@ export function renderCharacter(options: CharacterRenderOptions): string {
     kind,
     wearingFloatie,
     floatieVariant,
+    speechText,
+    speechStyle,
+    speechTail,
     frameIndex = 0,
     fillMask,
   } = options;
@@ -294,6 +323,26 @@ export function renderCharacter(options: CharacterRenderOptions): string {
           fillMask,
         }),
       ]
+    );
+  }
+
+  if (speechText && speechText.trim().length > 0) {
+    const anchor = CHARACTER_SPEECH_ANCHORS[kind];
+    const bubbleMarkup = renderAnnotation({
+      x: anchor.x,
+      y: anchor.y,
+      text: speechText.trim(),
+      bubbleStyle: speechStyle ?? 'speech',
+      tailDirection: speechTail ?? 'bottom-center',
+      anchorAtTailTip: true,
+    });
+    inner += svgEl(
+      'g',
+      {
+        'data-part': 'character-speech',
+        transform: flipX ? 'scale(-1, 1)' : undefined,
+      },
+      bubbleMarkup
     );
   }
 

@@ -4,13 +4,20 @@ import { isSteppedBlinkFrame, steppedOscillate } from '../../engine/clock';
 import {
   crayonPath,
   crayonStrokeAttrs,
+  round2,
   svgEl,
   svgTransform,
 } from '../../engine/svgUtils';
 import type { CharacterRenderOptions } from './types';
+import { renderStarShape } from '../props/shared';
 
 /**
- * Renders the expressive Crayon Moon Character Rig (`'moon'`, Reference Images 1, 2, 3).
+ * Renders the expressive Storybook Crescent Moon with Twinkling Stars (`'moon'`).
+ * - Sculpted C-shaped wax-crayon Crescent Moon (`crayonWarmMoon` with `mask: fillMask`)
+ * - Warm rosy cheek spots (`moonCheek`) and diagonal charcoal hatching
+ * - Expressive face states: `moon-face-sleeping`, `moon-face-grumpy`, `moon-face-awake`
+ * - Optional blue-and-white striped sleeping nightcap (`data-part="moon-nightcap"`)
+ * - Companion twinkling & dangling 5-point crayon stars (`data-part="moon-stars"`)
  */
 export function renderMoon(options: CharacterRenderOptions): string {
   const {
@@ -21,22 +28,34 @@ export function renderMoon(options: CharacterRenderOptions): string {
   } = options;
 
   const {
+    warmMoon,
+    bananaYellow,
+    starWhite,
     moonCheek,
     nightcapWhite,
     charcoalOutline,
+    faintPencil,
     indigoNightDark,
   } = TOKENS.colors;
   const { outlineHeavy, outlineMedium, outlineThin, annotationPencil } =
     TOKENS.strokes;
 
   const gentleRock = steppedOscillate(frameIndex, 18, 2.5);
+  const starBob = round2(steppedOscillate(frameIndex, 6, 3.5));
   const autoBlink =
     state !== 'sleeping' &&
     (state === 'blinking' || isSteppedBlinkFrame(frameIndex, 24, 1, 4));
 
-  // 1. Main Warm Yellow Crayon Moon Disk (r ≈ 96)
-  const disk = crayonPath(
-    'M 0 -96 C 54 -96, 96 -54, 96 0 C 96 54, 54 96, 0 96 C -54 96, -96 54, -96 0 C -96 -54, -54 -96, 0 -96 Z',
+  // 1. Lush C-Shaped Storybook Crescent Moon Body (full left belly cradling face, tapered horns on right)
+  const crescentBody = crayonPath(
+    [
+      'M 36 -88',
+      'C -36 -108, -98 -58, -98 0',
+      'C -98 58, -36 108, 38 88',
+      'C 6 70, -14 38, -14 0',
+      'C -14 -38, 6 -70, 36 -88',
+      'Z',
+    ].join(' '),
     getPatternFill('crayonWarmMoon'),
     {
       strokeWidth: outlineHeavy,
@@ -45,164 +64,197 @@ export function renderMoon(options: CharacterRenderOptions): string {
     }
   );
 
-  // 2. Rosy Orange Crayon Spots / Cheeks (Ref Images 1, 2, 3)
+  // 2. Rosy Orange Crayon Cheek & Crescent Spots
   const spots = svgEl('g', { 'data-part': 'moon-spots' }, [
-    svgEl('circle', { cx: -14, cy: -58, r: 14, fill: moonCheek, opacity: 0.78 }),
-    svgEl('circle', { cx: 34, cy: -44, r: 16, fill: moonCheek, opacity: 0.75 }),
-    svgEl('circle', { cx: -56, cy: -22, r: 11, fill: moonCheek, opacity: 0.72 }),
-    svgEl('circle', { cx: -48, cy: 22, r: 12, fill: moonCheek, opacity: 0.75 }),
-    svgEl('circle', { cx: -36, cy: 36, r: 11, fill: moonCheek, opacity: 0.72 }),
-    svgEl('circle', { cx: 48, cy: 18, r: 12, fill: moonCheek, opacity: 0.75 }),
-    svgEl('circle', { cx: 60, cy: 30, r: 10, fill: moonCheek, opacity: 0.7 }),
-    svgEl('circle', { cx: -14, cy: 66, r: 13, fill: moonCheek, opacity: 0.76 }),
+    svgEl('circle', { cx: -32, cy: -56, r: 11, fill: moonCheek, opacity: 0.72 }),
+    svgEl('circle', { cx: -76, cy: -18, r: 10, fill: moonCheek, opacity: 0.74 }),
+    svgEl('circle', { cx: -74, cy: 18, r: 12, fill: moonCheek, opacity: 0.78 }),
+    svgEl('circle', { cx: -28, cy: 14, r: 10, fill: moonCheek, opacity: 0.74 }),
+    svgEl('circle', { cx: -36, cy: 58, r: 12, fill: moonCheek, opacity: 0.75 }),
   ]);
 
-  // 3. Signature Diagonal Charcoal Pencil Hatching Lines Across Moon Face (Ref Images 1, 2, 3!)
+  // 3. Signature Diagonal Charcoal Pencil Hatching Lines Across Crescent Belly
   const diagonalHatching = svgEl('path', {
     d: [
-      'M -42 -84 L 84 -12',
-      'M -66 -62 L 90 24',
-      'M -84 -24 L 74 62',
-      'M -86 12 L 54 84',
-      'M -68 50 L 18 92',
+      'M -56 -72 L -6 -44',
+      'M -82 -44 L -18 -10',
+      'M -90 -8 L -20 30',
+      'M -82 32 L -10 68',
+      'M -52 68 L 12 84',
     ].join(' '),
     fill: 'none',
     stroke: charcoalOutline,
     'stroke-width': annotationPencil,
-    'stroke-dasharray': '14 4 22 5 9 4',
+    'stroke-dasharray': '12 4 16 5 8 4',
     'stroke-linecap': 'round',
-    opacity: 0.62,
+    opacity: 0.58,
   });
 
-  // 4. Eyes & Facial Expression (Ref Image 1 sleeping, Ref Image 2 grumpy/unimpressed, Ref Image 3 curious/awake)
+  // 4. Eyes & Facial Expression Positioned on the Crescent Moon Body
   let faceMarkup = '';
-  if (state === 'sleeping' || autoBlink) {
-    // Closed curved/angled sleeping eyes (Ref Image 1!)
+  if (state === 'sleeping' || state === 'sleepy' || autoBlink) {
     faceMarkup = svgEl('g', { 'data-part': 'moon-face-sleeping' }, [
       svgEl('path', {
-        d: 'M -46 8 L -24 22 L -16 4 M 6 -24 L 22 -8 L 12 10',
+        d: 'M -74 -6 Q -62 6, -50 -6 M -42 -6 Q -30 6, -18 -6',
         fill: 'none',
         ...crayonStrokeAttrs({ strokeWidth: outlineMedium }),
       }),
       svgEl('path', {
-        d: 'M -6 22 L 8 30 L 18 18',
+        d: 'M -54 18 Q -46 25, -36 18',
         fill: 'none',
         ...crayonStrokeAttrs({ strokeWidth: outlineThin }),
       }),
     ]);
   } else if (state === 'grumpy') {
-    // Half-lowered flat upper eyelids glaring down-left at the singing girl (Ref Image 2!)
     faceMarkup = svgEl('g', { 'data-part': 'moon-face-grumpy' }, [
       // Left eye
       crayonPath(
-        'M -44 -14 L -12 -14 C -10 8, -46 8, -44 -14 Z',
+        'M -76 -12 L -50 -12 C -48 8, -78 8, -76 -12 Z',
         nightcapWhite,
         { strokeWidth: outlineMedium }
       ),
-      svgEl('circle', { cx: -31, cy: -4, r: 7.5, fill: indigoNightDark }),
-      svgEl('circle', { cx: -33, cy: -6, r: 2.2, fill: nightcapWhite }),
+      svgEl('circle', { cx: -64, cy: -3, r: 6.5, fill: indigoNightDark }),
+      svgEl('circle', { cx: -66, cy: -5, r: 2.0, fill: nightcapWhite }),
       svgEl('path', {
-        d: 'M -47 -15 L -10 -15',
+        d: 'M -78 -13 L -48 -13',
         fill: 'none',
         ...crayonStrokeAttrs({ strokeWidth: outlineHeavy }),
       }),
       // Right eye
       crayonPath(
-        'M 12 -14 L 44 -14 C 46 8, 10 8, 12 -14 Z',
+        'M -44 -12 L -18 -12 C -16 8, -46 8, -44 -12 Z',
         nightcapWhite,
         { strokeWidth: outlineMedium }
       ),
-      svgEl('circle', { cx: 25, cy: -4, r: 7.5, fill: indigoNightDark }),
-      svgEl('circle', { cx: 23, cy: -6, r: 2.2, fill: nightcapWhite }),
+      svgEl('circle', { cx: -32, cy: -3, r: 6.5, fill: indigoNightDark }),
+      svgEl('circle', { cx: -34, cy: -5, r: 2.0, fill: nightcapWhite }),
       svgEl('path', {
-        d: 'M 10 -15 L 47 -15',
+        d: 'M -46 -13 L -16 -13',
         fill: 'none',
         ...crayonStrokeAttrs({ strokeWidth: outlineHeavy }),
       }),
-      // Small unimpressed mouth tick
+      // Unimpressed mouth tick
       svgEl('path', {
-        d: 'M -6 22 L 10 25',
+        d: 'M -54 20 L -38 23',
         fill: 'none',
         ...crayonStrokeAttrs({ strokeWidth: outlineMedium }),
       }),
     ]);
   } else {
-    // Wide-eyed awake / curious Moon (Ref Image 3!)
-    const pupilShiftX = state === 'curious' ? -3 : 0;
+    const pupilShiftX = state === 'curious' ? -2.5 : 0;
     faceMarkup = svgEl('g', { 'data-part': 'moon-face-awake' }, [
       // Left round eye
       svgEl('circle', {
-        cx: -28,
+        cx: -63,
         cy: -6,
-        r: 15,
+        r: 12.5,
         fill: nightcapWhite,
         ...crayonStrokeAttrs({ strokeWidth: outlineMedium }),
       }),
       svgEl('circle', {
-        cx: -28 + pupilShiftX,
+        cx: -63 + pupilShiftX,
         cy: -5,
-        r: 7,
+        r: 6,
         fill: indigoNightDark,
       }),
       svgEl('circle', {
-        cx: -30 + pupilShiftX,
+        cx: -65 + pupilShiftX,
         cy: -8,
-        r: 2.4,
+        r: 2.2,
         fill: nightcapWhite,
       }),
       // Right round eye
       svgEl('circle', {
-        cx: 28,
+        cx: -31,
         cy: -6,
-        r: 15,
+        r: 12.5,
         fill: nightcapWhite,
         ...crayonStrokeAttrs({ strokeWidth: outlineMedium }),
       }),
       svgEl('circle', {
-        cx: 28 + pupilShiftX,
+        cx: -31 + pupilShiftX,
         cy: -5,
-        r: 7,
+        r: 6,
         fill: indigoNightDark,
       }),
       svgEl('circle', {
-        cx: 26 + pupilShiftX,
+        cx: -33 + pupilShiftX,
         cy: -8,
-        r: 2.4,
+        r: 2.2,
         fill: nightcapWhite,
       }),
-      // Little dotted/line mouth (Ref Image 3)
+      // Friendly crescent smile
       svgEl('path', {
-        d: 'M -4 20 L -1 20 M 3 20 L 6 20',
+        d: 'M -54 18 Q -46 25, -38 18',
         fill: 'none',
         ...crayonStrokeAttrs({ strokeWidth: outlineMedium }),
       }),
     ]);
   }
 
-  // 5. Blue-and-White Crayon Nightcap (Reference Image 1!)
+  // 5. Companion Twinkling & Dangling Stars Around the Crescent Moon (`data-part="moon-stars"`)
+  const companionStars = svgEl('g', { 'data-part': 'moon-stars' }, [
+    // Faint pencil thread & golden star dangling from the upper crescent tip into the crescent hollow!
+    svgEl('line', {
+      x1: 32,
+      y1: -84,
+      x2: 28,
+      y2: round2(-26 + starBob),
+      stroke: faintPencil,
+      'stroke-width': 1.5,
+      'stroke-dasharray': '3 3',
+    }),
+    crayonPath(
+      renderStarShape(28, round2(-16 + starBob), 13, gentleRock * 3),
+      bananaYellow,
+      { strokeWidth: outlineMedium, paperUnderlay: true }
+    ),
+    // Twinkling star inside lower crescent hollow
+    crayonPath(
+      renderStarShape(46, round2(34 - starBob * 0.7), 9.5, -12),
+      starWhite,
+      { strokeWidth: outlineThin, paperUnderlay: true }
+    ),
+    // Companion star upper-right of crescent horn
+    crayonPath(
+      renderStarShape(68, round2(-68 - starBob * 0.6), 11, 15),
+      warmMoon,
+      { strokeWidth: outlineThin, paperUnderlay: true }
+    ),
+    // Companion star upper-left of crescent back
+    crayonPath(
+      renderStarShape(-98, round2(-72 + starBob * 0.5), 10, -18),
+      bananaYellow,
+      { strokeWidth: outlineThin, paperUnderlay: true }
+    ),
+    // Little star below bottom crescent horn
+    crayonPath(
+      renderStarShape(-88, round2(68 - starBob * 0.5), 8.5, 10),
+      starWhite,
+      { strokeWidth: outlineThin, paperUnderlay: true }
+    ),
+  ]);
+
+  // 6. Blue-and-White Crayon Nightcap Perched on the Upper Crescent Curve
   const nightcap = wearingNightcap
     ? svgEl('g', { 'data-part': 'moon-nightcap' }, [
-        // Conical blue crayon cap body curving up from upper-left to top-right
         crayonPath(
-          'M -88 -26 C -76 -110, -28 -152, 26 -160 C 16 -120, 12 -96, 12 -82 Z',
+          'M -88 -26 C -70 -94, -22 -128, 18 -134 C 24 -112, 32 -98, 38 -86 Z',
           getPatternFill('crayonNightcapBlue'),
           { strokeWidth: outlineHeavy }
         ),
-        // Curved stripe creases inside blue nightcap
         svgEl('path', {
-          d: 'M -68 -56 Q -32 -78, 8 -92 M -52 -92 Q -22 -108, 12 -116 M -34 -124 Q -10 -134, 18 -138',
+          d: 'M -72 -56 C -42 -68, -6 -76, 30 -78 M -50 -88 C -24 -98, 4 -104, 24 -104',
           fill: 'none',
           ...crayonStrokeAttrs({ strokeWidth: outlineThin, opacity: 0.72 }),
         }),
-        // Thick white crayon brim/cuff hugging the upper-left curve of the Moon (Ref Image 1!)
         crayonPath(
-          'M -94 -18 C -64 -68, -22 -94, 20 -92 L 16 -72 C -20 -72, -56 -48, -82 -4 Z',
+          'M -94 -18 C -64 -72, -16 -102, 40 -90 L 34 -72 C -8 -78, -54 -50, -82 -4 Z',
           nightcapWhite,
           { strokeWidth: outlineMedium }
         ),
-        // Fluffy white pom-pom at the tip of the nightcap
         crayonPath(
-          'M 20 -164 C 14 -174, 28 -182, 36 -174 C 46 -178, 52 -164, 42 -156 C 46 -146, 30 -144, 24 -152 C 14 -150, 12 -160, 20 -164 Z',
+          'M 18 -130 C 12 -140, 26 -146, 32 -136 C 40 -132, 34 -120, 24 -122 C 14 -120, 12 -126, 18 -130 Z',
           nightcapWhite,
           { strokeWidth: outlineMedium }
         ),
@@ -217,6 +269,6 @@ export function renderMoon(options: CharacterRenderOptions): string {
       transform: svgTransform({ rotate: gentleRock }),
       filter: svgUrl(TOKENS.filters.ids.crayonStroke),
     },
-    [disk, spots, diagonalHatching, faceMarkup, nightcap]
+    [crescentBody, spots, diagonalHatching, faceMarkup, companionStars, nightcap]
   );
 }

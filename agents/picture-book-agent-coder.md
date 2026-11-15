@@ -52,17 +52,28 @@ Every scene rendered by the engine must pass through three visual layers:
 
 ### 4. Animation & Motion Rules (Stop-Motion Feel)
 - **Quantized Frame Rate**: All character motion, floating props (e.g., music notes, stars), and camera pans must be quantized to **6 to 8 FPS** (or use stepped timing functions).
-- **2D Cutout Rigging**:
+- **2D Cutout Rigging, `+X` Walking Profile Convention & Predefined Speech-Bubble Anchors (`CHARACTER_SPEECH_ANCHORS`)**:
   - Characters animate via simple pivot rotations (head tilt ±5°, arm wave, stepped eye blink) and subtle vertical bobbing.
+  - **Canonical `+X` Forward & 3/4 Walking Profile Rule**: Every character must face **RIGHT (`+X`)** when `flipX: false` and **LEFT (`-X`)** when `flipX: true`. For `state === 'walking'`, always render a dedicated 3/4 or side-profile walking rig facing right (`+X`) with both shoes/feet/paws pointing right (`+X`), legs striding forward/back from the hip center (`x ≈ 0`), and chest/head/eyes turned toward `+X` (never use a flat front-facing pose with sideways-scissoring legs for walking). Always set `flipX: false` when walking right (`next.x > prev.x`) and `flipX: true` when walking left (`next.x < prev.x`).
+  - Every character model in `src/assets/characters/` **MUST** define a predefined head-top anchor `{ x, y }` in `CHARACTER_SPEECH_ANCHORS` (`src/assets/characters/index.ts`), modeled after existing characters (`little_girl: { x: 0, y: -102 }`, `shopkeeper: { x: 0, y: -105 }`, `cat: { x: 10, y: -44 }`), so scene authors can pass `speechText` and `speechStyle: 'speech' | 'thought'` directly on `CharacterNode` or `NodeKeyframe` (`speechText: ''` to clear) and have the bubble automatically anchor above the character's head.
   - Prop emissions (music notes, chimney puffs, twinkling stars) move in discrete stepped hops rather than smooth continuous curves.
 - **Hand-Drawn Annotations**: Support playful picture-book details in the background (e.g., faint pencil numbers `1 2 3 4 5` counting stars, dashed motion lines, hand-lettered sound effects).
 
-### 5. Scene Authoring Contract
+### 5. Scene Authoring Contract & Storybook Book-Frame (`bookFrame`)
 When creating a new scene, structure it declaratively using shared engine primitives:
 - Define **Background Patches** (SVG paths with organic, uneven edges + marker/crayon fill patterns).
 - Place **Props & Architecture** (layered back-to-front with crayon displacement applied).
 - Place **Character Rigs** with named state triggers (`idle`, `singing`, `blinking`, `looking_up`).
 - Define a **Timeline** of stepped keyframes synced to timestamps or narration cues.
+- **Account for the Default Storybook Book-Frame (`bookFrame`, `src/engine/bookFrame.ts`)**:
+  - Every scene is framed inside an animated hardcover picture book by default (`bookFrame` enabled by default):
+    - **Opening Cover & Zoom-In (`0 .. openDurationSec`, default `3.5s`)**: Starts zoomed out (`bookScale: 0.68`) on a closed hardcover book showing `coverTitle` (defaults to `scene.title`), `coverSubtitle`, and optional `creditText`. The cover opens in stepped `6 FPS` stop-motion to reveal the scene at **0% crayon color** (charcoal outline sketch on warm paper). As the view zooms into the book spread (`0.68 -> 1.0`), the crayon colors progressively fill in from **0% to 100%** (`colorFillMultiplier: 0 -> 1`).
+    - **Main Story (`openDurationSec .. durationSec - closeDurationSec`)**: Full-bleed 16:9 storybook animation (100% identical to standard scene rendering).
+    - **Ending Color-Out, Zoom-Out & Closing Credits (`durationSec - closeDurationSec .. durationSec`, default last `3.5s`)**: The view zooms back out into the open book spread (`1.0 -> 0.68`) as crayon pigment drains from **100% down to 0%**, returning to a charcoal sketch before the book cover closes to display the scene name, `endingTitle` (`"The End ★"`), and `endingCredit` / credits card.
+  - **Choreography Best Practices**:
+    - Keep Act I's main character dialogue or key action starting after `openDurationSec` (or let the first `~3.5s` serve as the book-opening & color-in establishing shot, optionally paired with a `crayon_scribble` or `chime` audio cue).
+    - Let the final `~3.5s` (`closeDurationSec`) serve as a gentle farewell pose as the scene zooms out, un-colors to sketch, and closes the book (optionally paired with a `lullaby` cue).
+    - Customize cover titles, credits, cover material (`coverMaterial`), and open/close durations via `scene.bookFrame?: BookFrameConfig | boolean`, toggle live in the Studio UI (`#chk-book-frame`), or pass `?book_frame=1|0` in the URL.
 
 ---
 

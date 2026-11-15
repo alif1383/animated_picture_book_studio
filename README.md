@@ -10,7 +10,7 @@ The **Animated Picture Book Studio** is a **100% standalone, zero-dependency** A
 
 It works out-of-the-box on **any machine with only Antigravity installed** (`agy-node`)—no external `node`, `npm`, `pnpm`, `git`, or `python` installation is required. You can scaffold the bundled engine into any active `<workspace>` (or run it in-place) using `agy-node "<plugin-root>/scripts/ensure_engine.mjs"`. It provides skills, agents, rules, and the full engine so you can ask Antigravity to:
 
-- **Create animated videos** — Design scenes with characters, props, buildings, camera movements, and hand-drawn annotations in a warm crayon/oil-pastel aesthetic.
+- **Create animated videos** — Design scenes with characters, props, buildings, camera movements, and hand-drawn annotations in a warm crayon/oil-pastel aesthetic, complete with an automatic **Storybook Cover Opening & Ending/Credits Book-Frame (`bookFrame`)** where a hardcover picture book opens to a 0% color charcoal sketch, progressively colors in from 0% to 100% as the camera zooms into the story, and un-colors back to a sketch at the end before closing the cover with `"The End ★"` and credits.
 - **Model assets after photos** — Turn user-provided photos into hand-crafted 2D cutout SVG characters, props, or buildings that match the storybook style.
 - **Add and generate audio** — Sync built-in procedural sound effects, attach user-provided audio files, or generate narration and custom WAV sound effects at precise timestamps.
 - **Preview live** — Spin up the bundled studio dev server (`agy-node scripts/studio-cli.mjs dev`) and inspect your video interactively in the browser with playback controls, layer toggles, and SFX audition.
@@ -83,9 +83,10 @@ It works out-of-the-box on **any machine with only Antigravity installed** (`agy
 Complete guide to designing, choreographing, and editing animations in the Picture-Book Crayon Video Engine. Covers:
 - Core visual philosophy (wax crayon, oil pastel, cold-press paper aesthetic)
 - The 3-layer render pipeline (Base Scene → SVG Crayon Filter → Paper Composite)
-- `SceneDefinition` schema (acts, nodes, timelines, camera, audio cues)
+- **Storybook Cover Opening & Ending/Credits Book-Frame (`bookFrame`)**: Default `3.5s` opening cover & `0% -> 100%` color-in zoom (`0.68 -> 1.0`), full-bleed middle story, and final `3.5s` `100% -> 0%` color-out zoom-out & closing credits card (`BookFrameConfig`, `#chk-book-frame`, `?book_frame=1|0`)
+- `SceneDefinition` schema (acts, nodes, timelines, camera, `bookFrame`, audio cues)
 - All 15 built-in characters, 2 buildings, 13 props, and 21 crayon fill patterns
-- Scene registration and URL routing (`?scene=`, `?short_sample=`)
+- Scene registration and URL routing (`?scene=`, `?short_sample=`, `?book_frame=1|0`)
 - Stop-motion animation rules (6-8 FPS, 2D cutout rigging, hand-drawn annotations)
 
 ### 📷 `photo-to-crayon-asset`
@@ -151,6 +152,7 @@ The `rules/AGENTS.md` file is always active when the plugin is enabled. It enfor
 | Props | `<workspace>/src/assets/props/` |
 | Buildings | `<workspace>/src/assets/buildings/` |
 | Audio engine | `<workspace>/src/audio/soundEngine.ts` |
+| Book-frame engine | `<workspace>/src/engine/bookFrame.ts` |
 | Schema | `<workspace>/src/engine/schema.ts` |
 | Design tokens | `<workspace>/src/theme/tokens.ts` |
 | Architecture docs | `<workspace>/docs/ARCHITECTURE.md` |

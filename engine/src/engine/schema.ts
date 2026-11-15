@@ -1,5 +1,12 @@
 import type { CrayonMaterialId, ColorToken } from '../theme/tokens';
 import type { FillMaskBounds, FillMaskStyle } from './fillMask';
+import type {
+  BookFrameConfig,
+  BookFramePhase,
+  EvaluatedBookFrameState,
+} from './bookFrame';
+
+export type { BookFrameConfig, BookFramePhase, EvaluatedBookFrameState };
 
 export type CharacterKind =
   | 'little_girl'
@@ -53,7 +60,17 @@ export type PropKind =
   | 'ocean_waves'
   | 'water_splash'
   | 'swim_floatie'
-  | 'beach_ball';
+  | 'beach_ball'
+  | 'pizza_slice';
+
+export type BubbleStyle = 'none' | 'speech' | 'thought';
+
+export type BubbleTailDirection =
+  | 'bottom-center'
+  | 'bottom-left'
+  | 'bottom-right'
+  | 'left'
+  | 'right';
 
 export interface ProgressiveFillOptions {
   /** Stop-motion mask reveal style ('top-down-bands' | 'diagonal-strokes' | 'radial-scribble') */
@@ -111,10 +128,18 @@ export interface CharacterNode extends BaseSceneNode {
   wearingNightcap?: boolean;
   /** Little girl option: holding fluffy white sheep plushie */
   holdingSheep?: boolean;
+  /** Little girl option: holding a warm cheesy pizza slice */
+  holdingPizza?: boolean;
   /** Ocean swim option: inflatable wax-crayon swim-ring floatie wrapped around waist with water skirt */
   wearingFloatie?: boolean;
   /** Floatie style variant (0 = rubber ducky, 1 = red/white stripes, 2 = blue/gold stars, 3 = pink/yellow stripes, 4 = emerald/gold) */
   floatieVariant?: number;
+  /** Optional speech or thought bubble text anchored directly above this character's head */
+  speechText?: string;
+  /** Style of the character-attached bubble ('speech' | 'thought', default: 'speech') */
+  speechStyle?: 'speech' | 'thought';
+  /** Optional tail direction override for the character-attached bubble (default: 'bottom-center') */
+  speechTail?: 'bottom-center' | 'bottom-left' | 'bottom-right';
 }
 
 export interface PropNode extends BaseSceneNode {
@@ -137,6 +162,14 @@ export interface AnnotationNode extends BaseSceneNode {
   dashedPath?: string;
   color?: ColorToken | string;
   fontSize?: number;
+  /** Optional speech or thought bubble framing around `text` (default: 'none') */
+  bubbleStyle?: BubbleStyle;
+  /** Direction where the speech tail or thought puffs point toward the speaker (default: 'bottom-left') */
+  tailDirection?: BubbleTailDirection;
+  /** Optional custom fill color for speech/thought bubble (defaults to TOKENS.colors.paperWarm) */
+  bubbleFill?: ColorToken | string;
+  /** When true, local (0, 0) is the tip of the bottom tail/puff directly above a character's head */
+  anchorAtTailTip?: boolean;
 }
 
 export type SceneNode =
@@ -160,14 +193,21 @@ export interface NodeKeyframe {
   state?: CharacterState;
   /** Progressive fill progress [0..1] interpolated and stepped between keyframes */
   fillProgress?: number;
-  /** Dynamic building/prop toggles */
+  /** Dynamic building/prop/character/annotation toggles */
   windowLit?: boolean;
   wearingNightcap?: boolean;
   holdingSheep?: boolean;
+  holdingPizza?: boolean;
   wearingFloatie?: boolean;
   floatieVariant?: number;
+  speechText?: string;
+  speechStyle?: 'speech' | 'thought';
+  speechTail?: 'bottom-center' | 'bottom-left' | 'bottom-right';
   lit?: boolean;
   count?: number;
+  text?: string;
+  bubbleStyle?: BubbleStyle;
+  tailDirection?: BubbleTailDirection;
   /** If true, holds value until the next keyframe instead of stepped linear interpolation */
   hold?: boolean;
 }
@@ -244,6 +284,12 @@ export interface SceneDefinition {
   fps?: number;
   /** Whether this scene defaults to Vibrant Crayon Mode */
   vibrantMode?: boolean;
+  /**
+   * Optional Storybook Cover Opening & Ending/Credits Book-Frame configuration.
+   * Scenes can customize cover/ending titles, credits, cover color, and open/close
+   * durations, or set `false` to disable the book frame (enabled by default).
+   */
+  bookFrame?: BookFrameConfig | boolean;
   acts: StoryAct[];
   nodes: SceneNode[];
   timeline: TimelineTrack[];

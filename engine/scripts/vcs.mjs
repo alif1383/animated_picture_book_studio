@@ -54,7 +54,11 @@ async function main() {
   if (dirIdx !== -1 && rawArgs[dirIdx + 1]) {
     dir = path.resolve(rawArgs[dirIdx + 1]);
     rawArgs.splice(dirIdx, 2);
-  } else if (!fs.existsSync(path.join(dir, 'src')) && fs.existsSync(path.join(ENGINE_ROOT, 'src'))) {
+  } else if (
+    !fs.existsSync(path.join(dir, '.git')) &&
+    !fs.existsSync(path.join(dir, 'src')) &&
+    fs.existsSync(path.join(ENGINE_ROOT, 'src'))
+  ) {
     dir = ENGINE_ROOT;
   }
 

@@ -4,6 +4,7 @@
 - **Medium**: Wax crayons, oil pastels, and felt-tip markers on heavy cold-press watercolor paper.
 - **Forbidden**: Flat digital gradients, glowing neon effects, CSS `box-shadow`, pure `#FFFFFF` backgrounds, pure `#000000` outlines, or smooth 60fps `ease-in-out` motion.
 - **Negative Space & Stop-Motion Coloring**: Preserve generous areas of raw warm paper (`#F4EFE6`). Background sky and grass use partial-bleed vignette patches whose color fills in via stepped stop-motion brush/band masks.
+- **Storybook Cover Opening & Ending/Credits Book-Frame (`bookFrame`)**: Scenes open on a closed hardcover storybook (`#book-front-cover`) that flips open at `6 FPS` to reveal an uncolored charcoal-and-pencil sketch (`0%` crayon fill) on warm paper (`#F4EFE6`). As the camera zooms into the open book spread (`0.68 -> 1.0`), the crayon pigment progressively colors in from `0% -> 100%`. In the final `3.5s`, the scene zooms back out (`1.0 -> 0.68`) as crayon pigment drains from `100% -> 0%` back to a pencil sketch before the back/ending cover (`#book-ending-cover`) closes with `"The End ★"`, the scene title, and credits. All cover boards, page edges, spine stitching, and gold star emblems strictly use `TOKENS` colors and dry-crayon pattern fills.
 - **Vibrant Crayon Mode (`vibrant?: boolean`)**: Boosts pigment saturation (`1.42x`) and contrast via `#vibrant-grade` while reducing paper multiply overlay opacity (`0.35`) so pastel blues, meadow greens, reds, and yellows shine with vivid crayon intensity.
 
 ## 2. Centralized Palette (`src/theme/tokens.ts`)

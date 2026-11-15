@@ -1,5 +1,5 @@
 import { TOKENS, svgUrl } from '../theme/tokens';
-import { crayonPath, svgEl } from './svgUtils';
+import { crayonPath, round2, svgEl } from './svgUtils';
 import {
   getPatternFill,
   renderEngineDefs,
@@ -11,9 +11,17 @@ import {
   EvaluatedSceneFrame,
   evaluateSceneAtTime,
 } from './timeline';
+import {
+  EvaluatedBookFrameState,
+  evaluateBookFrameState,
+  renderBookFrameOverlay,
+} from './bookFrame';
 import type { SceneDefinition, SceneNode } from './schema';
 import { renderBuilding } from '../assets/buildings';
-import { renderCharacter } from '../assets/characters';
+import {
+  CHARACTER_SPEECH_ANCHORS,
+  renderCharacter,
+} from '../assets/characters';
 import { renderAnnotation, renderProp } from '../assets/objects';
 
 export interface RenderSceneOptions {
@@ -25,6 +33,8 @@ export interface RenderSceneOptions {
   enableProgressiveFill?: boolean;
   /** Toggle Vibrant Crayon Mode (high-saturation pigments & luminous paper tooth) */
   vibrant?: boolean;
+  /** Toggle Storybook Cover Opening & Ending/Credits Book-Frame (default: true unless scene.bookFrame is false) */
+  enableBookFrame?: boolean;
   /** Optional override for progressive fill progress across all nodes (for studio scrubber) */
   overrideFillProgress?: number;
 }
@@ -32,6 +42,7 @@ export interface RenderSceneOptions {
 export interface RenderedSceneOutput {
   svg: string;
   frame: EvaluatedSceneFrame;
+  bookFrame: EvaluatedBookFrameState;
 }
 
 function defaultBoundsForNode(node: SceneNode): FillMaskBounds {
@@ -100,6 +111,7 @@ function renderSingleNode(
         frameIndex,
         wearingNightcap: state.wearingNightcap ?? node.wearingNightcap,
         holdingSheep: state.holdingSheep ?? node.holdingSheep,
+        holdingPizza: state.holdingPizza ?? node.holdingPizza,
         wearingFloatie: state.wearingFloatie ?? node.wearingFloatie,
         floatieVariant: state.floatieVariant ?? node.floatieVariant,
         fillMask: fillMaskUrl,
@@ -117,10 +129,13 @@ function renderSingleNode(
     }
     case 'annotation': {
       return renderAnnotation({
-        text: node.text,
+        text: state.text ?? node.text,
         dashedPath: node.dashedPath,
         color: node.color,
         fontSize: node.fontSize,
+        bubbleStyle: state.bubbleStyle ?? node.bubbleStyle,
+        tailDirection: state.tailDirection ?? node.tailDirection,
+        bubbleFill: node.bubbleFill,
       });
     }
   }
@@ -142,12 +157,24 @@ export function evaluateAndRenderScene(
   const enablePaperTexture = options.enablePaperTexture ?? true;
   const enableProgressiveFill = options.enableProgressiveFill ?? true;
   const vibrant = options.vibrant ?? scene.vibrantMode ?? false;
+  const defaultBookFrameEnabled =
+    scene.bookFrame === false
+      ? false
+      : typeof scene.bookFrame === 'object' && scene.bookFrame !== null
+      ? scene.bookFrame.enabled ?? true
+      : true;
+  const enableBookFrame = options.enableBookFrame ?? defaultBookFrameEnabled;
+  const fps = scene.fps ?? TOKENS.timing.fps;
 
-  const frame = evaluateSceneAtTime(
-    scene,
+  const frame = evaluateSceneAtTime(scene, timeSec, fps);
+  const bookState = evaluateBookFrameState({
     timeSec,
-    scene.fps ?? TOKENS.timing.fps
-  );
+    durationSec: scene.durationSec,
+    fps,
+    config: enableBookFrame ? scene.bookFrame : false,
+    sceneTitle: scene.title,
+    sceneSubtitle: scene.subtitle,
+  });
   const width = scene.width ?? TOKENS.canvas.width;
   const height = scene.height ?? TOKENS.canvas.height;
 
@@ -156,6 +183,7 @@ export function evaluateAndRenderScene(
 
   const extraMaskDefs: string[] = [];
   const renderedNodeGroups: string[] = [];
+  const renderedSpeechBubbles: string[] = [];
 
   for (let idx = 0; idx < sortedNodes.length; idx++) {
     const node = sortedNodes[idx];
@@ -164,10 +192,14 @@ export function evaluateAndRenderScene(
       continue;
     }
 
-    const effectiveFillProgress =
+    const baseFillProgress =
       options.overrideFillProgress !== undefined
         ? options.overrideFillProgress
         : nodeState.fillProgress;
+    const effectiveFillProgress =
+      enableBookFrame && bookState.enabled && bookState.phase !== 'story'
+        ? baseFillProgress * bookState.colorFillMultiplier
+        : baseFillProgress;
 
     let fillMaskUrl: string | undefined;
     if (
@@ -208,6 +240,41 @@ export function evaluateAndRenderScene(
         innerMarkup
       )
     );
+
+    if (node.type === 'character') {
+      const speechText = (nodeState.speechText ?? node.speechText ?? '').trim();
+      if (speechText.length > 0) {
+        const anchor = CHARACTER_SPEECH_ANCHORS[node.kind];
+        const headX = round2(
+          nodeState.x +
+            (nodeState.flipX ? -anchor.x : anchor.x) * nodeState.scale
+        );
+        const headY = round2(nodeState.y + anchor.y * nodeState.scale);
+        const speechStyle =
+          nodeState.speechStyle ?? node.speechStyle ?? 'speech';
+        const speechTail =
+          nodeState.speechTail ?? node.speechTail ?? 'bottom-center';
+
+        renderedSpeechBubbles.push(
+          svgEl(
+            'g',
+            {
+              id: `speech-${node.id}`,
+              'data-character-speech': node.id,
+              opacity: nodeState.opacity < 1 ? nodeState.opacity : undefined,
+            },
+            renderAnnotation({
+              x: headX,
+              y: headY,
+              text: speechText,
+              bubbleStyle: speechStyle,
+              tailDirection: speechTail,
+              anchorAtTailTip: true,
+            })
+          )
+        );
+      }
+    }
   }
 
   // Layer 2 Filter & Pattern Defs (with stepped line-boil seed)
@@ -219,31 +286,41 @@ export function evaluateAndRenderScene(
     extraDefs: extraMaskDefs,
   });
 
-  // Layer 1 Base Scene Layer (warm cold-press watercolor paper + camera-rigged cutouts)
+  const innerSceneMarkup = [
+    svgEl('rect', {
+      id: 'paper-base',
+      x: 0,
+      y: 0,
+      width,
+      height,
+      fill: TOKENS.colors.paperWarm,
+    }),
+    svgEl(
+      'g',
+      {
+        id: 'camera-rig',
+        transform: frame.camera.transform || undefined,
+      },
+      [...renderedNodeGroups, ...renderedSpeechBubbles]
+    ),
+  ].join('');
+
+  const layer1Content = renderBookFrameOverlay({
+    innerSceneMarkup,
+    width,
+    height,
+    bookState,
+    frameIndex: frame.clock.frameIndex,
+  });
+
+  // Layer 1 Base Scene Layer (warm cold-press watercolor paper + camera-rigged cutouts + optional book frame)
   const layer1BaseScene = svgEl(
     'g',
     {
       id: 'layer-1-base-scene',
       filter: vibrant ? svgUrl(TOKENS.filters.ids.vibrantGrade) : undefined,
     },
-    [
-      svgEl('rect', {
-        id: 'paper-base',
-        x: 0,
-        y: 0,
-        width,
-        height,
-        fill: TOKENS.colors.paperWarm,
-      }),
-      svgEl(
-        'g',
-        {
-          id: 'camera-rig',
-          transform: frame.camera.transform || undefined,
-        },
-        renderedNodeGroups
-      ),
-    ]
+    layer1Content
   );
 
   // Layer 3 Physical Paper Composite Layer
@@ -265,11 +342,12 @@ export function evaluateAndRenderScene(
       'data-boil-seed': frame.clock.boilSeed,
       'data-quantized-time': frame.clock.quantizedTimeSec,
       'data-vibrant': vibrant ? 'true' : 'false',
+      'data-book-phase': bookState.enabled ? bookState.phase : 'disabled',
     },
     [defsMarkup, layer1BaseScene, layer3Paper]
   );
 
-  return { svg, frame };
+  return { svg, frame, bookFrame: bookState };
 }
 
 /**

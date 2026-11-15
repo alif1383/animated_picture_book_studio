@@ -175,6 +175,13 @@ const DRY_CRAYON_SPECS: readonly DryCrayonSpec[] = [
     angle: 22,
     baseOpacity: 0.86,
   },
+  {
+    id: TOKENS.patterns.crayonSweaterPurple,
+    baseColor: TOKENS.colors.sweaterPurple,
+    accentColor: TOKENS.colors.sweaterPurpleDark,
+    angle: -24,
+    baseOpacity: 0.86,
+  },
 ];
 
 /**

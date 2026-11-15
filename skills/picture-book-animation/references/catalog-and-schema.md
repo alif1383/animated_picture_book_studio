@@ -10,11 +10,11 @@
 
 | Kind literal | Render function | File | Description |
 |---|---|---|---|
-| `little_girl` | `renderLittleGirl` | `src/assets/characters/littleGirl.ts` | 2D cutout rig: brown bob hair, pink crayon dress, optional fluffy white sheep plushie (`holdingSheep`) |
+| `little_girl` | `renderLittleGirl` | `src/assets/characters/littleGirl.ts` | 2D cutout rig: wavy brown hair with pastel pink hairclip, purple star sweater, cream wide-leg trousers & white sneakers, optional sheep plushie (`holdingSheep`) or hot pizza slice (`holdingPizza`) |
 | `shopkeeper` | `renderShopkeeper` | `src/assets/characters/shopkeeper.ts` | Friendly baker in cream apron & cap |
-| `moon` | `renderMoon` | `src/assets/characters/moon.ts` | Warm yellow pastel moon with orange cheeks, diagonal hatching, optional nightcap (`wearingNightcap`) |
+| `moon` | `renderMoon` | `src/assets/characters/moon.ts` | Storybook Crescent Moon with dangling & twinkling companion stars (`data-part="moon-stars"`), orange cheeks, diagonal hatching, optional nightcap (`wearingNightcap`) |
 | `sun` | `renderSun` | `src/assets/characters/sun.ts` | Bright yellow morning sun, turns warm orange at sunset, yawns sleepily |
-| `cat` | `renderCat` | `src/assets/characters/cat.ts` | Terracotta tabby cat — curious, sleeping, or idle |
+| `cat` | `renderCat` | `src/assets/characters/cat.ts` | White/cream kitten with dark brown/grey tabby patches, pink inner ears & golden collar bell — curious, walking, waving, sleeping, or idle |
 | `singing_radish` | `renderSingingRadish` | `src/assets/characters/singingRadish.ts` | Red-orange radish with emerald leaf ponytails, blue hair ties & crayon microphone |
 | `birthday_strawberry` | `renderBirthdayStrawberry` | `src/assets/characters/birthdayStrawberry.ts` | Plump red strawberry with yellow seeds, leafy green calyx collar & golden birthday crown |
 | `watermelon_slice` | `renderWatermelonSlice` | `src/assets/characters/watermelonSlice.ts` | Red-pink watermelon slice with black seeds, emerald rind & red pom-pom party hat |
@@ -42,6 +42,10 @@ Not every character implements every state; unsupported states fall back to `idl
 | `state` | `CharacterState` | Current pose/animation state |
 | `wearingNightcap?` | `boolean` | Moon only — blue-and-white striped sleeping nightcap |
 | `holdingSheep?` | `boolean` | Little girl only — fluffy white sheep plushie |
+| `holdingPizza?` | `boolean` | Little girl only — warm cheesy pepperoni pizza slice |
+| `speechText?` | `string` | Optional speech or thought bubble text anchored directly above this character's head (`CHARACTER_SPEECH_ANCHORS`) |
+| `speechStyle?` | `'speech' \| 'thought'` | Style of the character-attached bubble (default: `'speech'`) |
+| `speechTail?` | `'bottom-center' \| 'bottom-left' \| 'bottom-right'` | Optional tail direction override for the character-attached bubble (default: `'bottom-center'`) |
 
 ---
 
@@ -49,7 +53,7 @@ Not every character implements every state; unsupported states fall back to `idl
 
 | Kind literal | Render function | File | Description |
 |---|---|---|---|
-| `ochre_cottage` | `renderOchreCottage` | `src/assets/buildings/ochreCottage.ts` | Terracotta crayon roof, round attic window, pink-curtained room & right ladder |
+| `ochre_cottage` | `renderOchreCottage` | `src/assets/buildings/ochreCottage.ts` | Cute & cozy storybook cottage: scalloped terracotta roof, welcome wreath door with heart window, overflowing window flower boxes, teal shutters, climbing garden vines & optional right ladder |
 | `corner_store` | `renderCornerStore` | `src/assets/buildings/cornerStore.ts` | Pastel teal storefront, red-and-cream striped crayon awning, default sign "LUNE STORE" |
 
 ### BuildingNode-specific fields
@@ -81,6 +85,7 @@ Not every character implements every state; unsupported states fall back to `idl
 | `meadow_flowers` | `renderMeadowFlowers` | `src/assets/props/meadowFlowers.ts` | Daisies & V-grass tufts across the meadow hill |
 | `birthday_cake` | `renderBirthdayCake` | `src/assets/props/birthdayCake.ts` | Two-tier strawberry birthday cake with 3 flickering candles that can be blown out |
 | `party_confetti` | `renderPartyConfetti` | `src/assets/props/partyConfetti.ts` | Colorful crayon ribbons, stars & paper diamonds at 6 FPS |
+| `pizza_slice` | `renderPizzaSlice` | `src/assets/props/pizzaSlice.ts` | Warm cheesy pepperoni pizza slice with steam (`variant: 1`) or open pizza counter box (`variant: 2`) |
 
 ### PropNode-specific fields
 
@@ -152,12 +157,47 @@ interface SceneDefinition {
   height?: number;             // default: 720
   fps?: number;                // default: 6
   vibrantMode?: boolean;       // enables Vibrant Crayon Mode
+  bookFrame?: BookFrameConfig | boolean; // Storybook Cover Opening & Ending/Credits Book-Frame (default: true)
   acts: StoryAct[];
   nodes: SceneNode[];
   timeline: TimelineTrack[];
   camera?: CameraKeyframe[];
   audioCues?: AudioNoteCue[];
   audioClips?: AudioClipCue[]; // External/generated audio clips (e.g., TTS narration, WAV/MP3)
+}
+```
+
+### BookFrameConfig, BookFramePhase & EvaluatedBookFrameState (`src/engine/bookFrame.ts`)
+
+```typescript
+type BookFramePhase = 'opening' | 'story' | 'closing';
+
+interface BookFrameConfig {
+  enabled?: boolean;                // default: true
+  coverTitle?: string;              // defaults to scene.title
+  coverSubtitle?: string;           // defaults to scene.subtitle
+  creditText?: string;              // optional author/illustrator credit shown on front/back cover
+  endingTitle?: string;             // defaults to 'The End ★'
+  endingCredit?: string;            // defaults to scene.title + optional credit line
+  coverMaterial?: CrayonMaterialId; // default: 'crayonTerracotta'
+  accentMaterial?: CrayonMaterialId;// optional accent crayon fill
+  openDurationSec?: number;         // default: 3.5 (opening cover flip + 0%->100% color-in zoom)
+  closeDurationSec?: number;        // default: 3.5 (100%->0% color-out zoom-out + ending cover close)
+}
+
+interface EvaluatedBookFrameState {
+  enabled: boolean;
+  phase: BookFramePhase;
+  coverOpenProgress: number;        // 0 = closed front cover, 1 = cover fully open to reveal pages
+  coverCloseProgress: number;       // 0 = pages open, 1 = back/ending cover fully closed
+  bookScale: number;                // 0.68 when viewing open book spread -> 1.0 when zoomed into story
+  colorFillMultiplier: number;      // 0.0 -> 1.0 during opening zoom-in, 1.0 in story, 1.0 -> 0.0 during closing zoom-out
+  coverTitle: string;
+  coverSubtitle: string;
+  creditText: string;
+  endingTitle: string;
+  endingCredit: string;
+  coverMaterial: CrayonMaterialId;
 }
 ```
 
@@ -232,6 +272,10 @@ interface CharacterNode extends BaseSceneNode {
   state: CharacterState;
   wearingNightcap?: boolean;   // Moon only
   holdingSheep?: boolean;      // Little girl only
+  holdingPizza?: boolean;      // Little girl only
+  speechText?: string;         // Character-attached bubble text (pass "" in keyframe to clear)
+  speechStyle?: 'speech' | 'thought';
+  speechTail?: 'bottom-center' | 'bottom-left' | 'bottom-right';
 }
 ```
 
@@ -264,12 +308,19 @@ interface PropNode extends BaseSceneNode {
 ### AnnotationNode
 
 ```typescript
+type BubbleStyle = 'none' | 'speech' | 'thought';
+type BubbleTailDirection = 'bottom-center' | 'bottom-left' | 'bottom-right' | 'left' | 'right';
+
 interface AnnotationNode extends BaseSceneNode {
   type: 'annotation';
-  text?: string;               // hand-lettered text
+  text?: string;               // hand-lettered text (supports multi-line with '\n')
   dashedPath?: string;         // hand-drawn dashed motion path SVG `d`
   color?: ColorToken | string;
   fontSize?: number;
+  bubbleStyle?: BubbleStyle;   // 'none' | 'speech' | 'thought'
+  tailDirection?: BubbleTailDirection; // 'bottom-center' | 'bottom-left' | 'bottom-right' | 'left' | 'right'
+  bubbleFill?: ColorToken | string;    // default: TOKENS.colors.paperWarm
+  anchorAtTailTip?: boolean;   // when true, (0, 0) is the tip of the tail/puff above a character's head
 }
 ```
 
@@ -290,8 +341,15 @@ interface NodeKeyframe {
   windowLit?: boolean;
   wearingNightcap?: boolean;
   holdingSheep?: boolean;
+  holdingPizza?: boolean;
+  speechText?: string;         // character-attached speech/thought bubble text (pass "" to clear)
+  speechStyle?: 'speech' | 'thought';
+  speechTail?: 'bottom-center' | 'bottom-left' | 'bottom-right';
   lit?: boolean;
   count?: number;
+  text?: string;               // dynamically updates annotation text
+  bubbleStyle?: BubbleStyle;
+  tailDirection?: BubbleTailDirection;
   hold?: boolean;              // step-hold: holds value until next keyframe
 }
 ```
@@ -482,6 +540,7 @@ export const SCENE_REGISTRY: Record<ShortSampleId, SceneDefinition> = {
 | `?scene=` | `<sceneId>` | Select scene by its `id` field |
 | `?footage=` | Act ID or alias (e.g., `morning`, `arrival`, `song`, `cake`, `act-1`) | Loop a single act |
 | `?vibrant=` | `1` or `0` | Override Vibrant Crayon Mode |
+| `?book_frame=` | `1` or `0` | Override Storybook Cover Opening & Ending/Credits Book-Frame (`#chk-book-frame`, default `1`) |
 | `?t=` | `<seconds>` | Seek to a specific time |
 | `?autoplay=` | `1` or `0` | Auto-start playback |
 | `?auto_export=` | `1` | Automatically export 16:9 `.mp4` on mount and save to `<workspace>/exports/` |
