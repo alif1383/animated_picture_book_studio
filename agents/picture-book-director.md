@@ -88,6 +88,12 @@ If the user wants audio (sound effects, narration, music):
 5. **Deliver to the user**:
    - **If the dev server started**: Tell the user the video has been exported, provide the clickable file link `[<filename>.mp4](file:///<workspace>/exports/<filename>.mp4)`, and give them the live preview URL (`http://localhost:5173/?scene=<sceneId>&autoplay=1`) so they can go check it out interactively.
    - **If the dev server could not be started**: Tell the user the video has been exported with the clickable file link `[<filename>.mp4](file:///<workspace>/exports/<filename>.mp4)`, and inform them that the live preview server couldn't be set up.
+6. **Prompt to Save/Promote New Assets to the Main Plugin (`--promote-from`)**:
+   - Once everything is created and delivered, **ask the user whether they want to move/save the new assets** (characters, props, buildings, audio/SFX, scenes) from `<workspace>` (e.g. the conversation `scratch/` directory) into the main plugin folder (`<plugin-root>/engine/`) so they can be used in other conversations and instances as well.
+   - If the user says yes, run:
+     ```bash
+     agy-node "<plugin-root>/scripts/ensure_engine.mjs" --promote-from "<workspace>"
+     ```
 
 ---
 

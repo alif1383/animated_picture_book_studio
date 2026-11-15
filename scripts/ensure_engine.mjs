@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * ensure_engine.mjs — 100% Standalone Zero-Dependency Engine Scaffolder & Syncer (Option A).
+ * ensure_engine.mjs — 100% Standalone Zero-Dependency Engine Scaffolder, Syncer & Asset Promoter (Option A).
  *
  * Runs on Antigravity's built-in `agy-node` (or standard `node`) with ZERO
  * external dependencies (no `pnpm`, `npm`, `python`, or `git` required).
@@ -24,6 +24,13 @@
  *    `<plugin-root>/engine/` into `<appDataDir>/brain/<conversation-id>/scratch/picture-book-studio`
  *    so each conversation has its own 100% isolated workspace without touching
  *    `<plugin-root>/engine/` or polluting the user's home/unrelated folder!
+ * 5. Asset Promotion Mode (`--promote-from <workspace>`):
+ *    When the user confirms they want to save newly created assets (characters,
+ *    buildings, props, scenes, audio files, SFX modules, docs, tests) from the
+ *    active workspace or conversation `scratch/` folder back into the main
+ *    plugin folder (`<plugin-root>/engine/`) so future conversations can use
+ *    them, run:
+ *      `agy-node "<plugin-root>/scripts/ensure_engine.mjs" --promote-from "<workspace>"`
  */
 
 import fs from 'node:fs';
@@ -33,18 +40,28 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PLUGIN_ROOT = path.resolve(__dirname, '..');
-const BUNDLED_ENGINE_DIR = path.join(PLUGIN_ROOT, 'engine');
+
+function isEngineRoot(dir) {
+  return Boolean(dir) && fs.existsSync(path.join(dir, 'src', 'engine', 'schema.ts'));
+}
+
+const BUNDLED_ENGINE_DIR = isEngineRoot(path.join(PLUGIN_ROOT, 'engine'))
+  ? path.join(PLUGIN_ROOT, 'engine')
+  : PLUGIN_ROOT;
 
 const SKIP_DIRS = new Set(['node_modules', 'dist', '.git', '__pycache__']);
+const PROMOTE_SUBDIRS = [
+  'src',
+  'public',
+  'docs',
+  'tests',
+  'scripts',
+];
 const ALWAYS_UPDATE_FILES = new Set([
   'package.json',
   'tsconfig.json',
   'vite.config.ts',
 ]);
-
-function isEngineRoot(dir) {
-  return Boolean(dir) && fs.existsSync(path.join(dir, 'src', 'engine', 'schema.ts'));
-}
 
 function hasModularAssets(dir) {
   return fs.existsSync(path.join(dir, 'src', 'assets', 'characters', 'cat.ts'));
@@ -74,7 +91,7 @@ export function getDefaultScratchEngineDir() {
   );
 }
 
-function copyTreeSync(srcDir, destDir, overwrite = true) {
+function copyTreeSync(srcDir, destDir, overwrite = true, copiedFiles = null) {
   fs.mkdirSync(destDir, { recursive: true });
   for (const entry of fs.readdirSync(srcDir, { withFileTypes: true })) {
     if (SKIP_DIRS.has(entry.name)) continue;
@@ -82,13 +99,13 @@ function copyTreeSync(srcDir, destDir, overwrite = true) {
     const destPath = path.join(destDir, entry.name);
 
     if (entry.isDirectory()) {
-      // Always overwrite vendor/ and scripts/ so standalone toolchain stays current
       const forceDir = entry.name === 'vendor' || entry.name === 'scripts';
-      copyTreeSync(srcPath, destPath, overwrite || forceDir);
+      copyTreeSync(srcPath, destPath, overwrite || forceDir, copiedFiles);
     } else if (entry.isFile()) {
       if (overwrite || !fs.existsSync(destPath) || ALWAYS_UPDATE_FILES.has(entry.name)) {
         try {
           fs.copyFileSync(srcPath, destPath);
+          if (copiedFiles) copiedFiles.push(destPath);
         } catch {
           // Ignore read-only file lock if identical
         }
@@ -103,6 +120,56 @@ function ensureExportsKeep(dir) {
   if (!fs.existsSync(exportsKeep)) {
     fs.writeFileSync(exportsKeep, '', 'utf8');
   }
+}
+
+/**
+ * Promotes assets (characters, buildings, props, scenes, audio files in `public/`,
+ * modular SFX in `src/audio/` & `scripts/sfx/`, `docs/`, and `tests/`) from a
+ * workspace or conversation `scratch/` directory back into `<plugin-root>/engine/`
+ * (and syncs `docs/AUDIO_CATALOG.md` to `skills/picture-book-audio/references/audio-catalog.md`).
+ */
+export function promoteAssetsToPlugin({
+  fromWorkspace,
+  targetPluginRoot = PLUGIN_ROOT,
+} = {}) {
+  const srcRoot = path.resolve(fromWorkspace || getDefaultScratchEngineDir());
+  if (!isEngineRoot(srcRoot)) {
+    throw new Error(`Source workspace is not a valid Picture-Book engine directory: ${srcRoot}`);
+  }
+
+  const destPluginRoot = path.resolve(targetPluginRoot);
+  const destEngineDir = path.join(destPluginRoot, 'engine');
+  fs.mkdirSync(destEngineDir, { recursive: true });
+
+  const promotedFiles = [];
+  for (const sub of PROMOTE_SUBDIRS) {
+    const srcSub = path.join(srcRoot, sub);
+    const destSub = path.join(destEngineDir, sub);
+    if (fs.existsSync(srcSub)) {
+      copyTreeSync(srcSub, destSub, true, promotedFiles);
+    }
+  }
+
+  // Also sync docs/AUDIO_CATALOG.md to skills/picture-book-audio/references/audio-catalog.md if present
+  const srcAudioCatalog = path.join(srcRoot, 'docs', 'AUDIO_CATALOG.md');
+  const skillAudioCatalogDir = path.join(
+    destPluginRoot,
+    'skills',
+    'picture-book-audio',
+    'references'
+  );
+  if (fs.existsSync(srcAudioCatalog) && fs.existsSync(path.dirname(skillAudioCatalogDir))) {
+    fs.mkdirSync(skillAudioCatalogDir, { recursive: true });
+    const destSkillCatalog = path.join(skillAudioCatalogDir, 'audio-catalog.md');
+    fs.copyFileSync(srcAudioCatalog, destSkillCatalog);
+    promotedFiles.push(destSkillCatalog);
+  }
+
+  return {
+    promoted_from: srcRoot,
+    promoted_to_engine: destEngineDir,
+    files_synced_count: promotedFiles.length,
+  };
 }
 
 export function resolveEngine({
@@ -187,6 +254,8 @@ function main() {
   let scaffold = false;
   let inPlace = false;
   let scratchDir = null;
+  let promoteFrom = null;
+  let promoteTarget = null;
   let jsonOut = false;
 
   for (let i = 0; i < args.length; i++) {
@@ -195,6 +264,10 @@ function main() {
       workspace = args[++i];
     } else if (a === '--scratch' && args[i + 1]) {
       scratchDir = args[++i];
+    } else if (a === '--promote-from' && args[i + 1]) {
+      promoteFrom = args[++i];
+    } else if (a === '--promote-target' && args[i + 1]) {
+      promoteTarget = args[++i];
     } else if (a === '--scaffold') {
       scaffold = true;
     } else if (a === '--in-place') {
@@ -202,6 +275,21 @@ function main() {
     } else if (a === '--json') {
       jsonOut = true;
     }
+  }
+
+  if (promoteFrom) {
+    const promo = promoteAssetsToPlugin({
+      fromWorkspace: promoteFrom,
+      targetPluginRoot: promoteTarget || PLUGIN_ROOT,
+    });
+    if (jsonOut) {
+      console.log(JSON.stringify(promo, null, 2));
+    } else {
+      console.log(
+        `Promoted ${promo.files_synced_count} files from ${promo.promoted_from} to plugin engine at ${promo.promoted_to_engine}`
+      );
+    }
+    return;
   }
 
   const result = resolveEngine({ workspace, scaffold, inPlace, scratchDir });

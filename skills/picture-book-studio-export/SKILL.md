@@ -164,6 +164,12 @@ Once export is complete:
      http://localhost:5173/?scene=<sceneId>&autoplay=1
      ```
    - If `agy-node scripts/studio-cli.mjs dev` could not be started, inform the user that the live preview server couldn't be started, while still providing the exported `.mp4` link above.
+3. **Ask the user if they want to promote new assets to the main plugin folder**:
+   - Whenever new characters, props, buildings, audio/SFX, or scenes were created in `<workspace>` (such as a per-conversation `scratch/picture-book-studio` workspace), ask the user if they want to move/save those assets into the main plugin folder (`<plugin-root>/engine/`) so they are available in future instances.
+   - If the user confirms, run:
+     ```bash
+     agy-node "<plugin-root>/scripts/ensure_engine.mjs" --promote-from "<workspace>"
+     ```
 
 ---
 

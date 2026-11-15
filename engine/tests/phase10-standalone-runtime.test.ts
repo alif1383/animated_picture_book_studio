@@ -189,4 +189,91 @@ describe('Phase 10: Option B Standalone Runtime, Isomorphic-Git & Zero-Python Ut
     expect(shContent).toContain('ANTIGRAVITY_AGENTAPI_EXE');
     expect(shContent).toContain('ELECTRON_RUN_AS_NODE=1');
   });
+
+  it('scaffolds into isolated per-conversation scratch directory (Option A), preserves edits, and promotes new assets via ensure_engine.mjs', () => {
+    const tmpBase = fs.mkdtempSync(path.join(os.tmpdir(), 'pb-ensure-opt-a-'));
+    try {
+      const unrelatedWorkspace = path.join(tmpBase, 'unrelated-app');
+      const scratchWorkspace = path.join(tmpBase, 'brain-scratch-studio');
+      const mockPluginRoot = path.join(tmpBase, 'mock-plugin');
+      fs.mkdirSync(unrelatedWorkspace, { recursive: true });
+      fs.mkdirSync(
+        path.join(mockPluginRoot, 'skills', 'picture-book-audio', 'references'),
+        { recursive: true }
+      );
+
+      const ensureScript = path.resolve(process.cwd(), 'scripts', 'ensure_engine.mjs');
+
+      // 1. First call with an unrelated folder (no src/engine/schema.ts):
+      //    Should NOT pollute unrelatedWorkspace, and instead scaffold into scratchWorkspace
+      const run1 = spawnSync(
+        process.execPath,
+        [ensureScript, '--workspace', unrelatedWorkspace, '--scratch', scratchWorkspace, '--json'],
+        { encoding: 'utf8', env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' } }
+      );
+      expect(run1.status).toBe(0);
+      const res1 = JSON.parse(run1.stdout);
+      expect(res1.source).toBe('scaffolded_to_conversation_scratch');
+      expect(res1.engine_dir).toBe(scratchWorkspace);
+      expect(res1.vendor_ready).toBe(true);
+      expect(fs.readdirSync(unrelatedWorkspace)).toHaveLength(0);
+      expect(fs.existsSync(path.join(scratchWorkspace, 'src', 'engine', 'schema.ts'))).toBe(true);
+
+      // 2. Create a custom asset inside the conversation's scratch workspace
+      const customAssetPath = path.join(
+        scratchWorkspace,
+        'src',
+        'assets',
+        'characters',
+        'customTestFox.ts'
+      );
+      fs.writeFileSync(customAssetPath, 'export const CUSTOM_FOX = true;\n', 'utf8');
+
+      // 3. Second call in the same conversation should preserve customTestFox.ts
+      const run2 = spawnSync(
+        process.execPath,
+        [ensureScript, '--workspace', unrelatedWorkspace, '--scratch', scratchWorkspace, '--json'],
+        { encoding: 'utf8', env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' } }
+      );
+      expect(run2.status).toBe(0);
+      const res2 = JSON.parse(run2.stdout);
+      expect(res2.source).toBe('conversation_scratch');
+      expect(fs.existsSync(customAssetPath)).toBe(true);
+
+      // 4. Promote assets from scratchWorkspace to mockPluginRoot
+      const runPromote = spawnSync(
+        process.execPath,
+        [
+          ensureScript,
+          '--promote-from',
+          scratchWorkspace,
+          '--promote-target',
+          mockPluginRoot,
+          '--json',
+        ],
+        { encoding: 'utf8', env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' } }
+      );
+      expect(runPromote.status).toBe(0);
+      const promoRes = JSON.parse(runPromote.stdout);
+      expect(promoRes.files_synced_count).toBeGreaterThan(20);
+      expect(
+        fs.existsSync(
+          path.join(mockPluginRoot, 'engine', 'src', 'assets', 'characters', 'customTestFox.ts')
+        )
+      ).toBe(true);
+      expect(
+        fs.existsSync(
+          path.join(
+            mockPluginRoot,
+            'skills',
+            'picture-book-audio',
+            'references',
+            'audio-catalog.md'
+          )
+        )
+      ).toBe(true);
+    } finally {
+      fs.rmSync(tmpBase, { recursive: true, force: true });
+    }
+  });
 });

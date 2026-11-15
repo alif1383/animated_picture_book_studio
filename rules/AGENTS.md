@@ -152,3 +152,10 @@ Follow this complete workflow:
 4. **Deliver the video & report status**:
    - **If the dev server started**: Tell the user the video has been exported, give them the clickable file link `[filename.mp4](file:///<workspace>/exports/filename.mp4)`, **and** give them the live preview site URL `http://localhost:5173/?scene=<sceneId>&autoplay=1` so they can go check it out.
    - **If the dev server could not be started**: Tell the user the video has been exported with the clickable file link `[filename.mp4](file:///<workspace>/exports/filename.mp4)`, and let them know the live preview server could not be set up.
+5. **Prompt the User to Promote New Assets to the Main Plugin Folder (`--promote-from`)**:
+   - Whenever new assets (characters, buildings, props, scenes, audio files in `public/audio/`, modular SFX in `src/audio/sfx/` or `scripts/sfx/`, or reference images/catalogs) have been created in `<workspace>` (such as a per-conversation `scratch/` folder or project workspace), **always ask the user at the end of your reply** whether they would like to save/move those new assets into the main plugin folder (`<plugin-root>/engine/`) so they can be reused across future conversations and instances.
+   - If the user confirms, run:
+     ```bash
+     agy-node "<plugin-root>/scripts/ensure_engine.mjs" --promote-from "<workspace>"
+     ```
+     which syncs all newly created/updated assets (`src/`, `public/`, `docs/`, `tests/`, `scripts/`) and `docs/AUDIO_CATALOG.md` back into `<plugin-root>/engine/` and `<plugin-root>/skills/picture-book-audio/references/audio-catalog.md`.
