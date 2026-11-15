@@ -97,10 +97,11 @@ Step-by-step workflow for turning user photos (or AI-generated reference images)
 - Registration checklist (schema types, render wiring, asset catalog, build verification)
 
 ### 🔊 `picture-book-audio`
-Comprehensive guide to all three audio modes:
-- **Mode A — Procedural SFX** (`audioCues`): 9 built-in synthesizer kinds with frequency/timing control
-- **Mode B — External Files** (`audioClips`): Attach `.mp3`/`.wav` files at precise timestamps with volume/offset control
-- **Mode C — Generated Audio**: Narration and procedural WAV SFX via the bundled `generate_audio.mjs` utility
+Comprehensive guide to all three audio modes and the Master Audio Catalog (`docs/AUDIO_CATALOG.md` & `skills/picture-book-audio/references/audio-catalog.md`):
+- **Mandatory Scene Audio Planning & Catalog Check**: Check `docs/AUDIO_CATALOG.md` when designing a scene to select fitting existing BGM/SFX and plan new theme-appropriate audio
+- **Mode A — Modular Procedural SFX** (`audioCues`, `src/audio/sfx/<name>.ts`): 16 built-in one-file-per-SFX synthesizer modules with frequency/timing control and theme metadata
+- **Mode B — External & Bundled WAV Files** (`audioClips`, `public/audio/*.wav`): Attach `.mp3`/`.wav` files (including 5 bundled medieval/fantasy/campfire tracks in `public/audio/`) at precise timestamps with volume/offset control
+- **Mode C — Isolated Per-SFX Generation** (`scripts/sfx/<name>.mjs` & `generate_audio.mjs`): Create new sound effects via isolated subagents in standalone modular files and register them in `docs/AUDIO_CATALOG.md`
 
 ### 🎬 `picture-book-studio-export`
 Turnkey runbook for previewing and exporting videos:

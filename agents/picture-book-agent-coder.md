@@ -59,8 +59,9 @@ Every scene rendered by the engine must pass through three visual layers:
   - Prop emissions (music notes, chimney puffs, twinkling stars) move in discrete stepped hops rather than smooth continuous curves.
 - **Hand-Drawn Annotations**: Support playful picture-book details in the background (e.g., faint pencil numbers `1 2 3 4 5` counting stars, dashed motion lines, hand-lettered sound effects).
 
-### 5. Scene Authoring Contract & Storybook Book-Frame (`bookFrame`)
+### 5. Scene Authoring Contract, Audio Catalog Check & Storybook Book-Frame (`bookFrame`)
 When creating a new scene, structure it declaratively using shared engine primitives:
+- **Check `docs/AUDIO_CATALOG.md` First (Mandatory Scene Audio Plan)**: Before authoring a scene, always inspect `<workspace>/docs/AUDIO_CATALOG.md` (and `skills/picture-book-audio/references/audio-catalog.md`) to see what existing background music and sound effects fit the story's theme and what new theme-appropriate BGM/SFX must be created.
 - Define **Background Patches** (SVG paths with organic, uneven edges + marker/crayon fill patterns).
 - Place **Props & Architecture** (layered back-to-front with crayon displacement applied).
 - Place **Character Rigs** with named state triggers (`idle`, `singing`, `blinking`, `looking_up`).
@@ -79,10 +80,10 @@ When creating a new scene, structure it declaratively using shared engine primit
 
 ## Part 2: Development, Architecture & Workflow Guidelines
 
-### 1. Living Documentation & Agent Context Sharing
-- Maintain up-to-date documentation (`docs/ARCHITECTURE.md` and module-level summaries) detailing every file, module, and public API in the codebase.
-- **Update Docs Continuously**: Whenever files, functions, or schemas are added, modified, or removed, update the documentation in the same phase before committing.
-- **Subagent Context Handoff**: Whenever spawning subagents or handing off tasks, **always pass the exact file paths to relevant documentation** so they can locate existing utilities.
+### 1. Living Documentation, Audio Catalog & Agent Context Sharing
+- Maintain up-to-date documentation (`docs/ARCHITECTURE.md`, `docs/AUDIO_CATALOG.md`, and module-level summaries) detailing every file, module, sound effect, and public API in the codebase.
+- **Update Docs & Audio Catalog Continuously**: Whenever files, functions, or schemas are added, modified, or removed, update `docs/ARCHITECTURE.md` in the same phase before committing. Whenever new sound effects or background music are created, register their descriptions and fitting story themes in `<workspace>/docs/AUDIO_CATALOG.md` and `skills/picture-book-audio/references/audio-catalog.md`.
+- **Subagent Context Handoff**: Whenever spawning subagents or handing off tasks, **always pass the exact file paths to relevant documentation** (`docs/ARCHITECTURE.md`, `docs/STYLE_GUIDE.md`, `docs/AUDIO_CATALOG.md`) so they can locate existing utilities.
 
 ### 2. Git / `isomorphic-git` Workflow & Atomic Phase Commits (`scripts/vcs.mjs`)
 - **VCS Check & Initialization**: Run `agy-node scripts/vcs.mjs check` to detect whether native `git` or bundled `isomorphic-git` should be used. If no `.git` repository exists yet, initialize one via `agy-node scripts/vcs.mjs init`.
@@ -94,15 +95,16 @@ When creating a new scene, structure it declaratively using shared engine primit
 - **Micro Planning (Pre-Phase)**: Before starting any main phase, create a focused sub-plan breaking that phase into smaller, concrete implementation items.
 - **Incremental Execution**: Complete, verify, document, and commit each sub-item before moving to the next.
 
-### 4. Multi-Agent Research & Synthesis (Up to 5 Subagents Per Phase)
-- **Fresh Subagents Per Phase**: At the start of each major phase, spin up up to 5 fresh specialized researcher subagents in parallel and synthesize their findings into that phase's micro-plan before implementing.
+### 4. Multi-Agent Research & Synthesis (Mandatory `>= 3` Subagents for Changes `> 100` LOC, Up to 5 Per Phase)
+- **Mandatory Liberal Subagent Rule (`>= 3` Parallel Researchers for `> 100` LOC)**: Any code change requiring **more than 100 lines of code** MUST spin up **at least 3 researcher subagents in parallel** before editing code (and up to 5 fresh specialized researcher subagents at the start of each major phase) and synthesize their findings into the micro-plan before implementing.
 - **Distinct Roles**: Assign each subagent a specific, non-overlapping role tailored to the phase.
 - **Mandatory Minimalism & Reuse Researcher**: Always dedicate one subagent to auditing the current codebase and `docs/` for existing logic and utilities so nothing is duplicated.
+- **Isolated Per-SFX Subagents**: Whenever new sound effects are required, load `skills/picture-book-audio/SKILL.md` and spin up **isolated subagent(s)** to build each sound effect in its own separate modular file (`src/audio/sfx/<name>.ts` and/or `scripts/sfx/<name>.mjs` generating `public/audio/<name>.wav`).
 
-### 5. Code Reuse, DRY Principles & Modularity
+### 5. Code Reuse, DRY Principles & One-File-Per-SFX Modularity
 - **Reuse First**: Consult the codebase and `docs/` before writing new functions. Extend or compose existing primitives whenever possible.
 - **Eliminate Duplication**: Actively refactor and remove repetitive logic.
-- **Modular & Decoupled Architecture**: Keep modules independent with small, well-defined interfaces.
+- **Modular & Decoupled Architecture (Including One-File-Per-SFX)**: Keep modules independent with small, well-defined interfaces. Every procedural WebAudio sound effect must live in its own standalone file `src/audio/sfx/<name>.ts` (registered via `src/audio/sfx/index.ts`), and every custom WAV sound effect generator must live in its own standalone script `scripts/sfx/<name>.mjs` outputting `public/audio/<name>.wav`.
 
 ### 6. Centralized Styling, Sizing & Design Tokens
 - All values come from `src/theme/tokens.ts` and `docs/STYLE_GUIDE.md`.
@@ -120,16 +122,16 @@ When creating a new scene, structure it declaratively using shared engine primit
 When your task touches these domains, **ALWAYS load and follow the corresponding skill before implementing**:
 
 ### Animation & Scene Design
-Load `skills/picture-book-animation/SKILL.md` whenever designing, choreographing, or editing animations, scenes, acts, camera movements, timelines, keyframes, or visual aesthetics. Contains the complete `SceneDefinition` schema, all `CharacterKind`/`PropKind`/`BuildingKind` catalogs, 3-layer render pipeline, and scene registration instructions.
+Load `skills/picture-book-animation/SKILL.md` whenever designing, choreographing, or editing animations, scenes, acts, camera movements, timelines, keyframes, or visual aesthetics. Contains the complete `SceneDefinition` schema, all `CharacterKind`/`PropKind`/`BuildingKind` catalogs, 3-layer render pipeline, mandatory `docs/AUDIO_CATALOG.md` scene audio planning, and scene registration instructions.
 
 ### Photo-Modeled Assets
 Load `skills/photo-to-crayon-asset/SKILL.md` whenever creating custom characters, props, or buildings from user photos or generated reference images. Covers visual inspection, palette mapping to `TOKENS` (`agy-node "<plugin-root>/skills/photo-to-crayon-asset/scripts/analyze_reference_photo.mjs"`), SVG cutout decomposition, multi-state rigging, and the registration checklist.
 
-### Audio Sync & Generation (Including `audioClips`)
-Load `skills/picture-book-audio/SKILL.md` whenever adding, editing, or generating audio. Covers all three audio modes:
-- **Mode A — Procedural `audioCues`**: Built-in `AudioNoteCue[]` with 9 synthesizer kinds (`lullaby`, `chime`, `crayon_scribble`, `party_horn`, `confetti_pop`, `cheer_applause`, `candle_blow`, `giggle`, `birthday_song`).
+### Audio Sync, Catalog & Isolated Per-SFX Generation (Including `audioClips`)
+Load `skills/picture-book-audio/SKILL.md` whenever planning scene audio or adding, editing, or generating audio. Always consult `<workspace>/docs/AUDIO_CATALOG.md` (and `skills/picture-book-audio/references/audio-catalog.md`) first to select existing theme-appropriate BGM/SFX and identify new ones to create. When creating new sound effects, spin up **isolated subagent(s)** and keep **every sound effect in its own modular file**, then register new entries in `docs/AUDIO_CATALOG.md` and `skills/picture-book-audio/references/audio-catalog.md`. Covers all three audio modes:
+- **Mode A — Procedural `audioCues` (`src/audio/sfx/<name>.ts`)**: Modular one-file-per-SFX WebAudio synthesizers registered in `src/audio/sfx/index.ts` and triggered via `AudioNoteCue[]`.
 - **Mode B — External `audioClips`**: `AudioClipCue[]` for user-provided or generated `.mp3`/`.wav` files placed in `<workspace>/public/audio/`, with `startTime`, `duration`, `offsetSec`, and `volume` control. The `PictureBookSoundEngine` automatically plays clips in real-time preview AND mixes them into the offline audio buffer during `.mp4` export.
-- **Mode C — Generated Audio**: Narration and procedural WAV SFX via the bundled `agy-node "<plugin-root>/skills/picture-book-audio/scripts/generate_audio.mjs"` utility.
+- **Mode C — Generated Audio & Modular WAV SFX (`scripts/sfx/<name>.mjs`)**: Narration and procedural WAV SFX via `agy-node "<plugin-root>/skills/picture-book-audio/scripts/generate_audio.mjs"` or dedicated per-SFX scripts in `scripts/sfx/<name>.mjs` generating `<workspace>/public/audio/<name>.wav`.
 
 ### Turnkey Dev Server & Automated CLI Video Export
 Load `skills/picture-book-studio-export/SKILL.md` whenever the user wants to preview their video or export an `.mp4`. Follow the full turnkey workflow:

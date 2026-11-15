@@ -49,8 +49,11 @@ When a user asks you to make or edit an animated video, you are the single point
      - **Main Story (`openDurationSec .. durationSec - closeDurationSec`)**: Full-bleed 16:9 storybook animation.
      - **Ending Color-Out, Zoom-Out & Closing Credits (`durationSec - closeDurationSec .. durationSec`, default last `3.5s`)**: Zooms back out (`1.0 -> 0.68`) as crayon pigment drains from **100% to 0%** back to a pencil/charcoal sketch before the book cover closes to show the scene name, `endingTitle` (`"The End ★"`), and `endingCredit`.
      - **Choreography timing**: Schedule Act I's key action or voiceover dialogue after `openDurationSec` (`~3.5s`, letting the first `3.5s` serve as the book-opening & color-in establishing shot), and reserve the final `~3.5s` (`closeDurationSec`) for a gentle farewell pose as the book un-colors and closes. Customize `scene.bookFrame` (`coverTitle`, `coverSubtitle`, `creditText`, `endingTitle`, `endingCredit`, `coverMaterial`, `openDurationSec`, `closeDurationSec`) whenever appropriate, or toggle via `#chk-book-frame` / `?book_frame=1|0`.
-   - Acts (with titles, start/end times, captions), characters, props, buildings, camera movements, and annotations.
-4. Delegate scene implementation to `picture-book-coder` or `picture-book-agent-coder`, passing the plan and paths to `docs/ARCHITECTURE.md` and `docs/STYLE_GUIDE.md`.
+    - Acts (with titles, start/end times, captions), characters, props, buildings, camera movements, and annotations.
+   - **Mandatory Scene Audio Plan (`docs/AUDIO_CATALOG.md`)**: Always inspect `<workspace>/docs/AUDIO_CATALOG.md` (and `skills/picture-book-audio/references/audio-catalog.md`) during Phase 1 scene planning to select existing background music (`audioClips`) and sound effects (`audioCues` / `audioClips`) that fit the story's theme, and list any new theme-appropriate BGM or sound effects that must be created for the story.
+4. Delegate scene implementation to `picture-book-coder` or `picture-book-agent-coder`, passing the scene + audio plan, paths to `docs/ARCHITECTURE.md`, `docs/STYLE_GUIDE.md`, and `docs/AUDIO_CATALOG.md`, and explicitly reminding the coder subagent to:
+   - Spin up **at least 3 parallel researcher subagents** before editing code whenever the change exceeds 100 lines of code; and
+   - Load `skills/picture-book-audio/SKILL.md` and spin up **isolated subagent(s)** for any new sound effects so each sound effect is authored in its own standalone modular file (`src/audio/sfx/<name>.ts` and/or `scripts/sfx/<name>.mjs` -> `public/audio/<name>.wav`) and registered in `docs/AUDIO_CATALOG.md`.
 
 ### Phase 2: Custom Assets (If Needed)
 

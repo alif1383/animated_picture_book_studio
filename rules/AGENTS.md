@@ -63,6 +63,7 @@ Every scene in the Picture-Book Studio is automatically framed inside a physical
    - Keep Act I's main character dialogue/key action starting after `openDurationSec` (or let the first `~3.5s` serve as the book-opening & color-in establishing shot, optionally paired with a `crayon_scribble` or `chime` audio cue).
    - Let the final `~3.5s` (`closeDurationSec`) serve as a gentle farewell pose as the scene zooms out, un-colors to sketch, and closes the book (optionally paired with a `lullaby` cue).
    - **Character-Attached Speech & Thought Bubbles (`speechText` & `speechStyle`)**: Whenever a character speaks or thinks, set `speechText` and `speechStyle: 'speech' | 'thought'` directly on the character's `CharacterNode` or `NodeKeyframe` (and `speechText: ''` to clear it) rather than guessing manual `(x, y)` coordinates on a standalone annotation node. The engine automatically anchors the bubble tail/thought puffs directly above that character's head via `CHARACTER_SPEECH_ANCHORS`.
+   - **Mandatory Scene Audio Planning & Catalog Check (`docs/AUDIO_CATALOG.md`)**: Whenever planning or creating a new scene, the planning/director/coder agent **MUST** check `<workspace>/docs/AUDIO_CATALOG.md` (and `skills/picture-book-audio/references/audio-catalog.md`) to see what existing background music and sound effects fit the theme and what new theme-appropriate BGM/SFX must be created for the story, and pass this required audio plan to the coder agent.
    - Customize cover titles, credits, cover material, or durations via `scene.bookFrame: BookFrameConfig` (or set `bookFrame: false` to disable), toggle live in the Studio UI via `#chk-book-frame`, or pass `?book_frame=1|0` in the URL.
 
 ---
@@ -71,11 +72,12 @@ Every scene in the Picture-Book Studio is automatically framed inside a physical
 
 Whenever writing or modifying TypeScript code—including scenes, engine modules, SVG asset functions, audio synthesizers, UI components, or tests—**ALWAYS** follow the `picture-book-agent-coder` engineering standards. This means:
 
+- **Liberal Subagent Rule (`>= 3` Research Subagents for Any Change `> 100` Lines of Code)**: Any code change requiring **more than 100 lines of code** MUST spin up **at least 3 researcher subagents in parallel** before editing code (always including a minimalism & reuse researcher to audit existing utilities). Whenever the main/director agent delegates to a coder subagent, it must explicitly remind the coder subagent of this `>= 3` parallel researcher subagent rule and the isolated per-SFX subagent rule.
 - **Centralized design tokens**: Import all colors, dimensions, frame rates, filter IDs, and style constants from `src/theme/tokens.ts`. Never hardcode magic numbers or hex values.
-- **Modular DRY architecture**: Reuse existing engine primitives (`svgUtils.ts`, `filters.ts`, `fillMask.ts`, `timeline.ts`, `clock.ts`) before writing new code. Actively eliminate duplication.
+- **Modular DRY architecture & One-File-Per-SFX Modularity**: Reuse existing engine primitives (`svgUtils.ts`, `filters.ts`, `fillMask.ts`, `timeline.ts`, `clock.ts`) before writing new code. Keep **every sound effect in its own separate modular file** (`src/audio/sfx/<name>.ts` for procedural WebAudio cues and/or `scripts/sfx/<name>.mjs` generating `public/audio/<name>.wav` for WAV clips) created via isolated subagent(s).
 - **Predefined character speech/thought bubble anchors (`CHARACTER_SPEECH_ANCHORS`)**: Every character model in `src/assets/characters/` MUST register a predefined head-top anchor `{ x, y }` in `CHARACTER_SPEECH_ANCHORS` (`src/assets/characters/index.ts`), modeled after existing characters (`little_girl: { x: 0, y: -102 }`, `shopkeeper: { x: 0, y: -105 }`, `cat: { x: 10, y: -44 }`), so setting `speechText` and `speechStyle: 'speech' | 'thought'` on any `CharacterNode` or `NodeKeyframe` automatically attaches the speech or thought bubble right above that character's head.
 - **Mandatory `+X` character facing & 3/4 walking profile convention**: Every character rig MUST face **RIGHT (`+X`)** when `flipX: false` and **LEFT (`-X`)** when `flipX: true`. For `state === 'walking'`, always implement a dedicated 3/4 or side-profile walking rig facing right (`+X`) where both legs pivot from the hip center (`x ≈ 0`), both shoes/paws point right (`+X`), and the torso/head/eyes face right (`+X`) — never reuse a flat front-facing rig with sideways-scissoring legs for walking. Set `flipX: false` when walking right (`dx > 0`) and `flipX: true` when walking left (`dx < 0`).
-- **Living documentation**: Update `docs/ARCHITECTURE.md` whenever files, modules, or public APIs are added, modified, or removed.
+- **Living documentation & Audio Catalog (`docs/ARCHITECTURE.md` & `docs/AUDIO_CATALOG.md`)**: Update `docs/ARCHITECTURE.md` whenever files, modules, or public APIs are added, modified, or removed. Whenever new sound effects or background music are created, register their descriptions and fitting story themes in both `<workspace>/docs/AUDIO_CATALOG.md` and `skills/picture-book-audio/references/audio-catalog.md`.
 - **Minimalism & reuse checks**: Before implementing anything new, audit the codebase for existing utilities that can be extended or composed.
 - **Strict TypeScript + Test verification (Zero-Dependency CLI)**: All code must compile under `strict: true`. After every change, run in `<workspace>`:
   - `agy-node scripts/studio-cli.mjs typecheck` (runs bundled `tsc --noEmit`)
@@ -83,7 +85,7 @@ Whenever writing or modifying TypeScript code—including scenes, engine modules
   - `agy-node scripts/studio-cli.mjs build` (typechecks and builds `dist/`)
 - **Atomic Git commits (via `scripts/vcs.mjs`)**: Check `agy-node scripts/vcs.mjs check`, then commit after each completed phase or sub-task via `agy-node scripts/vcs.mjs commit -m "<message>"`.
 
-When the task involves substantial code changes, **delegate to or invoke the `picture-book-coder` or `picture-book-agent-coder` subagent** so these engineering standards are enforced end-to-end.
+When the task involves substantial code changes, **delegate to or invoke the `picture-book-coder` or `picture-book-agent-coder` subagent** (explicitly reminding it to use `>= 3` parallel researcher subagents for changes `> 100` LOC and isolated subagents per new SFX) so these engineering standards are enforced end-to-end.
 
 ---
 
@@ -99,13 +101,13 @@ This skill contains the complete workflow for visual inspection, palette mapping
 
 ---
 
-## Audio Sync & Generation Routing
+## Audio Sync, Catalog Planning & Isolated Per-SFX Subagent Routing
 
-Whenever the user wants to add audio to specific parts of a video—whether using:
+Whenever planning a scene's audio or adding audio to specific parts of a video—whether using:
 
-- **Built-in procedural SFX/music** (`audioCues: AudioNoteCue[]`) — lullaby, chime, crayon_scribble, party_horn, confetti_pop, cheer_applause, candle_blow, giggle, birthday_song
-- **User-provided audio files** (`.mp3`, `.wav`, `.ogg`, `.m4a`) attached via `audioClips: AudioClipCue[]`
-- **Newly generated TTS voiceover, narration, or custom sound effects** via `agy-node "<plugin-root>/skills/picture-book-audio/scripts/generate_audio.mjs"`
+- **Built-in procedural SFX/music** (`audioCues: AudioNoteCue[]`, modularly defined one-file-per-SFX in `src/audio/sfx/<name>.ts`) — lullaby, chime, crayon_scribble, party_horn, confetti_pop, cheer_applause, candle_blow, giggle, birthday_song, ocean_wave, water_splash, floatie_squeak, fire_crackle, dragon_fire, spear_clink, medieval_lute
+- **User-provided or pre-bundled WAV/MP3 audio files** (`.mp3`, `.wav`, `.ogg`, `.m4a`) attached via `audioClips: AudioClipCue[]`
+- **Newly generated TTS voiceover, narration, or custom WAV sound effects** via `agy-node "<plugin-root>/skills/picture-book-audio/scripts/generate_audio.mjs"` or modular per-SFX generator scripts in `scripts/sfx/<name>.mjs`
 
 **ALWAYS** load and follow the `picture-book-audio` skill before proceeding:
 
@@ -113,7 +115,10 @@ Whenever the user wants to add audio to specific parts of a video—whether usin
 skills/picture-book-audio/SKILL.md
 ```
 
-This skill covers all three audio modes, the `AudioNoteCue` and `AudioClipCue` interfaces, how to place audio files in `<workspace>/public/audio/`, and how to generate narration or procedural WAV sound effects using the bundled zero-dependency utility.
+Enforce these mandatory audio rules on every scene and audio task:
+1. **Check the Audio Catalog First (`docs/AUDIO_CATALOG.md`)**: When planning or creating any scene, read `<workspace>/docs/AUDIO_CATALOG.md` (and `skills/picture-book-audio/references/audio-catalog.md`) to see what existing background music and sound effects fit the story theme and determine what new theme-appropriate BGM/SFX must be created. Pass this audio plan to the coder agent.
+2. **Isolated Subagent(s) & One-File-Per-Sound-Effect Modularity**: To create new sound effects, the coder agent MUST load `skills/picture-book-audio/SKILL.md` and spin up **isolated subagent(s)** so that **every sound effect lives in its own separate modular file** (`src/audio/sfx/<name>.ts` for procedural WebAudio synthesizers and/or `scripts/sfx/<name>.mjs` generating `public/audio/<name>.wav` for WAV clips).
+3. **Register New Audio in the Catalog**: Every new sound effect or background track MUST be documented with its description, parameters/duration, and fitting story themes in both `<workspace>/docs/AUDIO_CATALOG.md` and `skills/picture-book-audio/references/audio-catalog.md`.
 
 ---
 

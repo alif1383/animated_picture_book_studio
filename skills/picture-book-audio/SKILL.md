@@ -45,19 +45,28 @@ preview, and are rendered offline via
 `soundEngine.renderOfflineAudio(cues, start, dur)` into the `.mp4` audio
 track during video export.
 
-### AudioCueKind Reference
+### AudioCueKind Reference (`src/audio/sfx/<name>.ts`)
 
-| Kind               | Character / Feel                                   |
-|--------------------|----------------------------------------------------|
-| `lullaby`          | Warm triangle-wave music-box note (default)        |
-| `crayon_scribble`  | Papery foley — bandpass-filtered grain noise        |
-| `chime`            | Bright sine music-box bell with 3× overtone        |
-| `birthday_song`    | Glockenspiel + sub-octave (Happy Birthday melody)  |
-| `party_horn`       | Sawtooth kazoo with upward pitch slide              |
-| `confetti_pop`     | Pitch-drop thump + sparkle chimes + paper burst     |
-| `cheer_applause`   | Rhythmic hand-claps + major-triad "Hooray!" chord   |
-| `candle_blow`      | Breathy filtered-noise whoosh                       |
-| `giggle`           | Two-note bouncy pitch hop ("hee-hee!")              |
+For the complete catalog of all **16 procedural WebAudio synthesizers** (`src/audio/sfx/*.ts`) and **5 pre-rendered `.wav` tracks** (`public/audio/*.wav` + `scripts/sfx/*.mjs`) with descriptions and fitting story themes, always consult [`references/audio-catalog.md`](references/audio-catalog.md) and `<workspace>/docs/AUDIO_CATALOG.md`.
+
+| Kind               | Module File (`src/audio/sfx/`) | Character / Feel                                   |
+|--------------------|--------------------------------|----------------------------------------------------|
+| `lullaby`          | `lullaby.ts`                   | Warm triangle-wave music-box note (default)        |
+| `crayon_scribble`  | `crayonScribble.ts`            | Papery foley — bandpass-filtered grain noise        |
+| `chime`            | `chime.ts`                     | Bright sine music-box bell with 3× overtone        |
+| `birthday_song`    | `birthdaySong.ts`              | Glockenspiel + sub-octave (Happy Birthday melody)  |
+| `party_horn`       | `partyHorn.ts`                 | Sawtooth kazoo with upward pitch slide              |
+| `confetti_pop`     | `confettiPop.ts`               | Pitch-drop thump + sparkle chimes + paper burst     |
+| `cheer_applause`   | `cheerApplause.ts`             | Rhythmic hand-claps + major-triad "Hooray!" chord   |
+| `candle_blow`      | `candleBlow.ts`                | Breathy filtered-noise whoosh                       |
+| `giggle`           | `giggle.ts`                    | Two-note bouncy pitch hop ("hee-hee!")              |
+| `ocean_wave`       | `oceanWave.ts`                 | Rolling lowpass ocean surf swell + frothy crest     |
+| `water_splash`     | `waterSplash.ts`               | Splash spray burst + 4 bubbly water-droplet blips   |
+| `floatie_squeak`   | `floatieSqueak.ts`             | Two-chirp inflatable vinyl/rubber-ducky squeak      |
+| `fire_crackle`     | `fireCrackle.ts`               | Warm lowpass campfire ember bed + 4 wood-snap pops  |
+| `dragon_fire`      | `dragonFire.ts`                | Sweeping bandpass flame whoosh + dragon throat roar |
+| `spear_clink`      | `spearClink.ts`                | Metallic spear-on-tooth clink + upward cork pop     |
+| `medieval_lute`    | `medievalLute.ts`              | Plucked medieval lute/harp string + sub-octave      |
 
 ### Note / Frequency Quick-Reference
 
@@ -104,15 +113,21 @@ audioCues: [
    `confetti_pop`).
 3. Leave 0.1–0.3 s gaps between cues so they don't overlap harshly.
 
-### Adding a New Procedural Synthesiser Kind
+### Adding a New Sound Effect (Isolated Per-SFX Subagent & One-File-Per-SFX Modularity)
 
-1. Add the new kind string to the `AudioCueKind` union in
-   `<workspace>/src/engine/schema.ts`.
-2. Add a private `synthesize<Name>()` method in
-   `<workspace>/src/audio/soundEngine.ts` following the existing
-   patterns (create oscillators/buffers → gain envelope → `connectOutput`).
-3. Add an `else if` branch in `scheduleCueOnContext()`.
-4. Run `agy-node scripts/studio-cli.mjs test` and `agy-node scripts/studio-cli.mjs build` in `<workspace>`.
+Whenever a scene needs a new procedural WebAudio cue or a new pre-rendered `.wav` clip not yet in [`references/audio-catalog.md`](references/audio-catalog.md) / `<workspace>/docs/AUDIO_CATALOG.md`, **spin up an isolated subagent** for each new sound effect and keep **every sound effect in its own standalone modular file**:
+
+1. **For a New Procedural WebAudio SFX (`<workspace>/src/audio/sfx/<sfxName>.ts`)**:
+   - Add the new kind string to the `AudioCueKind` union in `<workspace>/src/engine/schema.ts`.
+   - Create `<workspace>/src/audio/sfx/<sfxName>.ts` exporting a `ProceduralSfxModule` object (`kind`, `title`, `category`, `description`, `themes`, `defaultFreqHz`, `defaultDurationSec`, `synthesize`).
+   - Register the module in `<workspace>/src/audio/sfx/index.ts` (`PROCEDURAL_SFX_MODULES` and `PROCEDURAL_SFX_REGISTRY`).
+2. **For a New Pre-Rendered `.wav` Clip (`<workspace>/scripts/sfx/<clipName>.mjs` -> `<workspace>/public/audio/<clip-name>.wav`)**:
+   - Create `<workspace>/scripts/sfx/<clipName>.mjs` exporting its metadata (`id`, `filename`, `src`, `title`, `category`, `durationSec`, `defaultVolume`, `targetPeak`, `description`, `themes`) and `generate()` function.
+   - Register it in `<workspace>/scripts/sfx/index.mjs` (`WAV_SFX_MODULES`) and `<workspace>/src/audio/sfx/index.ts` (`AUDIO_CLIP_CATALOG`), then run `agy-node scripts/generate_medieval_audio.mjs` to write `<workspace>/public/audio/<clip-name>.wav`.
+3. **Register in the Audio Catalog**:
+   - Document the new sound effect's description, parameters, and fitting story themes in both `<workspace>/docs/AUDIO_CATALOG.md` and `skills/picture-book-audio/references/audio-catalog.md`.
+4. **Verify**:
+   - Run `agy-node scripts/studio-cli.mjs test` and `agy-node scripts/studio-cli.mjs build` in `<workspace>`.
 
 ---
 

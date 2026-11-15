@@ -416,15 +416,23 @@ camera: [
 },
 ```
 
-### 5.6 Syncing audio (`audioCues` & `audioClips`)
+### 5.6 Syncing audio (`audioCues` & `audioClips`) & Mandatory `docs/AUDIO_CATALOG.md` Check
+
+> [!IMPORTANT]
+> **Mandatory Scene Audio Planning & Modular Per-SFX Rule**:
+> 1. When planning or creating a new scene, **ALWAYS** inspect `<workspace>/docs/AUDIO_CATALOG.md` (and `skills/picture-book-audio/references/audio-catalog.md`) first to see what existing background music (`audioClips`) and procedural/WAV sound effects fit the story theme, and identify what new theme-appropriate BGM/SFX must be created.
+> 2. When new sound effects are needed, load `skills/picture-book-audio/SKILL.md` and spin up **isolated subagent(s)** so that **every sound effect lives in its own standalone modular file** (`src/audio/sfx/<sfxName>.ts` for procedural WebAudio synthesizers and/or `scripts/sfx/<clipName>.mjs` generating `public/audio/<clip-name>.wav`).
+> 3. Register every new sound effect's description and fitting story themes in `<workspace>/docs/AUDIO_CATALOG.md` and `skills/picture-book-audio/references/audio-catalog.md`.
 
 Scenes support both procedural WebAudio synthesis (`audioCues`) and external/generated audio file clips (`audioClips`, e.g., TTS narration or WAV/MP3 soundtracks placed in `<workspace>/public/audio/`):
 
 ```typescript
 audioCues: [
-  // Available AudioCueKind values:
+  // Available AudioCueKind values (modularly defined in src/audio/sfx/*.ts):
   // lullaby | crayon_scribble | chime | party_horn | confetti_pop |
-  // cheer_applause | candle_blow | giggle | birthday_song
+  // cheer_applause | candle_blow | giggle | birthday_song |
+  // ocean_wave | water_splash | floatie_squeak |
+  // fire_crackle | dragon_fire | spear_clink | medieval_lute
 
   { time: 0.5, freq: 620, duration: 0.25, kind: 'crayon_scribble' },
   { time: 3.0, freq: 440, duration: 0.4, kind: 'chime' },
