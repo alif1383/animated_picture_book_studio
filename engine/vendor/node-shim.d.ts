@@ -42,6 +42,14 @@ declare module 'node:zlib' {
   const zlib: any;
   export default zlib;
 }
+declare module 'node:http' {
+  const http: any;
+  export default http;
+}
+declare module 'node:url' {
+  export function pathToFileURL(p: string): URL;
+  export function fileURLToPath(u: string | URL): string;
+}
 declare module 'node:child_process' {
   export function spawnSync(command: string, args?: ReadonlyArray<string>, options?: any): any;
 }

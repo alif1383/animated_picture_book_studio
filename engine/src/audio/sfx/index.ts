@@ -19,6 +19,7 @@ import { MEDIEVAL_LUTE_SFX } from './medievalLute';
 
 export * from './types';
 export * from './shared';
+export * from '../voices';
 
 export const PROCEDURAL_SFX_MODULES: readonly ProceduralSfxModule[] = [
   LULLABY_SFX,

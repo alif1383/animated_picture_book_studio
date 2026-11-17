@@ -84,7 +84,7 @@ Every scene in the Picture-Book Studio is automatically framed inside a physical
      - **Natural Crayon Seams (`0–25px` max) & Safe Outer Overbleed**:
        - Between major zones (e.g., sky and grass, sky and water, or beach and water), a small organic hand-drawn crayon seam (`0–25px`) or gentle overlap is fine and preserves the authentic hand-drawn crayon look—just never leave large vertical bands (`> 25px`) or entire half-screens uncolored.
        - Extend outer edges of full-screen sky and ground/water/beach `background_patch` paths slightly beyond `0..1280 × 0..720` (e.g., `x: -60..1340`, `y: -40..760`) so camera pans and `#crayon-stroke` jitter never expose blank margins during the story (`bookFrame`'s `#book-page-container` and `#book-open-page-clip` automatically clip any overbleed inside the notebook pages during the intro and outro).
-   - **Mandatory Scene Audio Planning & Catalog Check (`docs/AUDIO_CATALOG.md`)**: Whenever planning or creating a new scene, the planning/director/coder agent **MUST** check `<workspace>/docs/AUDIO_CATALOG.md` (and `skills/picture-book-audio/references/audio-catalog.md`) to see what existing background music and sound effects fit the theme and what new theme-appropriate BGM/SFX must be created for the story, and pass this required audio plan to the coder agent.
+   - **Mandatory Scene Audio & Voice Catalog Check (`docs/AUDIO_CATALOG.md` & `docs/VOICE_CATALOG.md`)**: Whenever planning or creating a new scene, the planning/director/coder agent **MUST** check `<workspace>/docs/AUDIO_CATALOG.md` (and `skills/picture-book-audio/references/audio-catalog.md`) for fitting background music and sound effects, **and** `<workspace>/docs/VOICE_CATALOG.md` (and `skills/picture-book-voiceover/references/voice-catalog.md`) to cast voices by `gender`, `ageGroup`, `roughness`, `pitch`, `accentAffinity`, `CharacterKind`, and story `themes`. Pass this complete audio + voice casting plan to the coder agent.
    - Customize cover titles, credits, cover material, or durations via `scene.bookFrame: BookFrameConfig` (or set `bookFrame: false` to disable), toggle live in the Studio UI via `#chk-book-frame`, or pass `?book_frame=1|0` in the URL.
 
 ---
@@ -98,7 +98,7 @@ Whenever writing or modifying TypeScript code—including scenes, engine modules
 - **Modular DRY architecture & One-File-Per-SFX Modularity**: Reuse existing engine primitives (`svgUtils.ts`, `filters.ts`, `fillMask.ts`, `timeline.ts`, `clock.ts`) before writing new code. Keep **every sound effect in its own separate modular file** (`src/audio/sfx/<name>.ts` for procedural WebAudio cues and/or `scripts/sfx/<name>.mjs` generating `public/audio/<name>.wav` for WAV clips) created via isolated subagent(s).
 - **Predefined character speech/thought bubble anchors (`CHARACTER_SPEECH_ANCHORS`)**: Every character model in `src/assets/characters/` MUST register a predefined head-top anchor `{ x, y }` in `CHARACTER_SPEECH_ANCHORS` (`src/assets/characters/index.ts`), modeled after existing characters (`little_girl: { x: 0, y: -102 }`, `shopkeeper: { x: 0, y: -105 }`, `cat: { x: 10, y: -44 }`), so setting `speechText` and `speechStyle: 'speech' | 'thought'` on any `CharacterNode` or `NodeKeyframe` automatically attaches the speech or thought bubble right above that character's head.
 - **Mandatory `+X` character facing & 3/4 walking profile convention**: Every character rig MUST face **RIGHT (`+X`)** when `flipX: false` and **LEFT (`-X`)** when `flipX: true`. For `state === 'walking'`, always implement a dedicated 3/4 or side-profile walking rig facing right (`+X`) where both legs pivot from the hip center (`x ≈ 0`), both shoes/paws point right (`+X`), and the torso/head/eyes face right (`+X`) — never reuse a flat front-facing rig with sideways-scissoring legs for walking. Set `flipX: false` when walking right (`dx > 0`) and `flipX: true` when walking left (`dx < 0`).
-- **Living documentation & Audio Catalog (`docs/ARCHITECTURE.md` & `docs/AUDIO_CATALOG.md`)**: Update `docs/ARCHITECTURE.md` whenever files, modules, or public APIs are added, modified, or removed. Whenever new sound effects or background music are created, register their descriptions and fitting story themes in both `<workspace>/docs/AUDIO_CATALOG.md` and `skills/picture-book-audio/references/audio-catalog.md`.
+- **Living documentation, Audio Catalog & Voice Catalog (`docs/ARCHITECTURE.md`, `docs/AUDIO_CATALOG.md`, `docs/VOICE_CATALOG.md`)**: Update `docs/ARCHITECTURE.md` whenever files, modules, or public APIs are added, modified, or removed. Whenever new sound effects or background music are created, register their descriptions and fitting story themes in both `<workspace>/docs/AUDIO_CATALOG.md` and `skills/picture-book-audio/references/audio-catalog.md`. Whenever new character rigs or voice presets are added, register their voice casting metadata in `src/audio/voices.ts`, `docs/VOICE_CATALOG.md`, and `skills/picture-book-voiceover/references/voice-catalog.md`.
 - **Minimalism & reuse checks**: Before implementing anything new, audit the codebase for existing utilities that can be extended or composed.
 - **Strict TypeScript + Test verification (Zero-Dependency CLI)**: All code must compile under `strict: true`. After every change, run in `<workspace>`:
   - `agy-node scripts/studio-cli.mjs typecheck` (runs bundled `tsc --noEmit`)
@@ -122,15 +122,48 @@ This skill contains the complete workflow for visual inspection, palette mapping
 
 ---
 
+## Voiceover, Story Narration & Character Speech Routing (Google AI Studio Generate Speech & `VOICE_CATALOG.md`)
+
+Whenever the user asks for **voiceover**, **story narration**, **character voices**, **spoken dialogue**, **read-aloud audio**, or **Google AI Studio Generate Speech (Gemini TTS)**, **ALWAYS** load and follow the `picture-book-voiceover` skill before proceeding:
+
+```
+skills/picture-book-voiceover/SKILL.md
+```
+
+Follow these mandatory voiceover rules:
+1. **Check for the Google AI Studio API Key First (`check-key`)**:
+   ```bash
+   agy-node "<plugin-root>/skills/picture-book-voiceover/scripts/generate_audio.mjs" check-key
+   ```
+   This checks `--api-key`, `GEMINI_API_KEY` / `GOOGLE_API_KEY`, `.env`, and the persistent Antigravity config at `~/.gemini/config/animated_picture_book_studio/config.json`.
+2. **No Default OS Synthesizer Fallback — Explain Free API Key Setup (If Not Configured)**:
+   - **Do NOT fall back to the OS synthesizer by default!** If `check-key` prints `Configured: NO`, tell the user that since no Google AI Studio API key is provided, we cannot use Google AI Studio Generate Speech and cannot generate good character voices.
+   - Reassure the user that with a **free** Google AI Studio API key (**\$0 cost, no credit card or billing required**), they get all **30 prebuilt voices** and **40 character presets** completely free of charge:
+     1. Visit **[https://aistudio.google.com/apikey](https://aistudio.google.com/apikey)** (or open **[https://aistudio.google.com/generate-speech](https://aistudio.google.com/generate-speech)** and click **"Get API key"** in the bottom-left sidebar).
+     2. Click **"Create API key"**, copy the `AIzaSy...` key, and paste it in chat.
+   - Tell the user they *could* try using the local OS synthesizer (`--os-fallback` / `--offline`), **but it is not recommended** because OS synthesizers sound robotic and lack storybook character acting.
+   - As soon as the user provides their key, save it persistently across all Antigravity conversations by running:
+     ```bash
+     agy-node "<plugin-root>/skills/picture-book-voiceover/scripts/generate_audio.mjs" set-key "<USER_API_KEY>"
+     ```
+3. **Consult the Voice & Character Casting Catalog (`docs/VOICE_CATALOG.md` / `skills/picture-book-voiceover/references/voice-catalog.md`)**:
+   - Before generating speech, inspect `docs/VOICE_CATALOG.md` (or run `agy-node "<plugin-root>/skills/picture-book-voiceover/scripts/generate_audio.mjs" voices --theme <theme> --gender <female|male> --age <child_youth|young_adult|adult|mature_elder> --roughness <crystalline|smooth|warm_clear|breathy|husky_textured|gravelly> --accent <accent>`) to cast voices that match each character's gender, age group, vocal roughness/texture, pitch, accent affinity, and the scene's story theme.
+4. **Generate Expressive Voices (`tts`, `dialogue`, `voice-design`)**:
+   - Use `tts` with `--character <40 character/narrator presets>` (or `--voice <30 prebuilt voices>`), `--style "<acting direction>"`, and inline vocal tags (`<laugh>`, `<sigh>`, `<gasp>`, `<yawn>`, `<short pause>`) for single-speaker narration or character lines.
+   - Use `dialogue` with `--speakers` and `--styles` for multi-speaker character conversations in a single WAV file.
+   - Use `voice-design` (`POST /v1beta/voices`, Paid Tier 1+) to create brand-new custom character voices from a natural-language prompt.
+
+---
+
 ## Audio Sync, Catalog Planning & Isolated Per-SFX Subagent Routing
 
 Whenever planning a scene's audio or adding audio to specific parts of a video—whether using:
 
 - **Built-in procedural SFX/music** (`audioCues: AudioNoteCue[]`, modularly defined one-file-per-SFX in `src/audio/sfx/<name>.ts`) — lullaby, chime, crayon_scribble, party_horn, confetti_pop, cheer_applause, candle_blow, giggle, birthday_song, ocean_wave, water_splash, floatie_squeak, fire_crackle, dragon_fire, spear_clink, medieval_lute
 - **User-provided or pre-bundled WAV/MP3 audio files** (`.mp3`, `.wav`, `.ogg`, `.m4a`) attached via `audioClips: AudioClipCue[]`
-- **Newly generated TTS voiceover, narration, or custom WAV sound effects** via `agy-node "<plugin-root>/skills/picture-book-audio/scripts/generate_audio.mjs"` or modular per-SFX generator scripts in `scripts/sfx/<name>.mjs`
+- **Newly generated TTS voiceover, narration, or custom WAV sound effects** via `agy-node "<plugin-root>/skills/picture-book-voiceover/scripts/generate_audio.mjs"` (load `skills/picture-book-voiceover/SKILL.md` for voiceover!) or modular per-SFX generator scripts in `scripts/sfx/<name>.mjs`
 
-**ALWAYS** load and follow the `picture-book-audio` skill before proceeding:
+**ALWAYS** load and follow the `picture-book-audio` skill (and `skills/picture-book-voiceover/SKILL.md` whenever voiceover/speech is involved) before proceeding:
 
 ```
 skills/picture-book-audio/SKILL.md

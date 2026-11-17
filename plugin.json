@@ -2,11 +2,11 @@
   "name": "animated_picture_book_studio",
   "displayName": "Animated Picture Book Studio",
   "version": "1.0.0",
-  "description": "Create, edit, preview, and export hand-crafted 2D crayon and oil-pastel animated picture-book videos with custom photo-modeled assets, procedural or generated voiceover/audio sync, live dev server preview, and automated MP4 video download.",
+  "description": "Create, edit, preview, and export hand-crafted 2D crayon and oil-pastel animated picture-book videos with custom photo-modeled assets, Google AI Studio Generate Speech (Gemini TTS) character voiceovers & dialogue, procedural or generated audio sync, live dev server preview, and automated MP4 video download.",
   "logo": "assets/logo.svg",
   "suggestedPrompts": [
-    "Create a new 30-second animated picture-book video about a cat exploring a moonlit garden, with lullaby music and chime sound effects, then export it as an MP4",
-    "Here's a photo of my dog — model a crayon-style character after it, then add a narration voiceover starting at 2 seconds and a giggle sound effect at 8 seconds",
-    "Open the meadow party scene in the live preview server, add a new act where the birthday cake appears with confetti, then spin up the browser to inspect it"
+    "Create a new 30-second animated picture-book video about a cat exploring a moonlit garden, with Google AI Studio voiceover narration, lullaby music, and chime sound effects, then export it as an MP4",
+    "Here's a photo of my dog — model a crayon-style character after it, then add an expressive Google AI Studio character voiceover starting at 4 seconds and a giggle sound effect at 8 seconds",
+    "Open the meadow party scene in the live preview server, add multi-speaker character dialogue with Google AI Studio Generate Speech, and export the video"
   ]
 }

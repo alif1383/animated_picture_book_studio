@@ -165,6 +165,36 @@ export function promoteAssetsToPlugin({
     promotedFiles.push(destSkillCatalog);
   }
 
+  // Also sync docs/VOICE_CATALOG.md to skills/picture-book-voiceover/references/voice-catalog.md if present
+  const srcVoiceCatalog = path.join(srcRoot, 'docs', 'VOICE_CATALOG.md');
+  const skillVoiceCatalogDir = path.join(
+    destPluginRoot,
+    'skills',
+    'picture-book-voiceover',
+    'references'
+  );
+  if (fs.existsSync(srcVoiceCatalog) && fs.existsSync(path.dirname(skillVoiceCatalogDir))) {
+    fs.mkdirSync(skillVoiceCatalogDir, { recursive: true });
+    const destSkillVoiceCatalog = path.join(skillVoiceCatalogDir, 'voice-catalog.md');
+    fs.copyFileSync(srcVoiceCatalog, destSkillVoiceCatalog);
+    promotedFiles.push(destSkillVoiceCatalog);
+  }
+
+  // Also sync scripts/generate_audio.mjs to skills/picture-book-audio and skills/picture-book-voiceover
+  const srcGenAudio = path.join(srcRoot, 'scripts', 'generate_audio.mjs');
+  if (fs.existsSync(srcGenAudio)) {
+    for (const skillName of ['picture-book-audio', 'picture-book-voiceover']) {
+      const skillDir = path.join(destPluginRoot, 'skills', skillName);
+      if (fs.existsSync(skillDir)) {
+        const destScriptDir = path.join(skillDir, 'scripts');
+        fs.mkdirSync(destScriptDir, { recursive: true });
+        const destScript = path.join(destScriptDir, 'generate_audio.mjs');
+        fs.copyFileSync(srcGenAudio, destScript);
+        promotedFiles.push(destScript);
+      }
+    }
+  }
+
   return {
     promoted_from: srcRoot,
     promoted_to_engine: destEngineDir,

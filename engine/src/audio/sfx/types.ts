@@ -83,3 +83,49 @@ export interface AudioClipCatalogEntry {
   readonly themes: readonly string[];
   readonly generatorModule: string;
 }
+
+export type VoiceGender = 'female' | 'male';
+export type VoiceAgeGroup = 'child_youth' | 'young_adult' | 'adult' | 'mature_elder';
+export type VoicePitch = 'high' | 'medium_high' | 'medium' | 'medium_low' | 'low';
+export type VoiceRoughness =
+  | 'crystalline'
+  | 'smooth'
+  | 'warm_clear'
+  | 'breathy'
+  | 'husky_textured'
+  | 'gravelly';
+export type VoiceEnergy =
+  | 'soothing_calm'
+  | 'steady_measured'
+  | 'breezy_natural'
+  | 'upbeat_playful'
+  | 'bold_theatrical';
+
+export interface VoiceCatalogEntry {
+  readonly voiceName: string;
+  readonly gender: VoiceGender;
+  readonly ageGroup: VoiceAgeGroup;
+  readonly pitch: VoicePitch;
+  readonly tone: string;
+  readonly roughness: VoiceRoughness;
+  readonly energy: VoiceEnergy;
+  readonly accentAffinity: string;
+  readonly description: string;
+  readonly bestFor: string;
+  readonly recommendedRoles: readonly string[];
+  readonly themes: readonly string[];
+}
+
+export interface CharacterVoicePresetCatalogEntry {
+  readonly character: string;
+  readonly voice: string;
+  readonly gender: VoiceGender;
+  readonly ageGroup: VoiceAgeGroup;
+  readonly pitch: VoicePitch;
+  readonly roughness: VoiceRoughness;
+  readonly accentAffinity: string;
+  readonly style: string;
+  readonly description: string;
+  readonly themes: readonly string[];
+}
+
