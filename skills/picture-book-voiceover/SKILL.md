@@ -74,12 +74,52 @@ agy-node "<plugin-root>/skills/picture-book-voiceover/scripts/generate_audio.mjs
 
 ---
 
-## Step 3: Generate Single-Speaker Narration & Character Voiceovers (`tts`)
+## Step 3: Consult the Voice & Character Casting Catalog (`references/voice-catalog.md` / `docs/VOICE_CATALOG.md`)
+
+> **Mandatory Voice Casting Rule**: Just as you consult `docs/AUDIO_CATALOG.md` for sound effects and BGM, **always consult [`references/voice-catalog.md`](references/voice-catalog.md)** (mirrored at `<engine-root>/docs/VOICE_CATALOG.md` and exported from `<engine-root>/src/audio/voices.ts` as `VOICE_CATALOG` and `CHARACTER_VOICE_PRESET_CATALOG`) before casting voices for a scene!
+
+Every one of the **30 Google AI Studio prebuilt voices** and **40 character/narrator presets** is classified by:
+- **`gender`**: `'female'` (14 voices) | `'male'` (16 voices)
+- **`ageGroup`**: `'child_youth'` (`Leda`, `Puck`) | `'young_adult'` (`Zephyr`, `Fenrir`, `Laomedeia`, `Achernar`, `Autonoe`, `Achird`) | `'adult'` (`Sulafat`, `Aoede`, `Orus`, `Enceladus`, `Iapetus`, `Umbriel`, `Kore`, `Callirrhoe`, `Despina`, `Erinome`, `Alnilam`, `Schedar`, `Pulcherrima`, `Zubenelgenubi`, `Sadachbia`) | `'mature_elder'` (`Charon`, `Vindemiatrix`, `Gacrux`, `Algenib`, `Sadaltager`, `Algieba`, `Rasalgethi`)
+- **`roughness` (Vocal Texture)**:
+  - `'crystalline'` (bell-clear, sparkling): `Zephyr`, `Leda`, `Laomedeia`, `Autonoe`, `Erinome` — young children, fairies, kittens, balloons.
+  - `'smooth'` (velvety, liquid): `Aoede`, `Umbriel`, `Algieba`, `Despina`, `Vindemiatrix` — bedtime/daytime narrators, queens, grandmothers, shadow figures.
+  - `'warm_clear'` (rich, natural, grounded): `Sulafat`, `Puck`, `Fenrir`, `Orus`, `Kore`, `Callirrhoe`, `Iapetus`, `Alnilam`, `Schedar`, `Rasalgethi`, `Achird`, `Sadaltager` — fireside narrator, knights, soldiers, shopkeepers, wizards, kings.
+  - `'breathy'` (airy halo, whisper-croon): `Enceladus`, `Achernar` — sleepy bedtime moon, shy sprouts, angels, nocturnal whispers.
+  - `'husky_textured'` (warm grain, chest resonance): `Charon`, `Gacrux`, `Pulcherrima`, `Zubenelgenubi`, `Sadachbia` — grandfathers, wise elders, witches, salty beach crabs, booming genies.
+  - `'gravelly'` (deep raspy rumble): `Algenib` — grumpy/lovable dragons (`Barnaby`), monsters, trolls, pirates.
+- **`pitch`**: `'high'` | `'medium_high'` | `'medium'` | `'medium_low'` | `'low'`
+- **`energy`**: `'soothing_calm'` | `'steady_measured'` | `'breezy_natural'` | `'upbeat_playful'` | `'bold_theatrical'`
+- **`accentAffinity`**: Natural delivery + best regional/storytelling accents (`Classic British RP`, `Scottish/Irish folksy`, `Coastal harbor`, `Theatrical carnival`) steerable via `--style`.
+- **`themes`**: Story theme tags matching `AUDIO_CATALOG.md` (`bedtime`, `lullaby`, `birthday`, `party`, `beach`, `summer`, `medieval`, `fantasy`, `cozy_village`, `magic`, `mystery`, `comedy`, `adventure`, `royal`).
+
+### Querying & Filtering the Voice Catalog via CLI (`voices`)
+You can filter both the 30 prebuilt voices and 40 character presets directly from the command line:
+```bash
+# Filter by story theme (e.g., bedtime, medieval, birthday, beach, mystery, comedy)
+agy-node "<plugin-root>/skills/picture-book-voiceover/scripts/generate_audio.mjs" voices --theme bedtime
+
+# Filter by gender, age group, or vocal roughness/texture
+agy-node "<plugin-root>/skills/picture-book-voiceover/scripts/generate_audio.mjs" voices --gender male --roughness gravelly
+agy-node "<plugin-root>/skills/picture-book-voiceover/scripts/generate_audio.mjs" voices --gender female --age child_youth
+agy-node "<plugin-root>/skills/picture-book-voiceover/scripts/generate_audio.mjs" voices --age mature_elder --roughness husky_textured
+
+# Filter by accent affinity or free-text search
+agy-node "<plugin-root>/skills/picture-book-voiceover/scripts/generate_audio.mjs" voices --accent "British"
+agy-node "<plugin-root>/skills/picture-book-voiceover/scripts/generate_audio.mjs" voices --search "dragon"
+
+# Inspect a specific character preset
+agy-node "<plugin-root>/skills/picture-book-voiceover/scripts/generate_audio.mjs" voices --character knight
+```
+
+---
+
+## Step 4: Generate Single-Speaker Narration & Character Voiceovers (`tts`)
 
 Use the `tts` subcommand to synthesize narration or single-character lines into `.wav` files inside `<engine-root>/public/audio/`.
 
-### Automatic Character Archetype Mapping (`--character`)
-Every `CharacterKind` in the Picture Book Studio engine (`boy`, `girl`, `man`, `woman`, `elder_man`, `elder_woman`, `wise_elder`, `king`, `queen`, `prince`, `princess`, `knight`, `wizard`, `witch`, `fairy`, `angel`, `genie`, `villain`, `shadow_figure`, plus `narrator`) has a curated Google AI Studio voice and default `speech_metadata.style` acting prompt built in!
+### Automatic Character Archetype Mapping (`--character` — 40 Built-In Presets)
+Every visual `CharacterKind` rig in the Picture Book Studio engine (`little_girl`, `shopkeeper`, `moon`, `sun`, `cat`, `singing_radish`, `birthday_strawberry`, `watermelon_slice`, `blue_party_cat`, `hello_bug`, `party_banana`, `crying_onion`, `cherry_twins`, `acorn_twins`, `olive_sprout`, `knight`, `soldier`, `dragon`, `villager`), 3 narrator moods (`narrator`, `storyteller`, `bedtime`), and 18 story archetypes (`boy`, `girl`, `man`, `woman`, `elder_man`, `elder_woman`, `wise_elder`, `king`, `queen`, `prince`, `princess`, `wizard`, `witch`, `fairy`, `angel`, `genie`, `villain`, `shadow_figure`) have a curated Google AI Studio voice and default `speech_metadata.style` acting prompt built in!
 
 ```bash
 # Warm storybook narrator (defaults to Sulafat voice with warm bedtime storyteller style)
@@ -95,12 +135,12 @@ agy-node "<plugin-root>/skills/picture-book-voiceover/scripts/generate_audio.mjs
   --text "<gasp> Look at the river! The stepping stones are made of starlight! <laugh>" \
   --out "<engine-root>/public/audio/act1_leo.wav"
 
-#Explicit prebuilt voice selection (30 studio voices available)
+# Explicit prebuilt voice selection (30 studio voices available)
 agy-node "<plugin-root>/skills/picture-book-voiceover/scripts/generate_audio.mjs" tts \
-  --voice Fenrir \
-  --style "Deep, booming, theatrical fairy-tale giant with a warm chuckle" \
-  --text "Who dares cross my mossy bridge? <laugh> Oh, it is only a tiny traveler!" \
-  --out "<engine-root>/public/audio/act2_giant.wav"
+  --voice Algenib \
+  --style "Deep, gravelly, rumbling yet lovable storybook dragon with a warm chuckle" \
+  --text "Who dares cross my mossy bridge? <laugh> Oh, thank you for popping that thorny bramble from my tooth!" \
+  --out "<engine-root>/public/audio/act2_dragon.wav"
 ```
 
 ### Supported Models (`--model`)
@@ -122,7 +162,7 @@ Always put acting directions (tone, emotion, pacing, accent, energy) in `--style
 
 ---
 
-## Step 4: Generate Multi-Speaker Scene Dialogue (`dialogue`)
+## Step 5: Generate Multi-Speaker Scene Dialogue (`dialogue`)
 
 When two or more characters converse in an act (or a Narrator trades lines with characters), you can generate the entire multi-voice conversation in a single coherent audio file using `dialogue`:
 
@@ -136,13 +176,13 @@ Wizard: <sigh> Do not fear, little princess. <short pause> Stars only fall when 
   --out "<engine-root>/public/audio/act2_tower_dialogue.wav"
 ```
 
-- `--speakers`: Comma-separated `SpeakerAlias:VoiceOrCharacterKind` pairs (you can pass either a Gemini voice name like `Zephyr` or a character archetype like `princess` or `wizard`).
+- `--speakers`: Comma-separated `SpeakerAlias:VoiceOrCharacterKind` pairs (you can pass either a Gemini voice name like `Zephyr` or any of the 40 character presets like `princess`, `knight`, `dragon`, or `wizard`).
 - `--styles`: Pipe-separated (`|`) `SpeakerAlias:Style description` pairs mapped to each turn's `speech_metadata.style`.
 - `--text`: Multi-line dialogue script where each line starts with `SpeakerAlias: ...` (or pass `--turns-json '[...]'` for structured JSON turns).
 
 ---
 
-## Step 5: Design Custom Brand-New Character Voices (`voice-design`)
+## Step 6: Design Custom Brand-New Character Voices (`voice-design`)
 
 Google AI Studio's Speech API also supports creating custom voices from a natural-language description via `POST /v1beta/voices` (`type: "prompted"`), returning a reusable `voice_...` ID!
 
@@ -162,7 +202,7 @@ agy-node "<plugin-root>/skills/picture-book-voiceover/scripts/generate_audio.mjs
 
 ---
 
-## Step 6: Inspect Duration & Wire `audioClips[]` into `story.ts`
+## Step 7: Inspect Duration & Wire `audioClips[]` into `story.ts`
 
 1. Every `tts` and `dialogue` run prints the exact duration in seconds (e.g., `(6.42s, gemini-3.8-flash-tts, voice=Sulafat)`). You can also inspect any existing `.wav` file at any time:
    ```bash
@@ -175,15 +215,14 @@ agy-node "<plugin-root>/skills/picture-book-voiceover/scripts/generate_audio.mjs
    audioClips: [
      {
        id: 'act1-narration',
-       url: '/audio/act1_narration.wav',
+       src: '/audio/act1_narration.wav',
        startTime: 3.8,       // Wait ~3.5s on Scene 1 if bookFrame.enabled is true!
        duration: 6.42,       // Match or slightly exceed the WAV duration
        volume: 0.95,
-       loop: false,
      },
      {
        id: 'act1-leo-line',
-       url: '/audio/act1_leo.wav',
+       src: '/audio/act1_leo.wav',
        startTime: 10.6,      // Start right after narration finishes
        duration: 4.15,
        volume: 0.95,
@@ -197,12 +236,3 @@ agy-node "<plugin-root>/skills/picture-book-voiceover/scripts/generate_audio.mjs
    - Ensure each act's `duration` in `scene.acts[]` is at least `clipEndTime - actStartTime + 0.8s` so the scene never cuts off a spoken sentence mid-word.
    - Align character `speechText` bubble acts and `speaking: true` / `expression: 'happy' | 'surprised'` flags with the exact time window when that character's voice clip plays!
 
----
-
-## Listing All 30 Prebuilt Voices & 19 Character Presets
-
-Run `voices` at any time:
-```bash
-agy-node "<plugin-root>/skills/picture-book-voiceover/scripts/generate_audio.mjs" voices
-```
-Or read `references/voice-catalog.md` in this skill directory for the complete table of all 30 Google AI Studio voices and 19 `CharacterKind` presets.

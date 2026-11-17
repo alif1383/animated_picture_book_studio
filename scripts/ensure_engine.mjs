@@ -165,6 +165,21 @@ export function promoteAssetsToPlugin({
     promotedFiles.push(destSkillCatalog);
   }
 
+  // Also sync docs/VOICE_CATALOG.md to skills/picture-book-voiceover/references/voice-catalog.md if present
+  const srcVoiceCatalog = path.join(srcRoot, 'docs', 'VOICE_CATALOG.md');
+  const skillVoiceCatalogDir = path.join(
+    destPluginRoot,
+    'skills',
+    'picture-book-voiceover',
+    'references'
+  );
+  if (fs.existsSync(srcVoiceCatalog) && fs.existsSync(path.dirname(skillVoiceCatalogDir))) {
+    fs.mkdirSync(skillVoiceCatalogDir, { recursive: true });
+    const destSkillVoiceCatalog = path.join(skillVoiceCatalogDir, 'voice-catalog.md');
+    fs.copyFileSync(srcVoiceCatalog, destSkillVoiceCatalog);
+    promotedFiles.push(destSkillVoiceCatalog);
+  }
+
   // Also sync scripts/generate_audio.mjs to skills/picture-book-audio and skills/picture-book-voiceover
   const srcGenAudio = path.join(srcRoot, 'scripts', 'generate_audio.mjs');
   if (fs.existsSync(srcGenAudio)) {

@@ -31,30 +31,80 @@ function makeMockPcmBytes(numSamples = 4800): Buffer {
 }
 
 describe('Google AI Studio Generate Speech (Gemini TTS) & picture-book-voiceover skill', () => {
-  it('exposes all 30 prebuilt Google AI Studio voices and character presets', async () => {
+  it('exposes all 30 prebuilt Google AI Studio voices and 40 character presets with full vocal classifications', async () => {
     const mod = await loadGenerateAudioModule();
     expect(typeof mod.GEMINI_PREBUILT_VOICES).toBe('object');
     const voiceNames = Object.keys(mod.GEMINI_PREBUILT_VOICES);
     expect(voiceNames.length).toBe(30);
-    expect(voiceNames).toContain('Sulafat');
-    expect(voiceNames).toContain('Zephyr');
-    expect(voiceNames).toContain('Puck');
-    expect(voiceNames).toContain('Charon');
-    expect(voiceNames).toContain('Fenrir');
-    expect(voiceNames).toContain('Leda');
+    expect(Array.isArray(mod.VOICE_CATALOG)).toBe(true);
+    expect(mod.VOICE_CATALOG.length).toBe(30);
+
+    for (const entry of mod.VOICE_CATALOG) {
+      expect(['female', 'male']).toContain(entry.gender);
+      expect(['child_youth', 'young_adult', 'adult', 'mature_elder']).toContain(entry.ageGroup);
+      expect(['high', 'medium_high', 'medium', 'medium_low', 'low']).toContain(entry.pitch);
+      expect([
+        'crystalline',
+        'smooth',
+        'warm_clear',
+        'breathy',
+        'husky_textured',
+        'gravelly',
+      ]).toContain(entry.roughness);
+      expect([
+        'soothing_calm',
+        'steady_measured',
+        'breezy_natural',
+        'upbeat_playful',
+        'bold_theatrical',
+      ]).toContain(entry.energy);
+      expect(entry.accentAffinity.length).toBeGreaterThan(5);
+      expect(entry.description.length).toBeGreaterThan(20);
+      expect(entry.recommendedRoles.length).toBeGreaterThanOrEqual(2);
+      expect(entry.themes.length).toBeGreaterThanOrEqual(3);
+    }
 
     const presets = mod.CHARACTER_VOICE_PRESETS;
+    expect(Object.keys(presets).length).toBe(40);
+    expect(mod.CHARACTER_VOICE_PRESET_CATALOG.length).toBe(40);
     expect(presets.narrator.voice).toBe('Sulafat');
     expect(presets.little_girl.voice).toBe('Leda');
     expect(presets.shopkeeper.voice).toBe('Orus');
     expect(presets.knight.voice).toBe('Fenrir');
     expect(presets.dragon.voice).toBe('Algenib');
+    expect(presets.dragon.roughness).toBe('gravelly');
     expect(presets.boy.voice).toBe('Puck');
     expect(presets.girl.voice).toBe('Leda');
     expect(presets.princess.voice).toBe('Zephyr');
     expect(presets.wizard.voice).toBe('Iapetus');
     expect(presets.wise_elder.voice).toBe('Gacrux');
     expect(presets.villain.voice).toBe('Enceladus');
+  });
+
+  it('filters voices and character presets by gender, age, roughness, energy, accent, and story theme', async () => {
+    const mod = await loadGenerateAudioModule();
+
+    // Filter by male + gravelly -> Algenib & dragon
+    const gravellyMales = mod.filterVoiceCatalog({ gender: 'male', roughness: 'gravelly' });
+    expect(gravellyMales.voices.map((v: any) => v.voiceName)).toEqual(['Algenib']);
+    expect(gravellyMales.characterPresets.map((p: any) => p.character)).toContain('dragon');
+
+    // Filter by female + child_youth -> Leda & little_girl / birthday_strawberry / hello_bug / girl
+    const youngFemales = mod.filterVoiceCatalog({ gender: 'female', age: 'child_youth' });
+    expect(youngFemales.voices.map((v: any) => v.voiceName)).toEqual(['Leda']);
+    expect(youngFemales.characterPresets.map((p: any) => p.character)).toContain('little_girl');
+
+    // Filter by theme: bedtime
+    const bedtime = mod.filterVoiceCatalog({ theme: 'bedtime' });
+    expect(bedtime.voices.some((v: any) => v.voiceName === 'Vindemiatrix')).toBe(true);
+    expect(bedtime.voices.some((v: any) => v.voiceName === 'Sulafat')).toBe(true);
+    expect(bedtime.characterPresets.some((p: any) => p.character === 'bedtime')).toBe(true);
+    expect(bedtime.characterPresets.some((p: any) => p.character === 'moon')).toBe(true);
+
+    // Filter by accent affinity: British
+    const british = mod.filterVoiceCatalog({ accent: 'British' });
+    expect(british.voices.some((v: any) => v.voiceName === 'Sadaltager')).toBe(true);
+    expect(british.voices.some((v: any) => v.voiceName === 'Fenrir')).toBe(true);
   });
 
   it('persists and resolves the Google AI Studio API key via set-key and check-key', async () => {

@@ -1,19 +1,34 @@
 import type { AudioClipCue, AudioNoteCue } from '../engine/schema';
 import {
   AUDIO_CLIP_CATALOG,
+  CHARACTER_VOICE_PRESET_CATALOG,
   PROCEDURAL_SFX_MODULES,
   PROCEDURAL_SFX_REGISTRY,
+  VOICE_CATALOG,
   createProceduralSfxHelpers,
   type ProceduralSfxHelpers,
 } from './sfx';
 
-export { AUDIO_CLIP_CATALOG, PROCEDURAL_SFX_MODULES, PROCEDURAL_SFX_REGISTRY };
+export {
+  AUDIO_CLIP_CATALOG,
+  CHARACTER_VOICE_PRESET_CATALOG,
+  PROCEDURAL_SFX_MODULES,
+  PROCEDURAL_SFX_REGISTRY,
+  VOICE_CATALOG,
+};
 export type {
   AudioClipCatalogEntry,
+  CharacterVoicePresetCatalogEntry,
   FilteredNoiseOptions,
   ProceduralSfxCategory,
   ProceduralSfxHelpers,
   ProceduralSfxModule,
+  VoiceAgeGroup,
+  VoiceCatalogEntry,
+  VoiceEnergy,
+  VoiceGender,
+  VoicePitch,
+  VoiceRoughness,
 } from './sfx';
 
 export interface SoundEngineOptions {

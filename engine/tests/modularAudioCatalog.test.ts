@@ -4,9 +4,11 @@ import { describe, expect, it } from 'vitest';
 import type { AudioCueKind } from '../src/engine/schema';
 import {
   AUDIO_CLIP_CATALOG,
+  CHARACTER_VOICE_PRESET_CATALOG,
   PROCEDURAL_SFX_MODULES,
   PROCEDURAL_SFX_REGISTRY,
   PictureBookSoundEngine,
+  VOICE_CATALOG,
 } from '../src/audio/soundEngine';
 
 const ALL_AUDIO_CUE_KINDS: readonly AudioCueKind[] = [
@@ -28,7 +30,7 @@ const ALL_AUDIO_CUE_KINDS: readonly AudioCueKind[] = [
   'medieval_lute',
 ] as const;
 
-describe('Modular One-File-Per-SFX Architecture & Master Audio Catalog', () => {
+describe('Modular One-File-Per-SFX Architecture & Master Audio + Voice Catalogs', () => {
   it('registers all 16 procedural AudioCueKind modules with complete metadata and themes', () => {
     expect(PROCEDURAL_SFX_MODULES.length).toBe(16);
     for (const kind of ALL_AUDIO_CUE_KINDS) {
@@ -74,6 +76,50 @@ describe('Modular One-File-Per-SFX Architecture & Master Audio Catalog', () => {
     for (const clip of AUDIO_CLIP_CATALOG) {
       expect(content).toContain(clip.filename);
       expect(content).toContain(clip.generatorModule);
+    }
+  });
+
+  it('registers all 30 prebuilt voices in VOICE_CATALOG and all 40 character presets in CHARACTER_VOICE_PRESET_CATALOG and documents them in docs/VOICE_CATALOG.md', () => {
+    expect(VOICE_CATALOG.length).toBe(30);
+    expect(CHARACTER_VOICE_PRESET_CATALOG.length).toBe(40);
+
+    const voiceCatalogDocPath = path.join(process.cwd(), 'docs', 'VOICE_CATALOG.md');
+    expect(fs.existsSync(voiceCatalogDocPath)).toBe(true);
+    const voiceDoc = fs.readFileSync(voiceCatalogDocPath, 'utf8');
+
+    const voiceNames = new Set<string>();
+    for (const voice of VOICE_CATALOG) {
+      voiceNames.add(voice.voiceName);
+      expect(['female', 'male']).toContain(voice.gender);
+      expect(['child_youth', 'young_adult', 'adult', 'mature_elder']).toContain(voice.ageGroup);
+      expect(['high', 'medium_high', 'medium', 'medium_low', 'low']).toContain(voice.pitch);
+      expect([
+        'crystalline',
+        'smooth',
+        'warm_clear',
+        'breathy',
+        'husky_textured',
+        'gravelly',
+      ]).toContain(voice.roughness);
+      expect([
+        'soothing_calm',
+        'steady_measured',
+        'breezy_natural',
+        'upbeat_playful',
+        'bold_theatrical',
+      ]).toContain(voice.energy);
+      expect(voice.accentAffinity.length).toBeGreaterThan(5);
+      expect(voice.description.length).toBeGreaterThan(20);
+      expect(voice.themes.length).toBeGreaterThanOrEqual(3);
+      expect(voiceDoc).toContain(`\`${voice.voiceName}\``);
+    }
+
+    for (const preset of CHARACTER_VOICE_PRESET_CATALOG) {
+      expect(voiceNames.has(preset.voice)).toBe(true);
+      expect(preset.style.length).toBeGreaterThan(10);
+      expect(preset.description.length).toBeGreaterThan(15);
+      expect(preset.themes.length).toBeGreaterThanOrEqual(3);
+      expect(voiceDoc).toContain(`\`${preset.character}\``);
     }
   });
 
