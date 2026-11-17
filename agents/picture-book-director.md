@@ -65,16 +65,25 @@ If the user provides photos or wants custom characters/props/buildings:
 3. Delegate SVG asset coding to `picture-book-coder` with the analysis report and style guide, ensuring every character defines a predefined head-top speech/thought bubble anchor in `CHARACTER_SPEECH_ANCHORS` (`src/assets/characters/index.ts`) so `speechText` and `speechStyle: 'speech' | 'thought'` attach automatically above the character's head, and implements a dedicated 3/4 or side-profile `'walking'` rig facing **RIGHT (`+X`)** when `flipX: false` (and **LEFT (`-X`)** when `flipX: true`) with both shoes/feet pointing in the walking direction.
 4. Verify the new asset compiles (`agy-node scripts/studio-cli.mjs test` & `agy-node scripts/studio-cli.mjs build`) and appears in the Asset Catalog.
 
-### Phase 3: Audio
+### Phase 3: Audio & Voiceover
 
-If the user wants audio (sound effects, narration, music):
+If the user wants audio (voiceover, character dialogue, sound effects, narration, music):
 
-1. Load `skills/picture-book-audio/SKILL.md`.
-2. Determine the audio mode:
-   - **Procedural SFX** (`audioCues`): Add `AudioNoteCue[]` entries to the scene definition.
-   - **User-provided files** (`audioClips`): Copy files to `<workspace>/public/audio/` and add `AudioClipCue[]` entries.
-   - **Generated narration/SFX**: Run `agy-node "<plugin-root>/skills/picture-book-audio/scripts/generate_audio.mjs" tts "<text>" --name <name> --output <workspace>/public/audio/<name>.wav` (or `sfx` mode for WAV effects), then add `AudioClipCue[]` entries.
-3. Delegate code changes to `picture-book-coder`.
+1. **When Voiceover, Story Narration, or Character Speech is Requested**:
+   - **ALWAYS load `skills/picture-book-voiceover/SKILL.md` first!**
+   - Run `agy-node "<plugin-root>/skills/picture-book-voiceover/scripts/generate_audio.mjs" check-key` to check if the user's Google AI Studio API key is already configured in `~/.gemini/config/animated_picture_book_studio/config.json` or the environment.
+   - If `check-key` reports `Configured: NO` and the user wants real proper AI voiceover, direct the user on how to get their free Google AI Studio API key:
+     1. Go to **[https://aistudio.google.com/apikey](https://aistudio.google.com/apikey)** (or open **[https://aistudio.google.com/generate-speech](https://aistudio.google.com/generate-speech)** and click **"Get API key"** in the bottom-left sidebar).
+     2. Click **"Create API key"**, copy the `AIzaSy...` key, and paste it in chat.
+     3. Once they paste it, save it persistently via `agy-node "<plugin-root>/skills/picture-book-voiceover/scripts/generate_audio.mjs" set-key "<USER_API_KEY>"`.
+   - Generate expressive single-speaker narration/character lines (`tts --character <kind> --style "..." --text "..." --out "<workspace>/public/audio/<name>.wav"`), multi-speaker dialogue (`dialogue --speakers "..." --text "..." --out ...`), or custom voices (`voice-design --prompt "..."`).
+2. **When Sound Effects or Music are Needed**:
+   - Load `skills/picture-book-audio/SKILL.md`.
+   - Determine the audio mode:
+     - **Procedural SFX** (`audioCues`): Add `AudioNoteCue[]` entries to the scene definition.
+     - **User-provided files** (`audioClips`): Copy files to `<workspace>/public/audio/` and add `AudioClipCue[]` entries.
+     - **Generated WAV SFX**: Use modular `scripts/sfx/<name>.mjs` or `generate_audio.mjs sfx`, then add `AudioClipCue[]` entries.
+3. Delegate code changes and timeline synchronization (`audioClips[]`, `acts[]`, `bookFrame` offsets) to `picture-book-coder`.
 
 ### Phase 4: Preview & Export
 
@@ -114,7 +123,8 @@ If the user wants audio (sound effects, narration, music):
 |--------|-------|-------------|
 | Scene design, animation, art direction | `skills/picture-book-animation/SKILL.md` | Designing/editing scenes, acts, timelines, camera, aesthetics |
 | Photo-modeled assets | `skills/photo-to-crayon-asset/SKILL.md` | User provides photos or wants custom characters/props/buildings |
-| Audio (procedural, files, TTS) | `skills/picture-book-audio/SKILL.md` | Adding any audio to the video |
+| Voiceover, narration, character speech (Google AI Studio TTS) | `skills/picture-book-voiceover/SKILL.md` | User requests voiceover, story narration, character voices, dialogue, or API key setup |
+| Audio (procedural SFX, music, audioClips) | `skills/picture-book-audio/SKILL.md` | Adding SFX, BGM, or custom audio clips to the video |
 | Dev server & video export | `skills/picture-book-studio-export/SKILL.md` | Previewing or exporting `.mp4` |
 
 ## Quick Reference: Engine

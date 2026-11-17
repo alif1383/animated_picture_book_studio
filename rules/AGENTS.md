@@ -122,15 +122,44 @@ This skill contains the complete workflow for visual inspection, palette mapping
 
 ---
 
+## Voiceover, Story Narration & Character Speech Routing (Google AI Studio Generate Speech)
+
+Whenever the user asks for **voiceover**, **story narration**, **character voices**, **spoken dialogue**, **read-aloud audio**, or **Google AI Studio Generate Speech (Gemini TTS)**, **ALWAYS** load and follow the `picture-book-voiceover` skill before proceeding:
+
+```
+skills/picture-book-voiceover/SKILL.md
+```
+
+Follow these mandatory voiceover rules:
+1. **Check for the Google AI Studio API Key First (`check-key`)**:
+   ```bash
+   agy-node "<plugin-root>/skills/picture-book-voiceover/scripts/generate_audio.mjs" check-key
+   ```
+   This checks `--api-key`, `GEMINI_API_KEY` / `GOOGLE_API_KEY`, `.env`, and the persistent Antigravity config at `~/.gemini/config/animated_picture_book_studio/config.json`.
+2. **Direct the User on How to Get & Set the API Key (If Not Configured)**:
+   - If `check-key` prints `Configured: NO` and the user wants real studio-grade AI voiceover, politely instruct the user on where to get their free Google AI Studio API key:
+     1. Visit **[https://aistudio.google.com/apikey](https://aistudio.google.com/apikey)** (or open **[https://aistudio.google.com/generate-speech](https://aistudio.google.com/generate-speech)** and click **"Get API key"** in the bottom-left sidebar).
+     2. Click **"Create API key"**, copy the `AIzaSy...` key, and paste it in chat.
+   - As soon as the user provides their key, save it persistently across all Antigravity conversations by running:
+     ```bash
+     agy-node "<plugin-root>/skills/picture-book-voiceover/scripts/generate_audio.mjs" set-key "<USER_API_KEY>"
+     ```
+3. **Generate Expressive Voices (`tts`, `dialogue`, `voice-design`)**:
+   - Use `tts` with `--character <CharacterKind>` (or `--voice <30 prebuilt voices>`), `--style "<acting direction>"`, and inline vocal tags (`<laugh>`, `<sigh>`, `<gasp>`, `<yawn>`, `<short pause>`) for single-speaker narration or character lines.
+   - Use `dialogue` with `--speakers` and `--styles` for multi-speaker character conversations in a single WAV file.
+   - Use `voice-design` (`POST /v1beta/voices`) to create brand-new custom character voices from a natural-language prompt.
+
+---
+
 ## Audio Sync, Catalog Planning & Isolated Per-SFX Subagent Routing
 
 Whenever planning a scene's audio or adding audio to specific parts of a video—whether using:
 
 - **Built-in procedural SFX/music** (`audioCues: AudioNoteCue[]`, modularly defined one-file-per-SFX in `src/audio/sfx/<name>.ts`) — lullaby, chime, crayon_scribble, party_horn, confetti_pop, cheer_applause, candle_blow, giggle, birthday_song, ocean_wave, water_splash, floatie_squeak, fire_crackle, dragon_fire, spear_clink, medieval_lute
 - **User-provided or pre-bundled WAV/MP3 audio files** (`.mp3`, `.wav`, `.ogg`, `.m4a`) attached via `audioClips: AudioClipCue[]`
-- **Newly generated TTS voiceover, narration, or custom WAV sound effects** via `agy-node "<plugin-root>/skills/picture-book-audio/scripts/generate_audio.mjs"` or modular per-SFX generator scripts in `scripts/sfx/<name>.mjs`
+- **Newly generated TTS voiceover, narration, or custom WAV sound effects** via `agy-node "<plugin-root>/skills/picture-book-voiceover/scripts/generate_audio.mjs"` (load `skills/picture-book-voiceover/SKILL.md` for voiceover!) or modular per-SFX generator scripts in `scripts/sfx/<name>.mjs`
 
-**ALWAYS** load and follow the `picture-book-audio` skill before proceeding:
+**ALWAYS** load and follow the `picture-book-audio` skill (and `skills/picture-book-voiceover/SKILL.md` whenever voiceover/speech is involved) before proceeding:
 
 ```
 skills/picture-book-audio/SKILL.md

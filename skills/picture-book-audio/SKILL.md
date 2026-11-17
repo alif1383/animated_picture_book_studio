@@ -211,43 +211,65 @@ interface AudioClipCue {
 
 ---
 
-## Mode C — Generating Audio with `generate_audio.mjs`
+## Mode C — Generating Voiceover (Google AI Studio Gemini TTS) & Audio with `generate_audio.mjs`
+
+> [!TIP]
+> **Dedicated Voiceover Skill**: Whenever the user asks for **voiceover**, **story narration**, **character voices**, or **multi-speaker dialogue**, **ALWAYS load `skills/picture-book-voiceover/SKILL.md` first!** It includes complete instructions on checking for the Google AI Studio API key (`check-key`), directing the user on where to get a free key (`https://aistudio.google.com/apikey` or `https://aistudio.google.com/generate-speech`), saving it persistently (`set-key`), and using `gemini-3.8-flash-tts` single-speaker, multi-speaker dialogue, and custom voice design.
 
 A bundled zero-dependency Node CLI at
-`<plugin-root>/skills/picture-book-audio/scripts/generate_audio.mjs`
-(also scaffolded to `<workspace>/scripts/generate_audio.mjs`)
-can **generate** narration and custom WAV sound effects on demand via `agy-node` without requiring Python or any external packages.
+`<plugin-root>/skills/picture-book-voiceover/scripts/generate_audio.mjs`
+(also available at `<plugin-root>/skills/picture-book-audio/scripts/generate_audio.mjs` and `<workspace>/scripts/generate_audio.mjs`)
+can **generate** studio-grade Google AI Studio Gemini TTS voiceovers, multi-speaker character dialogue, custom designed voices, and procedural WAV sound effects on demand via `agy-node` without requiring Python or any external packages.
 
-### Subcommand: `tts` — Text-to-Speech Narration
-
-```bash
-agy-node "<plugin-root>/skills/picture-book-audio/scripts/generate_audio.mjs" tts "<text>" --name <clip-name> [options]
-```
-
-| Flag         | Default              | Description                         |
-|--------------|----------------------|-------------------------------------|
-| `--name`     | `tts-output`         | Clip name (becomes filename + id)   |
-| `--voice`    | `en-US-AnaNeural`    | Voice name or shortcut              |
-| `--rate`     | `+0%`                | Speed adjustment (`+10%`, `-20%`)   |
-| `--pitch`    | `+0Hz`               | Pitch shift (`+2st`, `-3Hz`)        |
-| `--output`   | `public/audio/<name>.wav` | Custom output path             |
-| `--start-time` | `0`                | startTime in the AudioClipCue snippet |
-
-**Voice shortcuts**: `ana` → `en-US-AnaNeural`, `aria` → `en-US-AriaNeural`,
-`guy` → `en-US-GuyNeural`, `sonia` → `en-GB-SoniaNeural`.
-
-**Example — Generate narration for each act:**
+### Subcommands: `check-key` & `set-key` — Google AI Studio API Key Management
 
 ```bash
-agy-node "<plugin-root>/skills/picture-book-audio/scripts/generate_audio.mjs" tts "Once upon a time, in a tiny crayon village..." \
-  --name act1-narration --voice ana --rate -10%
+# Check if an API key is configured (checks --api-key, GEMINI_API_KEY, GOOGLE_API_KEY, .env, and ~/.gemini/config/animated_picture_book_studio/config.json)
+agy-node "<plugin-root>/skills/picture-book-voiceover/scripts/generate_audio.mjs" check-key
 
-agy-node "<plugin-root>/skills/picture-book-audio/scripts/generate_audio.mjs" tts "And so the little moon drifted off to sleep." \
-  --name act5-narration --voice sonia --start-time 22.0
+# Save the user's Google AI Studio API key persistently across all Antigravity sessions
+agy-node "<plugin-root>/skills/picture-book-voiceover/scripts/generate_audio.mjs" set-key "<USER_API_KEY>"
 ```
 
-Output is saved to `./public/audio/act1-narration.wav` (or `.mp3` if `edge-tts` is available) in `<workspace>` and
-the script prints a ready-to-paste `AudioClipCue` TypeScript snippet.
+### Subcommand: `tts` — Single-Speaker Narration & Character Voiceover
+
+```bash
+agy-node "<plugin-root>/skills/picture-book-voiceover/scripts/generate_audio.mjs" tts \
+  --character <CharacterKind|narrator> \
+  --style "<speech_metadata.style acting prompt>" \
+  --text "<transcript with optional <laugh>, <sigh>, <gasp>, <yawn>, <short pause>>" \
+  --out "<workspace>/public/audio/<clip-name>.wav"
+```
+
+| Flag          | Default                     | Description                                                                 |
+|---------------|-----------------------------|-----------------------------------------------------------------------------|
+| `--text`      | *(required)*                | Spoken transcript (supports `<laugh>`, `<sigh>`, `<gasp>`, `<yawn>`, `<short pause>`) |
+| `--character` | `narrator`                  | Picture-book `CharacterKind` (`narrator`, `boy`, `girl`, `king`, `queen`, `princess`, `knight`, `wizard`, `witch`, `fairy`, `wise_elder`, `villain`, etc.) |
+| `--voice`     | Character's default (`Sulafat` for narrator) | Any of the 30 Google AI Studio prebuilt voices (`Sulafat`, `Zephyr`, `Puck`, `Charon`, `Fenrir`, `Leda`, `Aoede`, `Gacrux`, etc.) or a custom `voice_...` ID |
+| `--style`     | Character's default acting style | Acting/delivery instructions sent via `speech_metadata.style` in `gemini-3.8-flash-tts` |
+| `--model`     | `gemini-3.8-flash-tts`      | `gemini-3.8-flash-tts`, `gemini-3.8-flash-lite-tts`, or `gemini-2.5-flash-preview-tts` |
+| `--out`       | `public/audio/<name>.wav`   | Output `.wav` file path                                                     |
+
+### Subcommand: `dialogue` — Multi-Speaker Character Conversations
+
+```bash
+agy-node "<plugin-root>/skills/picture-book-voiceover/scripts/generate_audio.mjs" dialogue \
+  --speakers "Narrator:Sulafat,Princess:Zephyr,Knight:Fenrir" \
+  --styles "Narrator:Warm bedtime storyteller|Princess:Bright and curious|Knight:Bold and cheerful" \
+  --text "Narrator: Near the castle gate, the princess waved.
+Princess: <gasp> Sir Leo! You found the silver lantern!
+Knight: <laugh> It was glowing right beside the old oak tree!" \
+  --out "<workspace>/public/audio/act2-dialogue.wav"
+```
+
+### Subcommand: `voice-design` — Custom Prompted Voice Creation (`/v1beta/voices`)
+
+```bash
+agy-node "<plugin-root>/skills/picture-book-voiceover/scripts/generate_audio.mjs" voice-design \
+  --prompt "A tiny, squeaky clockwork owl with a whimsical British accent" \
+  --sample-text "Hoo-hoo! All gears are ready for flight!" \
+  --out "<workspace>/public/audio/owl-sample.wav"
+```
 
 ### Subcommand: `sfx` / `tone` — Procedural WAV Sound Effects
 

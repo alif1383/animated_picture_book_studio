@@ -118,10 +118,10 @@ The **Picture-Book Crayon Video Engine** is a declarative 2D stop-motion storybo
   - `scripts/studio-cli.mjs` — Unified CLI supporting `typecheck` (bundled `tsc --noEmit`), `test` (runs `tests/**/*.test.ts` via `ts-loader-hooks.mjs` + `vitest-shim`), `build` (typechecks and compiles `dist/`), `dev` (HTTP server on `:5173` with on-the-fly `.ts` transpilation and `POST /__studio/save-export` MP4 saving), and `export` (`--scene <id> [--resolution 1080p|720p] [--footage <actId>]` headless CLI MP4 export).
   - `scripts/ts-loader-hooks.mjs` — Node `module.register` customization hooks resolving extensionless `.ts` imports, `'mp4-muxer'`, `'vitest'`, and `'isomorphic-git'`, and transpiling TypeScript via `vendor/typescript`.
   - `scripts/vcs.mjs` — Unified VCS CLI (`check`, `init`, `status`, `add`, `commit`, `log`) that automatically uses native `git` when installed or falls back to bundled `vendor/isomorphic-git`.
-  - `scripts/generate_audio.mjs` — Zero-Python audio CLI (`sfx`, `tone`, `tts`, `info`) generating WAV sound effects and narration clips.
+  - `scripts/generate_audio.mjs` — Zero-Python audio & Google AI Studio Generate Speech (Gemini TTS) CLI (`tts`, `dialogue`, `voice-design`, `voices`, `set-key`, `check-key`, `sfx`, `tone`, `info`) generating expressive single-speaker and multi-speaker character voiceover WAVs (`gemini-3.8-flash-tts`, `gemini-3.8-flash-lite-tts`, `gemini-2.5-flash-preview-tts`), custom prompted voices (`POST /v1beta/voices`), and procedural WAV sound effects.
   - `scripts/generate_medieval_audio.mjs` & `scripts/sfx/` — Modular pure-JS 44.1kHz 16-bit PCM WAV synthesizer entry point and one-file-per-clip generators (`scripts/sfx/shared.mjs`, `medievalFantasyBgm.mjs`, `campfireCrackle.mjs`, `dragonFireBreath.mjs`, `spearToothPop.mjs`, `horseTrot.mjs`, `index.mjs`).
   - `scripts/analyze_reference_photo.mjs` — Zero-Python image analyzer extracting dominant RGB color clusters and mapping them to `TOKENS.colors` and `TOKENS.patterns`.
-- `docs/AUDIO_CATALOG.md` — Master Audio & Sound Effects Catalog documenting all 16 procedural WebAudio synthesizers (`src/audio/sfx/*.ts`) and 5 pre-rendered `.wav` tracks (`public/audio/*.wav` + `scripts/sfx/*.mjs`), their descriptions, and fitting story themes.
+- `docs/AUDIO_CATALOG.md` — Master Audio & Sound Effects Catalog documenting all 16 procedural WebAudio synthesizers (`src/audio/sfx/*.ts`), 5 pre-rendered `.wav` tracks (`public/audio/*.wav` + `scripts/sfx/*.mjs`), and 30 Google AI Studio voices + 20 `CharacterKind` voiceover presets (`skills/picture-book-voiceover/SKILL.md`).
 
 ## 3. Standalone CLI, Dev Server, Build & Headless Export (`agy-node`)
 - **Typecheck**: `agy-node scripts/studio-cli.mjs typecheck` (or `pnpm run typecheck`) → runs bundled `tsc --noEmit`
@@ -131,10 +131,12 @@ The **Picture-Book Crayon Video Engine** is a declarative 2D stop-motion storybo
 - **Dev server**: `agy-node scripts/studio-cli.mjs dev` (or `pnpm run dev`) → starts Studio HTTP server on port **5173** (`http://localhost:5173`)
 - **Git / VCS**: `agy-node scripts/vcs.mjs check` / `init` / `status` / `commit -m "..."` / `log`
 
-## 4. Dev Server Middleware: `POST /__studio/save-export`
+## 4. Dev Server Middleware: `POST /__studio/save-export` & `POST /__studio/generate-speech`
 Built into `scripts/studio-cli.mjs dev` (and `vite.config.ts`).
 
-**Purpose**: Saves a video export blob to `<workspace>/exports/<filename>` so agent automation can retrieve the file from disk after a browser-triggered export.
+**Purpose (`POST /__studio/save-export`)**: Saves a video export blob to `<workspace>/exports/<filename>` so agent automation can retrieve the file from disk after a browser-triggered export.
+
+**Purpose (`POST /__studio/generate-speech`)**: Invokes `scripts/generate_audio.mjs` (`tts` or `dialogue`) to synthesize single-speaker or multi-speaker voiceovers into `<workspace>/public/audio/<filename>.wav` and returns `{ ok: true, url: "/audio/<filename>.wav", savedPath, durationSec, source }`.
 
 **Usage**:
 ```

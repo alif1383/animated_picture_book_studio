@@ -66,6 +66,13 @@ It works out-of-the-box on **any machine with only Antigravity installed** (`agy
     │   └── scripts/
     │       ├── analyze_reference_photo.mjs  # Zero-dep Node photo analysis utility
     │       └── analyze_reference_photo.py   # Optional Python photo analysis utility
+    ├── picture-book-voiceover/
+    │   ├── SKILL.md                         # Google AI Studio Generate Speech (Gemini TTS) voiceover guide & API key setup
+    │   ├── references/
+    │   │   └── voice-catalog.md             # All 30 Gemini voices & 20 CharacterKind presets
+    │   └── scripts/
+    │       ├── generate_audio.mjs           # Zero-dep Node Gemini TTS (3.8/2.5), dialogue, voice-design & WAV SFX CLI
+    │       └── generate_audio.py            # Optional Python Gemini TTS & WAV SFX CLI
     ├── picture-book-audio/
     │   ├── SKILL.md                         # Audio sync & generation guide
     │   └── scripts/
@@ -96,6 +103,13 @@ Step-by-step workflow for turning user photos (or AI-generated reference images)
 - Multi-state rigging for stop-motion animation
 - Registration checklist (schema types, render wiring, asset catalog, build verification)
 
+### 🎙️ `picture-book-voiceover`
+Dedicated skill for generating expressive studio-grade voiceovers, character voices, multi-speaker dialogue, and custom voice designs using **Google AI Studio's Generate Speech (Gemini TTS)** API (`gemini-3.8-flash-tts`, `gemini-3.8-flash-lite-tts`, `gemini-2.5-flash-preview-tts`, and `POST /v1beta/voices`):
+- **API Key Check & Persistent Setup**: Guides the agent to run `check-key`, instruct the user on where to get a free Google AI Studio API key (`https://aistudio.google.com/apikey` or `https://aistudio.google.com/generate-speech`), and save it persistently across all Antigravity sessions via `set-key` (`~/.gemini/config/animated_picture_book_studio/config.json`)
+- **Single-Speaker Narration & 20 Character Presets (`tts`)**: Built-in `--character <CharacterKind>` mapping to all 30 prebuilt Google AI Studio voices, `speech_metadata.style` acting directions, and inline vocal tags (`<laugh>`, `<sigh>`, `<gasp>`, `<yawn>`, `<short pause>`)
+- **Multi-Speaker Dialogue (`dialogue`)**: Multi-character conversations in a single coherent `.wav` file
+- **Custom Prompted Voice Design (`voice-design`)**: Create brand-new reusable `voice_...` IDs from a natural-language voice description
+
 ### 🔊 `picture-book-audio`
 Comprehensive guide to all three audio modes and the Master Audio Catalog (`docs/AUDIO_CATALOG.md` & `skills/picture-book-audio/references/audio-catalog.md`):
 - **Mandatory Scene Audio Planning & Catalog Check**: Check `docs/AUDIO_CATALOG.md` when designing a scene to select fitting existing BGM/SFX and plan new theme-appropriate audio
@@ -118,10 +132,10 @@ Turnkey runbook for previewing and exporting videos:
 Software engineering agent enforcing `picture-book-agent-coder` standards (living docs, atomic Git/`isomorphic-git` commits via `scripts/vcs.mjs`, hierarchical planning, 5-subagent research, DRY architecture, centralized tokens, strict TypeScript) with automatic routing to the plugin's domain skills.
 
 ### `picture-book-agent-coder`
-Specialist agent combining art direction rules (Part 1) with engineering discipline (Part 2), plus skill routing for animation, assets, audio (including `audioClips`), and automated browser export.
+Specialist agent combining art direction rules (Part 1) with engineering discipline (Part 2), plus skill routing for animation, assets, voiceover (`picture-book-voiceover`), audio (including `audioClips`), and automated browser export.
 
 ### `picture-book-director`
-Turnkey producer/orchestrator for users who want to make or edit animated videos end-to-end without worrying about technical details. Handles the full pipeline: story concept → scene design → asset creation → audio → preview → MP4 export.
+Turnkey producer/orchestrator for users who want to make or edit animated videos end-to-end without worrying about technical details. Handles the full pipeline: story concept → scene design → asset creation → voiceover & audio → preview → MP4 export.
 
 ---
 
@@ -134,8 +148,9 @@ The `rules/AGENTS.md` file is always active when the plugin is enabled. It enfor
 3. **Animation routing**: Load `picture-book-animation` skill for any scene/animation work
 4. **Code authoring routing**: Follow `picture-book-agent-coder` standards for all TypeScript code
 5. **Photo asset routing**: Load `photo-to-crayon-asset` skill for custom assets from photos
-6. **Audio routing**: Load `picture-book-audio` skill for any audio work
-7. **Export routing**: Load `picture-book-studio-export` skill for preview and MP4 export
+6. **Voiceover & Google AI Studio TTS routing**: Load `picture-book-voiceover` skill for any narration, character speech, dialogue, or API key setup
+7. **Audio routing**: Load `picture-book-audio` skill for SFX, BGM, and `audioClips`
+8. **Export routing**: Load `picture-book-studio-export` skill for preview and MP4 export
 
 ---
 

@@ -379,6 +379,71 @@ function createStudioHttpServer(callbacks = {}) {
       return;
     }
 
+    // 1c. POST /__studio/generate-speech (Google AI Studio Gemini TTS proxy)
+    if (req.method === 'POST' && pathname === '/__studio/generate-speech') {
+      const chunks = [];
+      req.on('data', (chunk) => chunks.push(chunk));
+      req.on('end', async () => {
+        try {
+          const payload = JSON.parse(Buffer.concat(chunks).toString('utf8') || '{}');
+          const rawFilename = String(payload.filename || 'voiceover.wav');
+          const safeFilename = path
+            .basename(rawFilename.endsWith('.wav') ? rawFilename : `${rawFilename}.wav`)
+            .replace(/[^a-zA-Z0-9._\-]/g, '_');
+          const outPath = path.join(ENGINE_ROOT, 'public', 'audio', safeFilename);
+          const genMod = await import('./generate_audio.mjs');
+          const cliArgs =
+            payload.mode === 'multi'
+              ? [
+                  'dialogue',
+                  '--text',
+                  String(payload.text || ''),
+                  '--speakers',
+                  String(payload.speakers || ''),
+                  '--styles',
+                  String(payload.styles || ''),
+                  '--model',
+                  String(payload.model || 'gemini-3.8-flash-tts'),
+                  '--out',
+                  outPath,
+                ]
+              : [
+                  'tts',
+                  '--text',
+                  String(payload.text || ''),
+                  '--voice',
+                  String(payload.voice || ''),
+                  '--character',
+                  String(payload.character || ''),
+                  '--style',
+                  String(payload.style || ''),
+                  '--model',
+                  String(payload.model || 'gemini-3.8-flash-tts'),
+                  '--out',
+                  outPath,
+                ];
+          if (payload.apiKey) {
+            cliArgs.push('--api-key', String(payload.apiKey));
+          }
+          const result = await genMod.runCli(cliArgs);
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(
+            JSON.stringify({
+              ok: true,
+              url: `/audio/${safeFilename}`,
+              savedPath: outPath.replace(/\\/g, '/'),
+              durationSec: result?.durationSec ?? 0,
+              source: result?.source ?? 'unknown',
+            })
+          );
+        } catch (err) {
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ ok: false, error: err instanceof Error ? err.message : String(err) }));
+        }
+      });
+      return;
+    }
+
     // 2. Serve bundled vendor mp4-muxer
     if (pathname === '/__vendor/mp4-muxer.mjs') {
       const muxerFile = path.join(ENGINE_ROOT, 'vendor', 'mp4-muxer', 'mp4-muxer.mjs');
