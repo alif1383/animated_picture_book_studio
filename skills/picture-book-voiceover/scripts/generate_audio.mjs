@@ -1861,7 +1861,7 @@ export function parseArgs(argv) {
     else if (a === '--theme' || a === '-t') opts.theme = argv[++i];
     else if (a === '--rate') opts.rate = argv[++i];
     else if (a === '--pitch') opts.pitch = argv[++i];
-    else if (a === '--offline' || a === '--fallback') opts.offline = true;
+    else if (a === '--offline' || a === '--fallback' || a === '--os-fallback') opts.offline = true;
     else if (a === '--json') opts.json = true;
     else opts.positional.push(a);
   }
@@ -1871,12 +1871,17 @@ export function parseArgs(argv) {
 function printApiKeyInstructions() {
   console.error(
     [
-      '[gemini-tts] No Google AI Studio API key found.',
-      'To generate studio-grade AI character voices and narration with Google AI Studio (Gemini TTS):',
-      '  1. Get an API key from: https://aistudio.google.com/apikey (or click "Get API key" in https://aistudio.google.com/generate-speech)',
+      '[gemini-tts] No Google AI Studio API key is provided.',
+      'Because no API key is configured, we cannot use Google AI Studio Generate Speech (Gemini TTS) and cannot generate studio-quality character voices.',
+      '',
+      'Good news — a FREE Google AI Studio API key unlocks all 30 prebuilt voices & 40 character presets at $0 cost (no credit card or billing required):',
+      '  1. Get a free API key at: https://aistudio.google.com/apikey (or click "Get API key" in https://aistudio.google.com/generate-speech)',
       '  2. Save it once for all future Antigravity sessions by running:',
       '       agy-node scripts/generate_audio.mjs set-key "<YOUR_GEMINI_API_KEY>"',
       '     (Or set the GEMINI_API_KEY environment variable.)',
+      '',
+      'Note: You could try using the local OS synthesizer by explicitly passing --os-fallback (or --offline),',
+      'but this is NOT recommended because OS synthesizers sound robotic and lack storybook character acting.',
     ].join('\n')
   );
 }
@@ -2166,7 +2171,6 @@ export async function runCli(argv = process.argv.slice(2)) {
     const outPath = opts.output
       ? path.resolve(opts.output)
       : path.join(defaultAudioDir, `${name}.wav`);
-    fs.mkdirSync(path.dirname(outPath), { recursive: true });
 
     const { voice, style } = resolveVoiceAndStyle({
       voice: opts.voice,
@@ -2177,6 +2181,12 @@ export async function runCli(argv = process.argv.slice(2)) {
     const model = opts.model || DEFAULT_GEMINI_TTS_MODEL;
     const { apiKey } = resolveGeminiApiKey({ apiKey: opts.apiKey, configDir: opts.configDir });
 
+    if (!opts.offline && !apiKey && process.env.GEMINI_TTS_MOCK !== '1') {
+      printApiKeyInstructions();
+      return 1;
+    }
+
+    fs.mkdirSync(path.dirname(outPath), { recursive: true });
     let providerUsed = 'fallback';
     if (!opts.offline && (apiKey || process.env.GEMINI_TTS_MOCK === '1')) {
       try {
@@ -2195,15 +2205,14 @@ export async function runCli(argv = process.argv.slice(2)) {
         );
       } catch (err) {
         console.error(
-          `[tts:gemini] Error calling Google AI Studio Gemini TTS (${err instanceof Error ? err.message : String(err)}). Falling back to local synthesis...`
+          `[tts:gemini] Error calling Google AI Studio Gemini TTS (${err instanceof Error ? err.message : String(err)}).`
         );
-        const fb = writeFallbackSpeechWav(outPath, text);
-        providerUsed = fb.provider;
+        return 1;
       }
     } else {
-      if (!opts.offline) {
-        printApiKeyInstructions();
-      }
+      console.warn(
+        '[tts:os-fallback] Generating speech using local OS/fallback synthesizer (--os-fallback). Note: OS synthesis is not recommended compared to free Google AI Studio voices.'
+      );
       const fb = writeFallbackSpeechWav(outPath, text);
       providerUsed = fb.provider;
     }
@@ -2235,11 +2244,16 @@ export async function runCli(argv = process.argv.slice(2)) {
     const outPath = opts.output
       ? path.resolve(opts.output)
       : path.join(defaultAudioDir, `${name}.wav`);
-    fs.mkdirSync(path.dirname(outPath), { recursive: true });
 
     const model = opts.model || DEFAULT_GEMINI_TTS_MODEL;
     const { apiKey } = resolveGeminiApiKey({ apiKey: opts.apiKey, configDir: opts.configDir });
 
+    if (!opts.offline && !apiKey && process.env.GEMINI_TTS_MOCK !== '1') {
+      printApiKeyInstructions();
+      return 1;
+    }
+
+    fs.mkdirSync(path.dirname(outPath), { recursive: true });
     let providerUsed = 'fallback';
     if (!opts.offline && (apiKey || process.env.GEMINI_TTS_MOCK === '1')) {
       try {
@@ -2258,16 +2272,14 @@ export async function runCli(argv = process.argv.slice(2)) {
         );
       } catch (err) {
         console.error(
-          `[dialogue:gemini] Error calling Google AI Studio Gemini TTS (${err instanceof Error ? err.message : String(err)}). Falling back to local synthesis...`
+          `[dialogue:gemini] Error calling Google AI Studio Gemini TTS (${err instanceof Error ? err.message : String(err)}).`
         );
-        const combinedText = turns.map((t) => t.text).join(' ');
-        const fb = writeFallbackSpeechWav(outPath, combinedText);
-        providerUsed = fb.provider;
+        return 1;
       }
     } else {
-      if (!opts.offline) {
-        printApiKeyInstructions();
-      }
+      console.warn(
+        '[dialogue:os-fallback] Generating dialogue using local OS/fallback synthesizer (--os-fallback). Note: OS synthesis is not recommended compared to free Google AI Studio voices.'
+      );
       const combinedText = turns.map((t) => t.text).join(' ');
       const fb = writeFallbackSpeechWav(outPath, combinedText);
       providerUsed = fb.provider;

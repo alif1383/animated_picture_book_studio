@@ -420,6 +420,20 @@ def synthesize_speech_fallback(text, out_path):
     return write_wav(out_path, samples)
 
 
+def print_no_api_key_message():
+    print(
+        "[gemini-tts] No Google AI Studio API key is provided.\n"
+        "Because no API key is configured, we cannot use Google AI Studio Generate Speech (Gemini TTS) and cannot generate studio-quality character voices.\n\n"
+        "Good news — a FREE Google AI Studio API key unlocks all 30 prebuilt voices & 40 character presets at $0 cost (no credit card or billing required):\n"
+        "  1. Get a free API key at: https://aistudio.google.com/apikey (or click 'Get API key' in https://aistudio.google.com/generate-speech)\n"
+        "  2. Save it once for all future Antigravity sessions by running:\n"
+        '       agy-node scripts/generate_audio.mjs set-key "<YOUR_GEMINI_API_KEY>"\n\n'
+        "Note: You could try using the local OS synthesizer by explicitly passing --os-fallback (or --offline),\n"
+        "but this is NOT recommended because OS synthesizers sound robotic and lack storybook character acting.",
+        file=sys.stderr,
+    )
+
+
 def run_tts(
     text,
     out_path,
@@ -428,10 +442,15 @@ def run_tts(
     style=None,
     model=DEFAULT_GEMINI_TTS_MODEL,
     api_key=None,
+    os_fallback=False,
 ):
-    Path(out_path).parent.mkdir(parents=True, exist_ok=True)
     key_info = resolve_gemini_api_key(api_key)
-    if key_info["apiKey"]:
+    if not os_fallback and not key_info["apiKey"]:
+        print_no_api_key_message()
+        sys.exit(1)
+
+    Path(out_path).parent.mkdir(parents=True, exist_ok=True)
+    if not os_fallback and key_info["apiKey"]:
         try:
             wav_bytes, dur = synthesize_gemini_speech_http(
                 api_key=key_info["apiKey"],
@@ -448,10 +467,15 @@ def run_tts(
             return
         except Exception as err:
             print(
-                f"[generate_audio.py] Gemini TTS failed ({err}); falling back to local TTS.",
+                f"[generate_audio.py] Gemini TTS failed ({err}).",
                 file=sys.stderr,
             )
+            sys.exit(1)
 
+    print(
+        "[generate_audio.py] Generating speech using local OS/fallback synthesizer (--os-fallback). Note: OS synthesis is not recommended compared to free Google AI Studio voices.",
+        file=sys.stderr,
+    )
     if shutil.which("edge-tts") and shutil.which("ffmpeg"):
         mp3_tmp = str(out_path) + ".tmp.mp3"
         edge_voice = voice or "en-US-AriaNeural"
@@ -559,6 +583,14 @@ def main():
     p_tts.add_argument("--style", default=None)
     p_tts.add_argument("--model", default=DEFAULT_GEMINI_TTS_MODEL)
     p_tts.add_argument("--api-key", dest="api_key", default=None)
+    p_tts.add_argument(
+        "--os-fallback",
+        "--offline",
+        "--fallback",
+        dest="os_fallback",
+        action="store_true",
+        default=False,
+    )
 
     p_set = sub.add_parser("set-key")
     p_set.add_argument("positional_key", nargs="?", default=None)
@@ -593,6 +625,7 @@ def main():
             args.style,
             args.model,
             args.api_key,
+            args.os_fallback,
         )
     elif args.cmd == "set-key":
         key = args.api_key or args.positional_key
@@ -607,9 +640,8 @@ def main():
                 f"[generate_audio.py] Google AI Studio API key is configured ({mask_api_key(res['apiKey'])}, source: {res['source']}).\nConfigured: YES"
             )
         else:
-            print(
-                f"[generate_audio.py] No Google AI Studio API key found.\nConfigured: NO\nGet a key at https://aistudio.google.com/apikey"
-            )
+            print_no_api_key_message()
+            print("Configured: NO")
     elif args.cmd == "voices":
         for k, v in CHARACTER_VOICE_PRESETS.items():
             print(f"{k.ljust(15)} -> {v['voice'].ljust(14)} | {v['style']}")

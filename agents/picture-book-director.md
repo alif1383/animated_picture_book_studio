@@ -72,12 +72,12 @@ If the user wants audio (voiceover, character dialogue, sound effects, narration
 1. **When Voiceover, Story Narration, or Character Speech is Requested**:
    - **ALWAYS load `skills/picture-book-voiceover/SKILL.md` and consult `docs/VOICE_CATALOG.md` (`skills/picture-book-voiceover/references/voice-catalog.md`) first!**
    - Run `agy-node "<plugin-root>/skills/picture-book-voiceover/scripts/generate_audio.mjs" check-key` to check if the user's Google AI Studio API key is already configured in `~/.gemini/config/animated_picture_book_studio/config.json` or the environment.
-   - If `check-key` reports `Configured: NO` and the user wants real proper AI voiceover, direct the user on how to get their free Google AI Studio API key:
+   - If `check-key` reports `Configured: NO`, **do NOT fall back to the OS synthesizer by default**. Tell the user that since no Google AI Studio API key is provided, we cannot use Google AI Studio Generate Speech and cannot generate good character voices; explain that a **free** API key from **[https://aistudio.google.com/apikey](https://aistudio.google.com/apikey)** (\$0 cost, no credit card required) unlocks all **30 prebuilt voices** and **40 character presets** for free, and mention they could try the local OS synthesizer (`--os-fallback`), though it is not recommended:
      1. Go to **[https://aistudio.google.com/apikey](https://aistudio.google.com/apikey)** (or open **[https://aistudio.google.com/generate-speech](https://aistudio.google.com/generate-speech)** and click **"Get API key"** in the bottom-left sidebar).
      2. Click **"Create API key"**, copy the `AIzaSy...` key, and paste it in chat.
      3. Once they paste it, save it persistently via `agy-node "<plugin-root>/skills/picture-book-voiceover/scripts/generate_audio.mjs" set-key "<USER_API_KEY>"`.
    - Cast voices using `docs/VOICE_CATALOG.md` or `generate_audio.mjs voices --theme <theme> --gender <female|male> --age <ageGroup> --roughness <roughness> --accent <accent>` so every narrator and character voice matches their gender, age, vocal roughness/texture, accent, and scene theme.
-   - Generate expressive single-speaker narration/character lines (`tts --character <kind> --style "..." --text "..." --out "<workspace>/public/audio/<name>.wav"`), multi-speaker dialogue (`dialogue --speakers "..." --text "..." --out ...`), or custom voices (`voice-design --prompt "..."`).
+   - Generate expressive single-speaker narration/character lines (`tts --character <kind> --style "..." --text "..." --out "<workspace>/public/audio/<name>.wav"`), multi-speaker dialogue (`dialogue --speakers "..." --text "..." --out ...`), or custom voices (`voice-design --prompt "..."`, Paid Tier 1+).
 2. **When Sound Effects or Music are Needed**:
    - Load `skills/picture-book-audio/SKILL.md`.
    - Determine the audio mode:

@@ -412,4 +412,69 @@ describe('Google AI Studio Generate Speech (Gemini TTS) & picture-book-voiceover
     expect(fs.readFileSync(voiceoverScript, 'utf8')).toBe(engineBytes);
     expect(fs.readFileSync(audioScript, 'utf8')).toBe(engineBytes);
   });
+
+  it('does NOT fall back to the OS synthesizer by default when no API key is provided unless --os-fallback is explicitly passed', async () => {
+    const mod = await loadGenerateAudioModule();
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'pb-tts-nokey-'));
+    const prevConfigDir = process.env.PICTURE_BOOK_CONFIG_DIR;
+    const prevGeminiKey = process.env.GEMINI_API_KEY;
+    const prevGoogleKey = process.env.GOOGLE_API_KEY;
+    const prevMock = process.env.GEMINI_TTS_MOCK;
+
+    try {
+      process.env.PICTURE_BOOK_CONFIG_DIR = tmpDir;
+      delete process.env.GEMINI_API_KEY;
+      delete process.env.GOOGLE_API_KEY;
+      delete process.env.GEMINI_TTS_MOCK;
+
+      // 1. Default behavior with no API key: must return exit code 1 and NOT create a fallback WAV
+      const blockedTtsOut = path.join(tmpDir, 'should_not_exist.wav');
+      const blockedTtsCode = await mod.runCli([
+        'tts',
+        '--character',
+        'narrator',
+        '--text',
+        'This should not fall back to the OS synthesizer.',
+        '--out',
+        blockedTtsOut,
+      ]);
+      expect(blockedTtsCode).toBe(1);
+      expect(fs.existsSync(blockedTtsOut)).toBe(false);
+
+      const blockedDialogueOut = path.join(tmpDir, 'should_not_exist_dialogue.wav');
+      const blockedDialogueCode = await mod.runCli([
+        'dialogue',
+        '--speakers',
+        'Narrator:Sulafat,Girl:little_girl',
+        '--text',
+        'Narrator: Hello there.\nGirl: Hi!',
+        '--out',
+        blockedDialogueOut,
+      ]);
+      expect(blockedDialogueCode).toBe(1);
+      expect(fs.existsSync(blockedDialogueOut)).toBe(false);
+
+      // 2. Explicit --os-fallback opt-in: creates the fallback WAV when explicitly requested
+      const explicitFallbackOut = path.join(tmpDir, 'explicit_os_fallback.wav');
+      const explicitFallbackCode = await mod.runCli([
+        'tts',
+        '--character',
+        'narrator',
+        '--text',
+        'Explicit OS fallback requested.',
+        '--os-fallback',
+        '--out',
+        explicitFallbackOut,
+      ]);
+      expect(explicitFallbackCode).toBe(0);
+      expect(fs.existsSync(explicitFallbackOut)).toBe(true);
+    } finally {
+      if (prevConfigDir === undefined) delete process.env.PICTURE_BOOK_CONFIG_DIR;
+      else process.env.PICTURE_BOOK_CONFIG_DIR = prevConfigDir;
+      if (prevGeminiKey !== undefined) process.env.GEMINI_API_KEY = prevGeminiKey;
+      if (prevGoogleKey !== undefined) process.env.GOOGLE_API_KEY = prevGoogleKey;
+      if (prevMock !== undefined) process.env.GEMINI_TTS_MOCK = prevMock;
+      fs.rmSync(tmpDir, { recursive: true, force: true });
+    }
+  });
 });

@@ -40,21 +40,29 @@ The CLI checks keys in this priority order:
 
 ---
 
-## Step 2: How to Guide the User to Get & Set Their Google AI Studio API Key
+## Step 2: What to Do When No API Key is Provided (No Default OS Synthesizer Fallback)
+
+> **CRITICAL DEFAULT RULE — Do NOT Fall Back to the OS Synthesizer by Default!**
+> If `check-key` reports `Configured: NO` (no API key is provided), `generate_audio.mjs` will **stop and exit with an error (`exit code 1`)** rather than silently falling back to a robotic OS synthesizer.
+>
+> **What you MUST tell the user when no API key is configured:**
+> 1. **Why we stopped**: Explain clearly that since no Google AI Studio API key is provided, we cannot use Google AI Studio Generate Speech and therefore **cannot generate good studio character voices**.
+> 2. **All 30 Premade Voices Are 100% Free with a Free Key (\$0 Cost)**: Reassure the user that with a **free** Google AI Studio API key (no credit card or billing account required), they get full access to **all 30 prebuilt Google AI Studio voices** (`VOICE_CATALOG`) and **all 40 character presets** (`CHARACTER_VOICE_PRESET_CATALOG`) at **\$0 cost** — so it is not costly at all!
+> 3. **OS Synthesizer is Optional & Not Recommended**: Mention that they *could* try using the local OS synthesizer (by asking you to pass `--os-fallback` / `--offline`), **but it is NOT recommended** because OS synthesizers sound flat/robotic and cannot perform expressive picture-book character voices.
 
 ### Why Antigravity Cannot Grab a Raw `AIza...` Key Automatically
 Antigravity runs in a secure sandboxed VM where Google Workspace plugins (`gdrive`, `gdocs`, etc.) use OAuth tokens injected by `agy-plugin-proxy` only for Workspace hosts, not raw `AIzaSy...` developer keys for `generativelanguage.googleapis.com`.
-**However**, `/home/antigravity/.gemini` (`~/.gemini`) is persistent storage across all Antigravity conversations! Once the user gives you their key **one time** and you save it with `set-key`, every future conversation automatically has access to real Google AI Studio voices without asking again.
+**However**, `/home/antigravity/.gemini` (`~/.gemini`) is persistent storage across all Antigravity conversations! Once the user gives you their free key **one time** and you save it with `set-key`, every future conversation automatically has access to real Google AI Studio voices without asking again.
 
 ### How to Direct the User to Get Their Free Google AI Studio API Key
-When `check-key` reports `Configured: NO` and the user wants real proper voiceover, politely ask the user for their Google AI Studio API key and give them these exact instructions:
+Give the user these exact steps:
 
-> **How to get your free Google AI Studio API key (takes ~15 seconds):**
+> **How to get your FREE Google AI Studio API key (takes ~15 seconds, \$0 cost, no credit card needed):**
 > 1. Open **Google AI Studio API Keys**: [https://aistudio.google.com/apikey](https://aistudio.google.com/apikey) *(or open the [Google AI Studio Speech Playground](https://aistudio.google.com/generate-speech) and click **"Get API key"** in the bottom-left sidebar)*.
 > 2. Sign in with your Google account and click **"Create API key"**.
 > 3. Copy the key (it starts with `AIzaSy...`) and paste it here in chat!
 >
-> *(Once you paste it, I will save it to your persistent `~/.gemini/config/animated_picture_book_studio/config.json` so you never have to enter it again in future sessions.)*
+> *(Once you paste it, I will save it to your persistent `~/.gemini/config/animated_picture_book_studio/config.json` so you never have to enter it again. If you really want to skip the API key, you could ask me to try the local OS synthesizer with `--os-fallback`, though it is **not recommended** because it sounds robotic compared to the free Google AI Studio voices.)*
 
 ### How the Agent Saves the API Key Persistently
 As soon as the user pastes their `AIza...` key in chat (or provides it in their prompt), immediately run:
@@ -69,8 +77,25 @@ Then verify it is saved:
 agy-node "<plugin-root>/skills/picture-book-voiceover/scripts/generate_audio.mjs" check-key
 ```
 
-> **What if the user says they don't want to get an API key right now?**
-> Do not block the story! Run `tts` anyway — `generate_audio.mjs` will automatically fall back to offline synthesis (`espeak-ng` / `say` / `edge-tts` / procedural speech-envelope WAV) so the picture book still builds and plays with timed audio cues.
+> **Only if the user explicitly insists on using the OS synthesizer anyway:**
+> Pass `--os-fallback` (or `--offline`) to `tts` or `dialogue`. Never pass `--os-fallback` unless the user explicitly asks to use the OS/offline synthesizer after being warned that it is not recommended.
+
+---
+
+### Free Tier vs. Paid Tier (What is Free vs. Locked Behind the Paywall)
+
+| Capability | Free API Key (Unbilled / \$0 Free Tier) | Paid Quota Tier 1+ (Paywall — Cloud Billing Linked) |
+|---|---|---|
+| **All 30 Prebuilt Studio Voices (`VOICE_CATALOG`)** | **100% FREE** (`Sulafat`, `Aoede`, `Leda`, `Puck`, `Fenrir`, `Algenib`, `Charon`, etc.) | Included |
+| **All 40 Character & Narrator Presets (`--character`)** | **100% FREE** (`narrator`, `little_girl`, `knight`, `dragon`, `birthday_strawberry`, etc.) | Included |
+| **Models: `gemini-3.8-flash-tts`, `gemini-3.8-flash-lite-tts`, `gemini-2.5-flash-preview-tts`** | **100% FREE** (within free daily request quotas) | Higher RPM/RPD quotas + 50%-off Batch/Flex API |
+| **Acting Style Prompts (`--style` / `speech_metadata.style`) & Accents (130 locales)** | **100% FREE** (whisper, grumpy dragon, British RP, Scottish brogue, bedtime croon, etc.) | Included |
+| **Inline Expressive Vocal Tags (`<laugh>`, `<sigh>`, `<gasp>`, `<yawn>`, `<short pause>`)** | **100% FREE** | Included |
+| **Multi-Speaker Dialogue (`dialogue` up to 2 prebuilt voices per call)** | **100% FREE** (great for conserving daily request quota!) | Included |
+| **Custom Voice Creation (`POST /v1beta/voices` — "Create Speaker": Voice Design `type: "prompted"`, Voice Remixing, & Persistent Voice Cloning `type: "replicated"`)** | **LOCKED (Paywall — returns `403 PERMISSION_DENIED`)** | **Unlocked on Paid Tier 1+** (up to 200 stored custom `voice_...` IDs per project) |
+| **Pro TTS Model (`gemini-2.5-pro-preview-tts`)** | **LOCKED (No Free Tier)** | **Paid-only** (note: Google recommends `gemini-3.8-flash-tts` instead) |
+| **High-Volume Rate Limits (RPM / RPD)** | Capped at Free Tier limits (~3 RPM / ~10–15 RPD per model) | **Unlocked** (`150–300+ RPM`, thousands of RPD; ~\$0.81 per full hour of generated audio on `3.8-flash-tts`, ~\$0.54/hr on `3.8-flash-lite-tts`) |
+| **Data Privacy / Model Training** | Google may review/use prompts & audio to improve products | **100% Private** — inputs and audio are **never** used to train Google models |
 
 ---
 
@@ -182,9 +207,11 @@ Wizard: <sigh> Do not fear, little princess. <short pause> Stars only fall when 
 
 ---
 
-## Step 6: Design Custom Brand-New Character Voices (`voice-design`)
+## Step 6: Design Custom Brand-New Character Voices (`voice-design` — Paid Tier 1+ Feature)
 
-Google AI Studio's Speech API also supports creating custom voices from a natural-language description via `POST /v1beta/voices` (`type: "prompted"`), returning a reusable `voice_...` ID!
+> **Paywall Note**: Creating and storing custom `voice_...` profiles via `POST /v1beta/voices` (`voice-design` / "Create Speaker") requires **Paid Quota Tier 1+** (a Google Cloud Billing account linked to the project). On a **Free Tier** API key, always use the **30 prebuilt voices** (`--voice <VoiceName>` or `--character <40 presets>`) combined with `--style "<acting direction>"`, which are **100% free**!
+
+On Paid Tier 1+ keys, Google AI Studio's Speech API supports creating custom voices from a natural-language description via `POST /v1beta/voices` (`type: "prompted"`), returning a reusable `voice_...` ID:
 
 ```bash
 # 1. Create a custom voice from a prompt and save a sample WAV

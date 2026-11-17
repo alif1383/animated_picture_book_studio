@@ -136,10 +136,12 @@ Follow these mandatory voiceover rules:
    agy-node "<plugin-root>/skills/picture-book-voiceover/scripts/generate_audio.mjs" check-key
    ```
    This checks `--api-key`, `GEMINI_API_KEY` / `GOOGLE_API_KEY`, `.env`, and the persistent Antigravity config at `~/.gemini/config/animated_picture_book_studio/config.json`.
-2. **Direct the User on How to Get & Set the API Key (If Not Configured)**:
-   - If `check-key` prints `Configured: NO` and the user wants real studio-grade AI voiceover, politely instruct the user on where to get their free Google AI Studio API key:
+2. **No Default OS Synthesizer Fallback — Explain Free API Key Setup (If Not Configured)**:
+   - **Do NOT fall back to the OS synthesizer by default!** If `check-key` prints `Configured: NO`, tell the user that since no Google AI Studio API key is provided, we cannot use Google AI Studio Generate Speech and cannot generate good character voices.
+   - Reassure the user that with a **free** Google AI Studio API key (**\$0 cost, no credit card or billing required**), they get all **30 prebuilt voices** and **40 character presets** completely free of charge:
      1. Visit **[https://aistudio.google.com/apikey](https://aistudio.google.com/apikey)** (or open **[https://aistudio.google.com/generate-speech](https://aistudio.google.com/generate-speech)** and click **"Get API key"** in the bottom-left sidebar).
      2. Click **"Create API key"**, copy the `AIzaSy...` key, and paste it in chat.
+   - Tell the user they *could* try using the local OS synthesizer (`--os-fallback` / `--offline`), **but it is not recommended** because OS synthesizers sound robotic and lack storybook character acting.
    - As soon as the user provides their key, save it persistently across all Antigravity conversations by running:
      ```bash
      agy-node "<plugin-root>/skills/picture-book-voiceover/scripts/generate_audio.mjs" set-key "<USER_API_KEY>"
@@ -149,7 +151,7 @@ Follow these mandatory voiceover rules:
 4. **Generate Expressive Voices (`tts`, `dialogue`, `voice-design`)**:
    - Use `tts` with `--character <40 character/narrator presets>` (or `--voice <30 prebuilt voices>`), `--style "<acting direction>"`, and inline vocal tags (`<laugh>`, `<sigh>`, `<gasp>`, `<yawn>`, `<short pause>`) for single-speaker narration or character lines.
    - Use `dialogue` with `--speakers` and `--styles` for multi-speaker character conversations in a single WAV file.
-   - Use `voice-design` (`POST /v1beta/voices`) to create brand-new custom character voices from a natural-language prompt.
+   - Use `voice-design` (`POST /v1beta/voices`, Paid Tier 1+) to create brand-new custom character voices from a natural-language prompt.
 
 ---
 
