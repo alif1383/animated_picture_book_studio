@@ -8,10 +8,13 @@ These rules are always active when the Animated Picture Book Studio plugin is en
 
 The entire Picture-Book Studio engine plus pure-JS dependencies (`vendor/typescript`, `vendor/mp4-muxer`, `vendor/vitest-shim`, `vendor/isomorphic-git`) and zero-dependency Node CLIs live inside `<plugin-root>/engine/`. Users only need **Antigravity** installed (no external `node`, `pnpm`, `python`, or `git`).
 
-- **Bootstrap / Resolve `<workspace>`** (if `agy-node` is not yet on `PATH`, run via `<plugin-root>/scripts/bootstrap-node.cmd` on Windows or `sh "<plugin-root>/scripts/bootstrap-node.sh"` on macOS/Linux):
+- **Bootstrap / Resolve `<workspace>`**:
   ```bash
   agy-node "<plugin-root>/scripts/ensure_engine.mjs" --workspace "<workspace>"
   ```
+  - If `agy-node` is not yet on `PATH` (fresh Antigravity install), run the bundled bootstrapper once — it creates the `agy-node` shim in `$ANTIGRAVITY_APP_DATA_DIR/bin` and forwards arguments directly:
+    - **Windows (PowerShell)**: `& "<plugin-root>/scripts/bootstrap-node.cmd" "<plugin-root>/scripts/ensure_engine.mjs" --workspace "<workspace>"`
+    - **macOS / Linux**: `sh "<plugin-root>/scripts/bootstrap-node.sh" "<plugin-root>/scripts/ensure_engine.mjs" --workspace "<workspace>"`
   - If `<workspace>/src/engine/schema.ts` exists, uses `<workspace>` directly.
   - Otherwise (default — **Option A**), copies `<plugin-root>/engine/` into the conversation's isolated scratch folder (`<appDataDir>/brain/<conversation-id>/scratch/picture-book-studio`) and prints `Engine ready at: <resolved_path>`. Always use that `<resolved_path>` as `<workspace>`.
   - Pass `--scaffold` only when the user explicitly asks to initialize a directory on disk; pass `--in-place` only when editing the plugin template itself.
@@ -37,18 +40,19 @@ The entire Picture-Book Studio engine plus pure-JS dependencies (`vendor/typescr
 
 Use the single main orchestrator **`picture-book-director`** (or act as orchestrator directly) to spin up **isolated parallel subagents** for every independent piece of work:
 
-- **Parallel Research (`>= 3` Subagents for Changes `> 100` LOC)**: Any code change exceeding `100` lines MUST first spin up at least 3 parallel researcher subagents (always including a **Minimalism & Reuse Researcher**), passing exact paths to `docs/ARCHITECTURE.md`, `docs/STYLE_GUIDE.md`, `docs/AUDIO_CATALOG.md`, and `docs/VOICE_CATALOG.md`.
-- **Side-by-Side Parallel Execution (Code + Assets + Audio + Voiceover Simultaneously)**: Once the story/file blueprint is ready, launch independent worker subagents **at the same time in parallel** so sound generation never blocks code and vice versa:
+- **Parallel Research (`>= 3` Subagents for Changes `> 100` LOC)**: Any code change exceeding `100` lines MUST first spin up at least 3 parallel read-only researcher subagents (`TypeName: "research"`, always including a **Minimalism & Reuse Researcher**), passing exact paths to `docs/ARCHITECTURE.md`, `docs/STYLE_GUIDE.md`, `docs/AUDIO_CATALOG.md`, and `docs/VOICE_CATALOG.md`.
+- **Side-by-Side Parallel Execution (Code + Assets + Audio + Voiceover Simultaneously)**: Once the story/file blueprint is ready, launch independent write-enabled worker subagents **at the same time in parallel** (via `define_subagent` with `EnableWriteTools: true`, or `TypeName: "self"` — never use read-only `research` for file writers and do not recursively invoke `picture-book-director` for leaf worker tasks) so sound generation never blocks code and vice versa:
   - Isolated **Character / Prop / Building Subagent(s)** (`src/assets/characters/<name>.ts`, `src/assets/props/<name>.ts`, `src/assets/buildings/<name>.ts`)
   - Isolated **Scene / Module Code Subagent(s)** (`src/scenes/<sceneName>.ts`, etc.)
   - Isolated **Per-SFX & Dynamic BGM Subagent(s)** (`src/audio/sfx/<name>.ts` and/or `scripts/sfx/<name>.mjs` → `public/audio/<name>.wav`, strictly one standalone file per SFX/BGM)
   - Isolated **Voiceover Subagent** (`public/audio/<line>.wav` via `generate_audio.mjs`, returning exact measured WAV durations)
-- **Strict File-Ownership Isolation**: Parallel subagents must **never** concurrently edit shared barrel, schema, registry, or catalog files (`src/engine/schema.ts`, `src/assets/*/index.ts`, `src/audio/sfx/index.ts`, `src/ui/app.ts`, `docs/*.md`). The orchestrator wires all barrels, plugs measured WAV durations into the scene timeline, and updates docs in one clean integration pass.
-- **Code Quality & Verification**:
+- **Strict File-Ownership Isolation**: Parallel subagents must **never** concurrently edit shared barrel, schema, registry, or catalog files (`src/engine/schema.ts`, `src/assets/*/index.ts`, `src/audio/sfx/index.ts`, `src/ui/app.ts`, `docs/*.md`). The orchestrator wires all barrels, reconciles returned `local SVG bounds × node.scale` against scene proportions, plugs measured WAV durations into the scene timeline, and updates docs in one clean integration pass.
+- **Hierarchical Planning & Code Quality**:
+  - For large engine/feature refactors, decompose work hierarchically (macro phases → micro sub-plans saved in `docs/plans/` and indexed in `docs/PLANS.md`); for video creation, use the `picture-book-script` Blueprint.
   - Import all colors, strokes, frame rates, filter IDs, and dimensions from `src/theme/tokens.ts` — never hardcode magic values.
   - Reuse shared engine primitives (`svgUtils.ts`, `filters.ts`, `fillMask.ts`, `timeline.ts`, `clock.ts`, `soundEngine.ts`).
   - Keep `docs/ARCHITECTURE.md`, `docs/AUDIO_CATALOG.md` (mirrored to `skills/picture-book-audio/references/audio-catalog.md`), and `docs/VOICE_CATALOG.md` (mirrored to `skills/picture-book-voiceover/references/voice-catalog.md`) up to date.
-  - Compile under `strict: true` and run `agy-node scripts/studio-cli.mjs typecheck`, `test`, and `build` after every change; commit atomically via `agy-node scripts/vcs.mjs commit -m "..."`.
+  - Compile under `strict: true`, run `agy-node scripts/studio-cli.mjs typecheck`, `test`, and `build` after every change, visually verify rendered scenes in the browser (`agy-node scripts/studio-cli.mjs dev`) to catch layout/scale/aesthetic bugs, and commit atomically via `agy-node scripts/vcs.mjs commit -m "..."`.
 
 ---
 
