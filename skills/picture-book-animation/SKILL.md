@@ -102,6 +102,39 @@ Every visible environment region on the `1280×720` stage (`Sky` in the upper zo
    - Extend the outer edges of full-screen sky and ground/water/beach `background_patch` paths and `bounds` slightly beyond `0..1280 × 0..720` (e.g., `x: -60..1340`, `y: -40..760`) so camera pans, zooms, and `#crayon-stroke` edge turbulence never expose blank white margins along the screen edges during the story.
    - Because `bookFrame` (`src/engine/bookFrame.ts`) wraps the entire scene inside `<svg id="book-page-container" width="1280" height="720" overflow="hidden">` and `<g id="book-page-clip-group" clip-path="url(#book-open-page-clip)">`, any outer overbleed is strictly clipped to the curved notebook pages during the intro and outro book sequences and will **never** bleed outside the notebook.
 
+### Story Continuity, Scene Transitions, Pacing & Proportional Scale
+Every multi-act or multi-location storybook animation **MUST** follow these continuity, staging, and proportion rules:
+
+1. **Location-Driven Background Changes**:
+   - Whenever consecutive scenes/acts take place in **different locations** (e.g., castle courtyard → dark forest, cottage interior → village street, road → dragon's lair, beach → meadow), **visibly change the background** to signal the location change.
+   - Update both **Tier 1 `background_patch` layers** (sky/ground/floor/wall palette & horizon silhouette) and **Tier 2 set dressing** (`building` / `prop` landmarks) rather than reusing the same static backdrop across different places.
+2. **Brisk Scene Transitions When All Characters Leave**:
+   - As soon as all active characters exit a scene (walk/ride/fly off-canvas past `x < -120` / `x > 1400`, or enter a doorway and turn `visible: false`), transition to the next scene/act **quickly** (within `~0.3–1.0s`).
+   - Avoid leaving `2–5+` seconds of empty-stage dead air after the cast has already left unless there is an intentional environmental beat or punchline.
+3. **Chronological Day/Night Cycle Continuity**:
+   - Maintain a continuous, physically logical forward time-of-day progression across the story:
+     `Dawn / Morning` → `Midday / Afternoon` → `Golden Hour / Sunset / Dusk` → `Twilight / Night` → *(next day)* `Dawn / Morning`.
+   - **Never** jump backwards or erratically out of sequence (for example, never jump `Night → Midday → Morning`, or `Sunset → Morning` with no intervening night/sleep beat) unless explicitly framed as a deliberate flashback or dream sequence.
+   - Keep sky `background_patch` materials (`crayonSkyBlue` → `crayonSunsetOrange` → `markerIndigoNight`), celestial characters (`sun`, `moon`, `star_cluster`), and warm lights (`windowLit`, `street_lantern`, `campfire`) strictly synchronized with the current time of day.
+4. **In-Scene Object, Prop & Companion Permanence (No Vanishing Items)**:
+   - Items, props, furniture, vehicles, and animal companions present in a scene must **never** abruptly disappear into thin air (`visible: false` in a single frame) while remaining in the same scene.
+   - **Example (Dismounting a Horse)**: When a character gets off a horse (`mounted: true` → `mounted: false`), the horse must **not** vanish! Either keep a standalone horse visible in the scene (tethered/standing nearby) or animate the horse walking/trotting naturally off-screen before hiding it.
+   - Apply the same rule to all props: placed items remain visible where put until carried off, consumed naturally, or the scene cuts to a new location.
+5. **Believable Character-to-Scene Scale & Proportions**:
+   - Always check every asset's rendered size (`local SVG dimensions × node.scale`) against characters standing on the same depth plane (`y`), keeping relative sizes consistent across acts:
+
+| Element Type | Proportional Target (vs. Standard `~95–105px` Standing Character at `scale: 1.0`) | Common Mistake to Avoid |
+| :--- | :--- | :--- |
+| **Tables / Desks / Counters** | Waist-to-chest height (`~40–65%` of character height, ~`42–65px` tall). | Making a table taller than a standing character. |
+| **Chairs / Benches / Logs** | Knee-to-hip height (`~25–45%` of character height, ~`26–45px` tall). | Giant chairs towering over characters or microscopic stools. |
+| **Full-Sized Cars / Carriages / Buses** | Clearly **wider/longer than a standing character's height** (`~1.8×–2.8×` character height wide, ~`190–280px+`), roof near or slightly below adult head height. | Drawing a full-sized car narrower than a standing person's length/height. |
+| **Bicycles** | Hip-to-chest height (`~55–75%` of rider height), proportionate to stride. | Toy-sized bikes under adults or huge bikes taller than riders. |
+| **Buildings & Doorways** | Doors taller and wider than characters walking through them; cottages/shops `~2.0×–3.5×` character height (`210–340px`); castles/trees larger still. | Characters taller than a cottage doorway or roof. |
+| **Pets, Mounts & Handheld Items** | Small pets (`cat` ~`44px`) `~30–45%` of human height; horses sized to carry riders comfortably; cups/food/books sized to fit hands. | Giant handheld items dwarfing the character's torso or tiny ponies smaller than a rider's boot. |
+
+6. **Speaking Mouth Animation & Voiceover Scene-Cut Alignment**:
+   - Whenever a scene includes spoken voiceovers, animate the speaking character's **mouth area** at stepped `6 FPS` during their exact spoken time window (and close it when silent), let every voice finish completely before switching acts unless intentionally cutting someone off, stop voices cleanly at or before any character/scene change, and never overlap multiple speakers unless purposefully scripted (see `skills/picture-book-voiceover/SKILL.md`).
+
 ### Storybook Cover Opening & Ending/Credits Book-Frame (`bookFrame`, `src/engine/bookFrame.ts`)
 Every scene in the Picture-Book Studio is framed inside an animated hand-drawn physical storybook (`bookFrame` enabled by default):
 1. **Opening Cover & Zoom-In (`0 .. openDurationSec`, default `3.5s`, `phase: 'opening'`)**:
@@ -475,6 +508,8 @@ audioClips: [
 
 - `audioCues`: `time` (seconds, quantized to 6 FPS), `freq` (Hz), `duration` (seconds), `kind` (`AudioCueKind`).
 - `audioClips`: `src` (`'/audio/<filename>'`), `startTime` (seconds), optional `duration`, `offsetSec`, `volume` (`0.0–2.0`), `label`. Automatically mixed into WebCodecs MP4 exports via `renderOfflineAudio()`.
+- **Dynamic BGM Pacing Across Acts**: Adapt background music tempo, rhythm, and mood across story sections (e.g., faster, more energetic rhythm during action/battle parts vs. calmer, softer ducked music `volume: 0.20–0.35` during dialogue or bedtime parts), either via a multi-section BGM score or cleanly capped per-act BGM `audioClips`.
+- **Voiceover Scene-Boundary, Mouth-Sync & Non-Overlap Discipline**: Let every spoken line complete before scene/act changes unless an intentional cut-off is scripted; always end a character's voice at or before any character/scene change (cap `AudioClipCue.duration` and clear `speechText: ''` so voice audio never bleeds across cuts); animate the speaking character's mouth area at `6 FPS` while they talk; and never overlap multiple characters' voices unless specifically intended.
 
 ---
 
