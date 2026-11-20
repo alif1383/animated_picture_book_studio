@@ -1,22 +1,21 @@
 ---
 name: picture-book-audio
 description: >-
-  Add, edit, sync, or generate audio — narration, voiceovers, music, or sound
-  effects — for specific parts of a Picture-Book Studio video. Covers built-in
-  procedural WebAudio cues, user-provided audio clips, and AI-generated
-  narration / custom SFX via the bundled generate_audio.py script.
+  Add, edit, sync, or generate sound effects (SFX), dynamic background music
+  (BGM), and external audio clips for a Picture-Book Studio video. Covers
+  modular procedural WebAudio cues (`audioCues`), pre-rendered WAV tracks
+  (`scripts/sfx/*.mjs`), external `audioClips`, and isolated parallel SFX
+  subagents. (For voiceover/narration/character speech, use
+  `picture-book-voiceover`.)
 ---
 
-# Picture-Book Audio Skill
+# Picture-Book Audio Skill (SFX, Dynamic BGM & `audioClips`)
 
-This skill teaches an Antigravity agent how to work with **all three audio
-modes** in the Picture-Book Crayon Video Engine (`<workspace>`, scaffolded from `<plugin-root>/engine/`).
+This skill covers **sound effects, dynamic background music, and `audioClips` integration** in the Picture-Book Crayon Video Engine (`<workspace>`, scaffolded from `<plugin-root>/engine/`).
 
 > [!IMPORTANT]
-> The active engine workspace is `<workspace>`. Audio assets go in
-> `<workspace>/public/audio/`. Never modify engine source files
-> unless the task explicitly requires adding a new procedural synthesiser
-> kind — follow `picture-book-agent-coder` standards for that.
+> - **For voiceovers, story narration, or character speech**, load **`skills/picture-book-voiceover/SKILL.md`** instead.
+> - **Parallel Side-by-Side Execution**: Isolated SFX/BGM subagents should run **concurrently alongside** code, custom asset, and voiceover subagents. Each SFX subagent creates only its standalone file (`src/audio/sfx/<sfxName>.ts` or `scripts/sfx/<clipName>.mjs`) and returns metadata/catalog text so the orchestrator wires shared registries (`schema.ts`, `index.ts`, `AUDIO_CATALOG.md`) cleanly with zero file collisions.
 
 ---
 
@@ -221,65 +220,12 @@ interface AudioClipCue {
 
 ---
 
-## Mode C — Generating Voiceover (Google AI Studio Gemini TTS) & Audio with `generate_audio.mjs`
+## Mode C — Generating Procedural WAV SFX & Inspecting Clips (`generate_audio.mjs`)
 
 > [!TIP]
-> **Dedicated Voiceover Skill**: Whenever the user asks for **voiceover**, **story narration**, **character voices**, or **multi-speaker dialogue**, **ALWAYS load `skills/picture-book-voiceover/SKILL.md` first!** It includes complete instructions on checking for the Google AI Studio API key (`check-key`), directing the user on where to get a free key (`https://aistudio.google.com/apikey` or `https://aistudio.google.com/generate-speech`), saving it persistently (`set-key`), and using `gemini-3.8-flash-tts` single-speaker, multi-speaker dialogue, and custom voice design.
+> **For Voiceovers, Story Narration & Character Dialogue**: Load **`skills/picture-book-voiceover/SKILL.md`** — it is the single source of truth for Google AI Studio Generate Speech (`check-key`, `set-key`, `voices`, `tts`, `dialogue`, `voice-design`) and voice lip-sync/cutoff rules.
 
-A bundled zero-dependency Node CLI at
-`<plugin-root>/skills/picture-book-voiceover/scripts/generate_audio.mjs`
-(also available at `<plugin-root>/skills/picture-book-audio/scripts/generate_audio.mjs` and `<workspace>/scripts/generate_audio.mjs`)
-can **generate** studio-grade Google AI Studio Gemini TTS voiceovers, multi-speaker character dialogue, custom designed voices, and procedural WAV sound effects on demand via `agy-node` without requiring Python or any external packages.
-
-### Subcommands: `check-key` & `set-key` — Google AI Studio API Key Management
-
-```bash
-# Check if an API key is configured (checks --api-key, GEMINI_API_KEY, GOOGLE_API_KEY, .env, and ~/.gemini/config/animated_picture_book_studio/config.json)
-agy-node "<plugin-root>/skills/picture-book-voiceover/scripts/generate_audio.mjs" check-key
-
-# Save the user's Google AI Studio API key persistently across all Antigravity sessions
-agy-node "<plugin-root>/skills/picture-book-voiceover/scripts/generate_audio.mjs" set-key "<USER_API_KEY>"
-```
-
-### Subcommand: `tts` — Single-Speaker Narration & Character Voiceover
-
-```bash
-agy-node "<plugin-root>/skills/picture-book-voiceover/scripts/generate_audio.mjs" tts \
-  --character <CharacterKind|narrator> \
-  --style "<speech_metadata.style acting prompt>" \
-  --text "<transcript with optional <laugh>, <sigh>, <gasp>, <yawn>, <short pause>>" \
-  --out "<workspace>/public/audio/<clip-name>.wav"
-```
-
-| Flag          | Default                     | Description                                                                 |
-|---------------|-----------------------------|-----------------------------------------------------------------------------|
-| `--text`      | *(required)*                | Spoken transcript (supports `<laugh>`, `<sigh>`, `<gasp>`, `<yawn>`, `<short pause>`) |
-| `--character` | `narrator`                  | Picture-book `CharacterKind` (`narrator`, `boy`, `girl`, `king`, `queen`, `princess`, `knight`, `wizard`, `witch`, `fairy`, `wise_elder`, `villain`, etc.) |
-| `--voice`     | Character's default (`Sulafat` for narrator) | Any of the 30 Google AI Studio prebuilt voices (`Sulafat`, `Zephyr`, `Puck`, `Charon`, `Fenrir`, `Leda`, `Aoede`, `Gacrux`, etc.) or a custom `voice_...` ID |
-| `--style`     | Character's default acting style | Acting/delivery instructions sent via `speech_metadata.style` in `gemini-3.8-flash-tts` |
-| `--model`     | `gemini-3.8-flash-tts`      | `gemini-3.8-flash-tts`, `gemini-3.8-flash-lite-tts`, or `gemini-2.5-flash-preview-tts` |
-| `--out`       | `public/audio/<name>.wav`   | Output `.wav` file path                                                     |
-
-### Subcommand: `dialogue` — Multi-Speaker Character Conversations
-
-```bash
-agy-node "<plugin-root>/skills/picture-book-voiceover/scripts/generate_audio.mjs" dialogue \
-  --speakers "Narrator:Sulafat,Princess:Zephyr,Knight:Fenrir" \
-  --styles "Narrator:Warm bedtime storyteller|Princess:Bright and curious|Knight:Bold and cheerful" \
-  --text "Narrator: Near the castle gate, the princess waved.
-Princess: <gasp> Sir Leo! You found the silver lantern!
-Knight: <laugh> It was glowing right beside the old oak tree!" \
-  --out "<workspace>/public/audio/act2-dialogue.wav"
-```
-
-### Subcommand: `voice-design` — Custom Prompted Voice Creation (`/v1beta/voices`)
-
-```bash
-agy-node "<plugin-root>/skills/picture-book-voiceover/scripts/generate_audio.mjs" voice-design \
-  --prompt "A tiny, squeaky clockwork owl with a whimsical British accent" \
-  --sample-text "Hoo-hoo! All gears are ready for flight!" \
-  --out "<workspace>/public/audio/owl-sample.wav"
-```
+The bundled zero-dependency Node CLI at `<plugin-root>/skills/picture-book-audio/scripts/generate_audio.mjs` (also at `<workspace>/scripts/generate_audio.mjs`) generates quick ad-hoc procedural WAV sound effects and inspects any audio file's exact duration:
 
 ### Subcommand: `sfx` / `tone` — Procedural WAV Sound Effects
 
@@ -296,93 +242,45 @@ agy-node "<plugin-root>/skills/picture-book-audio/scripts/generate_audio.mjs" sf
 | `--output`   | auto    | Custom output path                       |
 | `--start-time` | `0`   | startTime for the snippet                |
 
-**Available SFX presets:**
-
-| Preset          | Description                                        |
-|-----------------|----------------------------------------------------|
-| `page_turn`     | Quick papery whoosh                                |
-| `wind`          | Gentle breeze (LFO-modulated filtered noise)       |
-| `footsteps`     | Rhythmic soft taps                                 |
-| `magic_sparkle` | Rising shimmer arpeggio                            |
-| `boing`         | Cartoony spring boing                              |
-| `drum_roll`     | Accelerating drum roll                             |
-| `chord`         | Major triad chord at given frequency               |
-| `sweep`         | Frequency sweep from `--freq` to `--freq-end`      |
-| `tone`          | Pure sine wave at given frequency                  |
-
-**Examples:**
+**Available SFX presets:** `page_turn` (papery whoosh), `wind` (gentle breeze), `footsteps` (soft taps), `magic_sparkle` (rising shimmer), `boing` (spring boing), `drum_roll` (accelerating drum roll), `chord` (major triad), `sweep` (frequency sweep), `tone` (sine tone).
 
 ```bash
-# Page-turn whoosh
+# Examples (save to ./public/audio/<name>.wav in <workspace> by default):
 agy-node "<plugin-root>/skills/picture-book-audio/scripts/generate_audio.mjs" sfx page_turn --duration 0.3 --name page-flip
-
-# Wind ambient (3 seconds)
-agy-node "<plugin-root>/skills/picture-book-audio/scripts/generate_audio.mjs" sfx wind --duration 3.0 --name bg-wind --start-time 0
-
-# Magic sparkle
-agy-node "<plugin-root>/skills/picture-book-audio/scripts/generate_audio.mjs" sfx magic_sparkle --duration 1.5 --name act3-sparkle
-
-# C-major chord
-agy-node "<plugin-root>/skills/picture-book-audio/scripts/generate_audio.mjs" sfx chord --freq 261.63 --duration 2.0 --name c-chord
-
-# Frequency sweep 200→1200 Hz
+agy-node "<plugin-root>/skills/picture-book-audio/scripts/generate_audio.mjs" sfx magic_sparkle --duration 1.2 --name star-appear --start-time 10.5
 agy-node "<plugin-root>/skills/picture-book-audio/scripts/generate_audio.mjs" sfx sweep --freq 200 --freq-end 1200 --duration 1.0 --name whoosh
 ```
-
-All files save to `./public/audio/<name>.wav` in `<workspace>` by default.
 
 ### Subcommand: `info` — Inspect Audio Files
 
 ```bash
-agy-node "<plugin-root>/skills/picture-book-audio/scripts/generate_audio.mjs" info <path> [--start-time <sec>] [--name <id>]
+agy-node "<plugin-root>/skills/picture-book-audio/scripts/generate_audio.mjs" info ./public/audio/<clip>.wav --start-time 2.5
 ```
 
-Prints format details (channels, sample rate, duration) and a
-ready-to-paste `AudioClipCue` TypeScript snippet:
-
-```bash
-agy-node "<plugin-root>/skills/picture-book-audio/scripts/generate_audio.mjs" info ./public/audio/narration.wav --start-time 2.5
-```
+Prints channels, sample rate, exact duration, and a ready-to-paste `AudioClipCue` snippet.
 
 ---
 
-## Complete Workflow Example
-
-**Task**: "Add narration for each act of the Sun & Moon story"
-
-```bash
-# 1. Generate narration clips
-agy-node "<plugin-root>/skills/picture-book-audio/scripts/generate_audio.mjs" tts "The sun rose over the crayon village" \
-  --name sunrise-narration --voice ana --rate -5%
-
-agy-node "<plugin-root>/skills/picture-book-audio/scripts/generate_audio.mjs" tts "As evening fell, the moon appeared" \
-  --name sunset-narration --voice sonia --start-time 6.0
-
-agy-node "<plugin-root>/skills/picture-book-audio/scripts/generate_audio.mjs" tts "Goodnight little moon, goodnight" \
-  --name goodnight-narration --voice ana --rate -15% --start-time 22.0
-
-# 2. Generate a custom SFX
-agy-node "<plugin-root>/skills/picture-book-audio/scripts/generate_audio.mjs" sfx magic_sparkle --duration 1.2 --name star-appear --start-time 10.5
-```
-
-Then add the clips to the scene definition:
+## Complete Workflow Example (Dynamic BGM + SFX + Voice Clips)
 
 ```ts
-// In shortSample1.ts (or wherever the scene is defined):
+// Inside a SceneDefinition (mixing multi-section or per-act BGM, SFX clips, voiceover WAVs, and procedural cues):
 audioClips: [
   {
-    id: 'sunrise-narration',
-    src: '/audio/sunrise-narration.mp3',
-    startTime: 0.5,
-    volume: 1.0,
-    label: 'Act 1 narration'
+    id: 'bgm-calm-opening',
+    src: '/audio/meadow-calm-bgm.wav',
+    startTime: 0,
+    duration: 14.0,     // Capped cleanly at the action-scene transition
+    volume: 0.25,       // Ducked under voiceover
+    label: 'Act I-II gentle BGM',
   },
   {
-    id: 'sunset-narration',
-    src: '/audio/sunset-narration.mp3',
-    startTime: 6.0,
-    volume: 1.0,
-    label: 'Act 2 narration'
+    id: 'bgm-action-chase',
+    src: '/audio/action-chase-bgm.wav',
+    startTime: 14.0,
+    duration: 12.0,     // Faster, rhythmic BGM for the action act
+    volume: 0.35,
+    label: 'Act III fast action BGM',
   },
   {
     id: 'star-appear',
@@ -390,23 +288,14 @@ audioClips: [
     startTime: 10.5,
     duration: 1.2,
     volume: 0.8,
-    label: 'Stars appearing sparkle'
+    label: 'Stars appearing sparkle',
   },
-  {
-    id: 'goodnight-narration',
-    src: '/audio/goodnight-narration.mp3',
-    startTime: 22.0,
-    volume: 1.0,
-    label: 'Final goodnight narration'
-  }
 ],
-
-// Procedural cues still work alongside:
 audioCues: [
-  { time: 0.5, freq: 329.63, duration: 0.4, kind: 'lullaby' },
-  // ...
-]
+  { time: 0.5, freq: 620, duration: 0.25, kind: 'crayon_scribble' },
+  { time: 14.2, freq: 520, duration: 0.45, kind: 'confetti_pop' },
+],
 ```
 
-Both `audioCues` (procedural) and `audioClips` (file-based) are mixed
-together in the final `.mp4` export automatically.
+Both `audioCues` (procedural) and `audioClips` (file-based) are mixed together in the final `.mp4` export automatically.
+

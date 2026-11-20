@@ -47,110 +47,101 @@ It works out-of-the-box on **any machine with only Antigravity installed** (`agy
 │   ├── package.json                         # Scripts routed to scripts/studio-cli.mjs
 │   └── tsconfig.json                        # Strict TypeScript config mapped to vendor/
 ├── scripts/
+│   ├── bootstrap-node.cmd                   # Windows agy-node shim bootstrapper
+│   ├── bootstrap-node.sh                    # macOS/Linux agy-node shim bootstrapper
 │   ├── ensure_engine.mjs                    # Scaffolds/syncs bundled engine via agy-node
-│   ├── ensure_engine.py                     # Optional Python wrapper
 │   └── vcs.mjs                              # Standalone VCS helper (git or isomorphic-git)
 ├── rules/
-│   └── AGENTS.md                            # Always-on routing rules
+│   └── AGENTS.md                            # Always-on routing rules & non-negotiable guardrails
 ├── agents/
-│   ├── picture-book-coder.md                # Engineering agent (picture-book-agent-coder + skills)
-│   ├── picture-book-agent-coder.md          # Specialist art-direction + coding agent
-│   └── picture-book-director.md             # Turnkey producer/orchestrator agent
+│   └── picture-book-director.md             # Main turnkey orchestrator & export agent (spins up parallel subagents)
 └── skills/
+    ├── picture-book-script/
+    │   └── SKILL.md                         # Story craft, continuity/scale staging & character voice sheets
     ├── picture-book-animation/
-    │   ├── SKILL.md                         # Scene design & animation guide
+    │   ├── SKILL.md                         # Scene design, terrain, continuity, scale & animation guide
     │   └── references/
     │       └── catalog-and-schema.md        # Full asset catalog & TypeScript schema
     ├── photo-to-crayon-asset/
-    │   ├── SKILL.md                         # Photo-to-SVG asset workflow
+    │   ├── SKILL.md                         # Photo-to-SVG asset workflow & rigging guide
     │   └── scripts/
-    │       ├── analyze_reference_photo.mjs  # Zero-dep Node photo analysis utility
-    │       └── analyze_reference_photo.py   # Optional Python photo analysis utility
+    │       └── analyze_reference_photo.mjs  # Zero-dep Node photo analysis utility
     ├── picture-book-voiceover/
-    │   ├── SKILL.md                         # Google AI Studio Generate Speech (Gemini TTS) voiceover guide & API key setup
+    │   ├── SKILL.md                         # Google AI Studio Generate Speech (Gemini TTS) voiceover guide
     │   ├── references/
-    │   │   └── voice-catalog.md             # All 30 Gemini voices & 20 CharacterKind presets
+    │   │   └── voice-catalog.md             # All 30 Gemini voices & 40 character/narrator presets
     │   └── scripts/
-    │       ├── generate_audio.mjs           # Zero-dep Node Gemini TTS (3.8/2.5), dialogue, voice-design & WAV SFX CLI
-    │       └── generate_audio.py            # Optional Python Gemini TTS & WAV SFX CLI
+    │       └── generate_audio.mjs           # Zero-dep Node Gemini TTS, dialogue, voice-design & WAV SFX CLI
     ├── picture-book-audio/
-    │   ├── SKILL.md                         # Audio sync & generation guide
+    │   ├── SKILL.md                         # SFX, dynamic BGM & audioClips sync guide
+    │   ├── references/
+    │   │   └── audio-catalog.md             # Master Audio & Sound Effects Catalog
     │   └── scripts/
-    │       ├── generate_audio.mjs           # Zero-dep Node TTS/SFX generator
-    │       └── generate_audio.py            # Optional Python TTS/SFX generator
+    │       └── generate_audio.mjs           # Zero-dep Node WAV SFX & clip inspection CLI
     └── picture-book-studio-export/
-        └── SKILL.md                         # Dev server & MP4 export runbook
+        └── SKILL.md                         # Dev server, headless MP4 export & asset promotion runbook
 ```
 
 ---
 
 ## Skills
 
+### ✍️ `picture-book-script`
+Story and scriptwriting skill invoked automatically whenever the user's prompt is brief or lacks detail:
+- Crafts classic 3–5 act picture-book arcs sized around `bookFrame` opening/closing beats
+- Bakes in chronological day/night continuity, location-driven background changes, brisk exit cuts, in-scene object/companion permanence, and proportional scale
+- Defines a complete **Character Voice Casting & Sound Direction Sheet** (`docs/VOICE_CATALOG.md`, `--style` acting prompts, inline vocal tags) and **Dynamic BGM & SFX Cue Sheet** (`docs/AUDIO_CATALOG.md`)
+- Outputs a **Parallel-Ready Production Script Blueprint** with exact file paths and IDs so code, asset, SFX/BGM, and voiceover subagents can immediately execute side-by-side
+
 ### 🎨 `picture-book-animation`
 Complete guide to designing, choreographing, and editing animations in the Picture-Book Crayon Video Engine. Covers:
-- Core visual philosophy (wax crayon, oil pastel, cold-press paper aesthetic)
-- The 3-layer render pipeline (Base Scene → SVG Crayon Filter → Paper Composite)
-- **Storybook Cover Opening & Ending/Credits Book-Frame (`bookFrame`)**: Default `3.5s` opening cover & `0% -> 100%` color-in zoom (`0.68 -> 1.0`), full-bleed middle story, and final `3.5s` `100% -> 0%` color-out zoom-out & closing credits card (`BookFrameConfig`, `#chk-book-frame`, `?book_frame=1|0`)
-- `SceneDefinition` schema (acts, nodes, timelines, camera, `bookFrame`, audio cues)
-- All 15 built-in characters, 2 buildings, 13 props, and 21 crayon fill patterns
-- Scene registration and URL routing (`?scene=`, `?short_sample=`, `?book_frame=1|0`)
-- Stop-motion animation rules (6-8 FPS, 2D cutout rigging, hand-drawn annotations)
+- Core visual philosophy (wax crayon, oil pastel, cold-press paper aesthetic) and 3-layer render pipeline
+- Mandatory Two-Tier Terrain Coloring, Story Continuity, Location Backgrounds, Brisk Empty-Stage Cuts, and Proportional Scale
+- **Storybook Cover Opening & Ending/Credits Book-Frame (`bookFrame`)**: Default `3.5s` opening cover & `0% -> 100%` color-in zoom (`0.68 -> 1.0`), full-bleed middle story, and final `3.5s` `100% -> 0%` color-out zoom-out & closing credits card
+- `SceneDefinition` schema, all **19 built-in characters, 4 buildings, 22 props**, and 21+ crayon fill patterns
+- Scene registration, URL routing (`?scene=`, `?short_sample=`, `?book_frame=1|0`), and 6 FPS stop-motion rules
 
 ### 📷 `photo-to-crayon-asset`
-Step-by-step workflow for turning user photos (or AI-generated reference images) into hand-crafted 2D cutout SVG assets:
+Step-by-step workflow for turning user photos (or generated reference images) into hand-crafted 2D cutout SVG assets:
 - Visual inspection and automated palette mapping via `analyze_reference_photo.mjs`
-- SVG cutout decomposition using engine primitives (`crayonPath`, `crayonCircle`, etc.)
-- Multi-state rigging for stop-motion animation
-- Registration checklist (schema types, render wiring, asset catalog, build verification)
+- SVG cutout decomposition, multi-state rigging (`+X` forward walking profile, `CHARACTER_SPEECH_ANCHORS`, stepped `6 FPS` animated speaking mouths), and proportional local SVG sizing
+- File-isolated authoring for parallel subagents + registration checklist
 
 ### 🎙️ `picture-book-voiceover`
 Dedicated skill for generating expressive studio-grade voiceovers, character voices, multi-speaker dialogue, and custom voice designs using **Google AI Studio's Generate Speech (Gemini TTS)** API (`gemini-3.8-flash-tts`, `gemini-3.8-flash-lite-tts`, `gemini-2.5-flash-preview-tts`, and `POST /v1beta/voices`):
-- **API Key Check & Persistent Setup**: Guides the agent to run `check-key`, instruct the user on where to get a free Google AI Studio API key (`https://aistudio.google.com/apikey` or `https://aistudio.google.com/generate-speech`), and save it persistently across all Antigravity sessions via `set-key` (`~/.gemini/config/animated_picture_book_studio/config.json`)
-- **Single-Speaker Narration & 20 Character Presets (`tts`)**: Built-in `--character <CharacterKind>` mapping to all 30 prebuilt Google AI Studio voices, `speech_metadata.style` acting directions, and inline vocal tags (`<laugh>`, `<sigh>`, `<gasp>`, `<yawn>`, `<short pause>`)
-- **Multi-Speaker Dialogue (`dialogue`)**: Multi-character conversations in a single coherent `.wav` file
-- **Custom Prompted Voice Design (`voice-design`)**: Create brand-new reusable `voice_...` IDs from a natural-language voice description
+- **API Key Check & Persistent Setup**: `check-key` / `set-key` with no default OS synthesizer fallback (guides user to free `$0` Google AI Studio API key at `https://aistudio.google.com/apikey`)
+- **Single-Speaker Narration & 40 Character/Narrator Presets (`tts`)**, **Multi-Speaker Dialogue (`dialogue`)**, and **Custom Voice Design (`voice-design`)**
+- **Voiceover Timing & Lip-Sync Rules**: Complete lines before scene cuts (unless intentionally cut off), end voices on character/scene changes (zero bleed), animate speaker mouths at `6 FPS`, and prevent unintended overlapping voices
 
 ### 🔊 `picture-book-audio`
-Comprehensive guide to all three audio modes and the Master Audio Catalog (`docs/AUDIO_CATALOG.md` & `skills/picture-book-audio/references/audio-catalog.md`):
-- **Mandatory Scene Audio Planning & Catalog Check**: Check `docs/AUDIO_CATALOG.md` when designing a scene to select fitting existing BGM/SFX and plan new theme-appropriate audio
-- **Mode A — Modular Procedural SFX** (`audioCues`, `src/audio/sfx/<name>.ts`): 16 built-in one-file-per-SFX synthesizer modules with frequency/timing control and theme metadata
-- **Mode B — External & Bundled WAV Files** (`audioClips`, `public/audio/*.wav`): Attach `.mp3`/`.wav` files (including 5 bundled medieval/fantasy/campfire tracks in `public/audio/`) at precise timestamps with volume/offset control
-- **Mode C — Isolated Per-SFX Generation** (`scripts/sfx/<name>.mjs` & `generate_audio.mjs`): Create new sound effects via isolated subagents in standalone modular files and register them in `docs/AUDIO_CATALOG.md`
+Comprehensive guide to sound effects, dynamic background music, and `audioClips` integration (`docs/AUDIO_CATALOG.md`):
+- **Mode A — Modular Procedural SFX** (`audioCues`, `src/audio/sfx/<name>.ts`): 16 built-in one-file-per-SFX synthesizer modules
+- **Mode B — External & Bundled WAV Files** (`audioClips`, `public/audio/*.wav`): Attach `.mp3`/`.wav` clips with dynamic BGM tempo/mood shifts across story sections (faster/energetic for action, calmer/softer ducked under dialogue)
+- **Mode C — Isolated Per-SFX Generation** (`scripts/sfx/<name>.mjs` & `generate_audio.mjs`): Build new SFX/BGM concurrently alongside code & voiceover subagents
 
 ### 🎬 `picture-book-studio-export`
-Turnkey runbook for previewing and exporting videos:
-- Build verification (`agy-node scripts/studio-cli.mjs test` & `agy-node scripts/studio-cli.mjs build`)
-- Direct headless CLI video export (`agy-node scripts/studio-cli.mjs export --scene <id> --resolution 1080p`) saving directly to `<workspace>/exports/<filename>.mp4`
-- Studio dev server management (`agy-node scripts/studio-cli.mjs dev` on `http://localhost:5173`)
-- Delivering the finished `.mp4` file and the live preview URL (or informing the user if the dev server could not be started)
+Turnkey runbook for previewing, exporting, and promoting assets:
+- Build verification (`agy-node scripts/studio-cli.mjs test` & `build`)
+- Direct headless CLI video export (`agy-node scripts/studio-cli.mjs export --scene <id> --resolution 1080p`)
+- Studio dev server management (`agy-node scripts/studio-cli.mjs dev` on `http://localhost:5173`) and asset promotion (`--promote-from`)
 
 ---
 
-## Agents
+## Agent Architecture
 
-### `picture-book-coder`
-Software engineering agent enforcing `picture-book-agent-coder` standards (living docs, atomic Git/`isomorphic-git` commits via `scripts/vcs.mjs`, hierarchical planning, 5-subagent research, DRY architecture, centralized tokens, strict TypeScript) with automatic routing to the plugin's domain skills.
-
-### `picture-book-agent-coder`
-Specialist agent combining art direction rules (Part 1) with engineering discipline (Part 2), plus skill routing for animation, assets, voiceover (`picture-book-voiceover`), audio (including `audioClips`), and automated browser export.
-
-### `picture-book-director`
-Turnkey producer/orchestrator for users who want to make or edit animated videos end-to-end without worrying about technical details. Handles the full pipeline: story concept → scene design → asset creation → voiceover & audio → preview → MP4 export.
+### `picture-book-director` (Single Main Orchestrator)
+The single main producer, engineering coordinator, and export agent. Rather than duplicating multiple overlapping coder agents, `picture-book-director` loads domain skills on demand and **spins up isolated subagents side-by-side in parallel** — running character rigs, props/buildings, scene TypeScript, per-SFX/dynamic BGM modules, and Gemini TTS voiceovers concurrently with strict file-level isolation, followed by one clean integration, test, build, and MP4 export pass.
 
 ---
 
 ## Rules
 
-The `rules/AGENTS.md` file is always active when the plugin is enabled. It enforces:
+`rules/AGENTS.md` is always active when the plugin is enabled. It acts as a lean, non-redundant router and guardrail sheet enforcing:
 
-1. **100% standalone engine resolution**: Bundled engine at `<plugin-root>/engine/`, automatically scaffolded into the active `<workspace>` via `agy-node "<plugin-root>/scripts/ensure_engine.mjs"`
-2. **Git vs. `isomorphic-git` detection**: Check and commit via `agy-node scripts/vcs.mjs`
-3. **Animation routing**: Load `picture-book-animation` skill for any scene/animation work
-4. **Code authoring routing**: Follow `picture-book-agent-coder` standards for all TypeScript code
-5. **Photo asset routing**: Load `photo-to-crayon-asset` skill for custom assets from photos
-6. **Voiceover & Google AI Studio TTS routing**: Load `picture-book-voiceover` skill for any narration, character speech, dialogue, or API key setup
-7. **Audio routing**: Load `picture-book-audio` skill for SFX, BGM, and `audioClips`
-8. **Export routing**: Load `picture-book-studio-export` skill for preview and MP4 export
+1. **100% standalone engine & VCS**: Auto-resolved via `ensure_engine.mjs` (Option A isolated scratch workspace by default) and `scripts/vcs.mjs`
+2. **Skill routing**: Routes every domain (scripting, animation, assets, voiceover, audio, export) to its Single-Source-of-Truth `SKILL.md`
+3. **Side-by-side parallel subagents & engineering discipline**: Concurrent isolated code + asset + SFX + voiceover subagents, `>= 3` research subagents for `> 100` LOC, centralized `TOKENS`, strict TypeScript, living docs, and atomic commits
+4. **Always-on production guardrails**: Script-first on brief prompts, Two-Tier Terrain & `bookFrame`, continuity/exit pacing/scale, voiceover cutoff/mouth-sync/non-overlap, dynamic BGM, headless export, and asset promotion prompt
 
 ---
 
