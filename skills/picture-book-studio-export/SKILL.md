@@ -14,16 +14,7 @@ seamless preview-and-export experience with the Picture-Book Crayon Video
 Engine.
 
 > [!IMPORTANT]
-> **100% Standalone Bundled Engine**: All of the engine source code plus pre-bundled pure-JS compilers and dependencies (`vendor/typescript`, `vendor/mp4-muxer`, `vendor/vitest-shim`, `vendor/isomorphic-git`) are bundled directly inside this plugin at `<plugin-root>/engine/`
-> (`~/.gemini/config/plugins/animated_picture_book_studio/engine/`).
-> - Run `agy-node "<plugin-root>/scripts/ensure_engine.mjs" --workspace "<workspace>"`:
->   - If `<workspace>/src/engine/schema.ts` exists, it uses `<workspace>` directly.
->   - If no workspace is open (or `<workspace>` is not a Picture-Book project), it automatically copies `<plugin-root>/engine/` into the conversation's isolated scratch folder (`<appDataDir>/brain/<conversation-id>/scratch/picture-book-studio`) and prints `Engine ready at: <resolved_path>`. Use that returned `<resolved_path>` as `<workspace>` for all commands.
->   - Pass `--workspace "<dir>" --scaffold` only when explicitly initializing a new project folder on disk.
->
-> This skill does NOT modify scene source files — it only resolves the engine
-> workspace, starts the dev server, opens the browser, and orchestrates video
-> export.
+> Resolve `<workspace>` first via `agy-node "<plugin-root>/scripts/ensure_engine.mjs" --workspace "<workspace>"` (see `rules/AGENTS.md` for standalone `agy-node` bootstrap and Option A scratch-workspace details). This skill does **not** modify scene source files — it verifies builds, exports `.mp4`, starts `:5173`, and handles asset promotion.
 
 ---
 
@@ -36,8 +27,7 @@ Before starting the server, ensure the project compiles cleanly using the bundle
 agy-node scripts/studio-cli.mjs test
 ```
 
-If tests pass, proceed. If there are compilation errors, fix them first
-(using the `picture-book-agent-coder` or `picture-book-coder` subagent).
+If tests pass, proceed. If there are compilation errors, fix them first before exporting.
 
 Alternatively, run strict typechecking and production build:
 
@@ -61,7 +51,7 @@ agy-node scripts/studio-cli.mjs export --scene <sceneId> --resolution 1080p
 ```
 
 Optional flags:
-- `--scene <sceneId>` — Scene ID or registry key (e.g. `1`, `2`, `3`, `strawberry-beach-birthday`, `moonlit-garden`)
+- `--scene <sceneId>` — Scene ID or registry key (e.g. `1`, `2`, `3`, `strawberry-beach-birthday`, `knight-dragon-quest`, `moonlit-garden`)
 - `--resolution 1080p|720p` — Output resolution (default: `1080p`)
 - `--footage <actId>` — Export a single story act
 - `--vibrant 1|0` — Override vibrant mode
@@ -95,7 +85,7 @@ The server starts on **http://localhost:5173**.
 | Parameter              | Example                              | Effect                                  |
 |------------------------|--------------------------------------|-----------------------------------------|
 | `?scene=<id>`          | `?scene=short-sample-1`             | Select any scene by registry key or id  |
-| `?short_sample=<n>`    | `?short_sample=1`                   | Select scene 1, 2, or 3 (legacy)        |
+| `?short_sample=<n>`    | `?short_sample=1`                   | Select scene 1–6 (legacy)               |
 | `?footage=<actId>`     | `?footage=act-3-nightfall`          | Loop a single act                       |
 | `?t=<sec>`             | `?t=12.5`                           | Seek to timestamp                       |
 | `?autoplay=1`          | `?autoplay=1`                       | Auto-play on load                       |
@@ -111,9 +101,10 @@ The server starts on **http://localhost:5173**.
 | `?short_sample=1`                     | SHORT_SAMPLE_1 (Sun & Moon story)              | 30 s     |
 | `?short_sample=2`                     | MOONLIGHT_STORY (Lune Store + Ochre Cottage)   | 28 s     |
 | `?short_sample=3`                     | MEADOW_PARTY (Strawberry's Birthday, vibrant)  | 24 s     |
-| `?scene=corner-store-day`             | CORNER_STORE_DAY (Daytime Lune Store)          | 24 s     |
+| `?scene=corner-store-day`             | CORNER_STORE_DAY (Daytime Lune Store)          | 32 s     |
 | `?scene=moonlit-garden`               | MOONLIT_GARDEN (Cat in Moonlit Garden)         | 30 s     |
 | `?scene=strawberry-beach-birthday`    | STRAWBERRY_BEACH_BIRTHDAY (Beach Splash)       | 46 s     |
+| `?scene=knight-dragon-quest`          | KNIGHT_DRAGON_QUEST (Sir Leo & Barnaby Dragon) | 66 s     |
 
 Custom scenes registered in `SCENE_REGISTRY` can be loaded with
 `?scene=<sceneId>`.

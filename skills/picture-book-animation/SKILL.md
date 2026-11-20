@@ -8,7 +8,8 @@ description: "How to create, edit, and style animations, scenes, acts, timelines
 This skill is the authoritative guide for creating and editing animated storybook scenes in the **Picture-Book Crayon Video Engine** (`<workspace>`, scaffolded from `<plugin-root>/engine/`).
 
 > [!IMPORTANT]
-> For the complete catalog of all 15 characters, 2 buildings, 13 props, 21 crayon fill patterns, full TypeScript interfaces, TOKENS color palette, and SCENE_REGISTRY routing — see [references/catalog-and-schema.md](references/catalog-and-schema.md).
+> - If the user's prompt is brief or lacks story/dialogue detail, load **`skills/picture-book-script/SKILL.md`** first to create the Production Script Blueprint.
+> - For the complete catalog of all **19 characters, 4 buildings, 22 props, 21+ crayon fill patterns**, full TypeScript interfaces, `TOKENS` color palette, and `SCENE_REGISTRY` routing — see [references/catalog-and-schema.md](references/catalog-and-schema.md).
 
 ---
 
@@ -530,19 +531,10 @@ Use consistent `zIndex` ranges to maintain the correct visual stack:
 
 ---
 
-## 7. Development Principles
+## 7. Engineering & Parallel Execution Standards
 
-> [!WARNING]
-> When writing or modifying engine code, you **MUST** follow `picture-book-agent-coder` development principles or delegate to `picture-book-agent-coder` / `picture-book-coder`.
-
-### Mandatory practices:
-1. **Living Documentation** — Update `docs/ARCHITECTURE.md` whenever files/APIs change.
-2. **Atomic Git Commits (`scripts/vcs.mjs`)** — Check `agy-node scripts/vcs.mjs check` (uses native `git` if installed or bundled `isomorphic-git` if not), initialize with `agy-node scripts/vcs.mjs init` if needed, and commit after each completed phase/sub-task via `agy-node scripts/vcs.mjs commit -m "<message>"`.
-3. **Hierarchical Planning** — Break large tasks into macro phases → micro sub-plans → incremental execution.
-4. **Code Reuse (DRY)** — Consult existing codebase before writing new utilities. Extend shared primitives from `svgUtils.ts`, `filters.ts`, `clock.ts`.
-5. **Centralized Tokens** — Never scatter magic numbers. Always import from `TOKENS`.
-6. **Strict TypeScript** — All code must compile under `strict: true`. Run `agy-node scripts/studio-cli.mjs typecheck` and `agy-node scripts/studio-cli.mjs build` to verify.
-7. **Testing** — Run `agy-node scripts/studio-cli.mjs test` for unit/integration tests. Visually verify in browser.
+- **Side-by-Side Parallel Production**: When building a new scene that also needs custom assets, SFX/BGM, or voiceovers, author `src/scenes/<sceneName>.ts` **in parallel alongside** isolated asset, SFX, and voiceover subagents using the agreed IDs/paths from the script blueprint. Keep shared registries (`src/ui/app.ts`, `src/engine/schema.ts`, `docs/ARCHITECTURE.md`) for the single post-parallel integration pass (and plug measured WAV durations into the scene timeline once the voiceover subagent finishes).
+- **Mandatory Engineering Practices**: Import all visual/timing constants from `TOKENS` (`src/theme/tokens.ts`); reuse shared primitives (`svgUtils.ts`, `filters.ts`, `clock.ts`); compile under `strict: true` (`typecheck`, `test`, `build`); update `docs/ARCHITECTURE.md`; and commit atomically via `agy-node scripts/vcs.mjs commit -m "..."`.
 
 ### Dev server
 ```bash

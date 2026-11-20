@@ -84,8 +84,7 @@ import { svgEl, crayonPath, crayonStrokeAttrs, svgTransform } from '../../engine
 2. **Internal details** — Overlapping shapes for clothing, patterns, markings (using different TOKENS colors)
 3. **Face** — Paper-white eye ovals with offset black pupils (for expression), small curved mouth, rosy cheek circles
 4. **Accessories** — Party hats, crowns, held objects as separate `svgEl` shapes
-5. **Limbs / appendages** — Simple stub arms/legs or leaf fronds as small `crayonPath` shapes
-6. **Canonical Forward Orientation (`+X` Right when `flipX: false`)** — Always orient characters so their default forward-walking / profile direction is **RIGHT (`+X`)** when `flipX: false` (and **LEFT (`-X`)** when `flipX: true`). Never draw a left foot pointing left (`-X`) in a walking or neutral pose when `flipX: false`.
+5. **Limbs / appendages** — Simple stub arms/legs or leaf fronds as small `crayonPath` shapes (follow the `+X` Forward Rule in Step 3)
 
 > [!TIP]
 > Study existing character files like `src/assets/characters/singingRadish.ts` or `birthdayStrawberry.ts` for the exact pattern to follow.
@@ -275,8 +274,8 @@ agy-node scripts/studio-cli.mjs build       # production build succeeds
 agy-node scripts/vcs.mjs commit -m "feat(assets): add <assetName> cutout asset"
 ```
 
-> [!WARNING]
-> These steps **must** follow `picture-book-agent-coder` development principles. If you are not `picture-book-agent-coder` or `picture-book-coder`, delegate the code changes to one of them.
+> [!TIP]
+> **Parallel Subagent Isolation**: When creating multiple custom characters, props, or buildings alongside scene code and audio, each isolated subagent writes **only** its own asset file (`src/assets/<category>/<assetName>.ts`) and returns its export name, kind literal, `CHARACTER_SPEECH_ANCHORS` `(x, y)`, floatie fit, and local SVG bounds so the orchestrator wires `schema.ts`, `index.ts`, `app.ts`, and `docs/ARCHITECTURE.md` in one clean integration pass.
 
 ---
 

@@ -7,78 +7,55 @@ description: Generate expressive studio-grade voiceovers, character voices, mult
 
 Use this skill whenever the user asks for **voiceover**, **story narration**, **character voices**, **spoken dialogue**, **read-aloud audio**, or **Google AI Studio Generate Speech** for their animated picture book.
 
-This skill uses Google AI Studio's newly released **Generate Speech (Gemini TTS)** API (`gemini-3.8-flash-tts`, `gemini-3.8-flash-lite-tts`, and `gemini-2.5-flash-preview-tts`, plus the `/v1beta/voices` Voice Design endpoint) via the bundled zero-dependency script `scripts/generate_audio.mjs` (or `scripts/generate_audio.py`).
+This skill uses Google AI Studio's **Generate Speech (Gemini TTS)** API (`gemini-3.8-flash-tts`, `gemini-3.8-flash-lite-tts`, and `gemini-2.5-flash-preview-tts`, plus the `/v1beta/voices` Voice Design endpoint) via the bundled zero-dependency Node script `scripts/generate_audio.mjs`.
 
-## Resolve `<plugin-root>` First
+> [!TIP]
+> **Works Side-by-Side in Parallel**: When building a scene from a `picture-book-script` blueprint, run this voiceover subagent **concurrently alongside** code, custom SVG asset, and SFX/BGM subagents. Generate all planned `public/audio/<line>.wav` files and return the **exact measured WAV duration** of each line so the orchestrator can plug exact timings into `src/scenes/<sceneName>.ts` during the final integration pass.
 
-Find the plugin root directory using the first match:
+## Resolve `<plugin-root>` & `agy-node`
+
+Find `<plugin-root>` using the first match:
 1. Current workspace root if it contains `plugin.json` and `skills/picture-book-voiceover/SKILL.md`
 2. `~/.gemini/extensions/animated-picture-book-studio`
 3. `/opt/antigravity/plugins/animated_picture_book_studio` or `/opt/antigravity/plugins/animated-picture-book-studio`
 
-Resolve `agy-node`:
-- Prefer `/opt/antigravity/bin/node` if executable, otherwise `node` on `PATH`.
+Resolve `agy-node`: prefer `/opt/antigravity/bin/node` if executable, otherwise `node` on `PATH`.
 
 ---
 
 ## Step 1: Check Whether the Google AI Studio API Key is Configured
 
-Before generating any voiceover, check if a Google AI Studio API key is already saved or set in the environment:
+Before generating any voiceover, check if an API key is already saved or set:
 
 ```bash
 agy-node "<plugin-root>/skills/picture-book-voiceover/scripts/generate_audio.mjs" check-key
 ```
 
-The CLI checks keys in this priority order:
-1. `--api-key <key>` CLI flag
-2. `GEMINI_API_KEY` or `GOOGLE_API_KEY` in the shell environment
-3. `GEMINI_API_KEY` or `GOOGLE_API_KEY` in `<cwd>/.env` or `<engine-root>/.env`
-4. Persistent Antigravity user config: `~/.gemini/config/animated_picture_book_studio/config.json` (which persists across all Antigravity sessions and VM restarts!)
+Checked in priority order: `--api-key` → `GEMINI_API_KEY` / `GOOGLE_API_KEY` env → `.env` → persistent Antigravity config `~/.gemini/config/animated_picture_book_studio/config.json` (persists across all sessions and VM restarts).
 
-- If `check-key` prints `Configured: YES`, proceed directly to **Step 3** to generate the voiceovers!
-- If `check-key` prints `Configured: NO`, follow **Step 2** below.
+- If `Configured: YES` → proceed directly to **Step 3**.
+- If `Configured: NO` → follow **Step 2** below.
 
 ---
 
-## Step 2: What to Do When No API Key is Provided (No Default OS Synthesizer Fallback)
+## Step 2: When No API Key is Provided (No Default OS Synthesizer Fallback)
 
 > **CRITICAL DEFAULT RULE — Do NOT Fall Back to the OS Synthesizer by Default!**
-> If `check-key` reports `Configured: NO` (no API key is provided), `generate_audio.mjs` will **stop and exit with an error (`exit code 1`)** rather than silently falling back to a robotic OS synthesizer.
->
-> **What you MUST tell the user when no API key is configured:**
-> 1. **Why we stopped**: Explain clearly that since no Google AI Studio API key is provided, we cannot use Google AI Studio Generate Speech and therefore **cannot generate good studio character voices**.
-> 2. **All 30 Premade Voices Are 100% Free with a Free Key (\$0 Cost)**: Reassure the user that with a **free** Google AI Studio API key (no credit card or billing account required), they get full access to **all 30 prebuilt Google AI Studio voices** (`VOICE_CATALOG`) and **all 40 character presets** (`CHARACTER_VOICE_PRESET_CATALOG`) at **\$0 cost** — so it is not costly at all!
-> 3. **OS Synthesizer is Optional & Not Recommended**: Mention that they *could* try using the local OS synthesizer (by asking you to pass `--os-fallback` / `--offline`), **but it is NOT recommended** because OS synthesizers sound flat/robotic and cannot perform expressive picture-book character voices.
+> When `check-key` prints `Configured: NO`, `generate_audio.mjs` exits with an error (`exit code 1`) rather than silently generating robotic OS speech. *(Workspace OAuth plugins cannot supply raw `AIzaSy...` keys for `generativelanguage.googleapis.com`, so the user enters it once and `set-key` persists it in `~/.gemini` forever.)*
 
-### Why Antigravity Cannot Grab a Raw `AIza...` Key Automatically
-Antigravity runs in a secure sandboxed VM where Google Workspace plugins (`gdrive`, `gdocs`, etc.) use OAuth tokens injected by `agy-plugin-proxy` only for Workspace hosts, not raw `AIzaSy...` developer keys for `generativelanguage.googleapis.com`.
-**However**, `/home/antigravity/.gemini` (`~/.gemini`) is persistent storage across all Antigravity conversations! Once the user gives you their free key **one time** and you save it with `set-key`, every future conversation automatically has access to real Google AI Studio voices without asking again.
+Tell the user clearly:
+1. **Why we stopped**: Without a Google AI Studio API key, we cannot use Google AI Studio Generate Speech and cannot generate studio-quality character voices.
+2. **All 30 premade voices & 40 character presets are 100% FREE (\$0 cost, no credit card or billing required)** with a free key:
+   - Open **[https://aistudio.google.com/apikey](https://aistudio.google.com/apikey)** *(or open **[https://aistudio.google.com/generate-speech](https://aistudio.google.com/generate-speech)** and click **"Get API key"** in the bottom-left sidebar)*.
+   - Sign in with Google, click **"Create API key"**, copy the `AIzaSy...` key, and paste it in chat.
+3. **OS fallback is optional and not recommended**: They *could* ask to try the local OS synthesizer (`--os-fallback` / `--offline`), **but it is NOT recommended** because it sounds flat/robotic and lacks storybook character acting. Never pass `--os-fallback` unless the user explicitly insists after being warned.
 
-### How to Direct the User to Get Their Free Google AI Studio API Key
-Give the user these exact steps:
-
-> **How to get your FREE Google AI Studio API key (takes ~15 seconds, \$0 cost, no credit card needed):**
-> 1. Open **Google AI Studio API Keys**: [https://aistudio.google.com/apikey](https://aistudio.google.com/apikey) *(or open the [Google AI Studio Speech Playground](https://aistudio.google.com/generate-speech) and click **"Get API key"** in the bottom-left sidebar)*.
-> 2. Sign in with your Google account and click **"Create API key"**.
-> 3. Copy the key (it starts with `AIzaSy...`) and paste it here in chat!
->
-> *(Once you paste it, I will save it to your persistent `~/.gemini/config/animated_picture_book_studio/config.json` so you never have to enter it again. If you really want to skip the API key, you could ask me to try the local OS synthesizer with `--os-fallback`, though it is **not recommended** because it sounds robotic compared to the free Google AI Studio voices.)*
-
-### How the Agent Saves the API Key Persistently
-As soon as the user pastes their `AIza...` key in chat (or provides it in their prompt), immediately run:
+As soon as the user pastes their key, save and verify it persistently:
 
 ```bash
 agy-node "<plugin-root>/skills/picture-book-voiceover/scripts/generate_audio.mjs" set-key "<USER_API_KEY>"
-```
-
-Then verify it is saved:
-
-```bash
 agy-node "<plugin-root>/skills/picture-book-voiceover/scripts/generate_audio.mjs" check-key
 ```
-
-> **Only if the user explicitly insists on using the OS synthesizer anyway:**
-> Pass `--os-fallback` (or `--offline`) to `tts` or `dialogue`. Never pass `--os-fallback` unless the user explicitly asks to use the OS/offline synthesizer after being warned that it is not recommended.
 
 ---
 
