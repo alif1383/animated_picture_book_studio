@@ -7,6 +7,7 @@ This catalog is the **single source of truth** for all procedural WebAudio synth
 > 1. Inspect this catalog (`docs/AUDIO_CATALOG.md` / `skills/picture-book-audio/references/audio-catalog.md`) to select existing background music (`audioClips`) and procedural sound effects (`audioCues`) that fit the scene's theme.
 > 2. Identify any new theme-appropriate background music or sound effects needed for the story and pass that audio plan to the coder agent.
 > 3. Use **isolated subagent(s)** with the `picture-book-audio` skill (`skills/picture-book-audio/SKILL.md`) to create each new sound effect in its **own standalone modular file** (`src/audio/sfx/<sfxName>.ts` and/or `scripts/sfx/<clipName>.mjs` generating `public/audio/<clipName>.wav`) and register its description and fitting themes in this catalog.
+> 4. **Vary Background Music Across Story Sections**: Match BGM tempo, rhythm, and instrumentation to each part's narrative energy (e.g., faster, more driving music for action/chase/battle parts vs. slower, softer ducked music `volume: 0.20–0.35` under cozy/bedtime/dialogue beats), via a multi-section score (like `medieval-fantasy-bgm`) or cleanly capped per-act BGM `audioClips`.
 
 ---
 

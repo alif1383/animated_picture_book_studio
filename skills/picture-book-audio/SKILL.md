@@ -201,13 +201,23 @@ interface AudioClipCue {
 | OGG    | `.ogg`    | Good compression, broad support    |
 | M4A    | `.m4a`    | AAC in MP4 container               |
 
-### Tips
+### Tips & Mandatory Audio Choreography Rules
 
-- Keep clip durations tight — trim silence from the start/end.
-- Use `offsetSec` to skip an intro in a longer audio file.
-- Use `volume: 0.3` for background music so narration stays clear.
-- Use the `info` subcommand of `generate_audio.mjs` to inspect duration
-  and get a ready-to-paste `AudioClipCue` snippet.
+- **Dynamic Background Music Across Story Sections (Match Tempo & Energy to the Action)**:
+  - Background music does **not** have to stay static or monotonous across the entire video — actively shift the music's tempo, rhythm, intensity, and instrumentation to match different parts of the story:
+    - **Action / Chase / Battle / Urgent scenes**: Faster tempo, driving percussion/rhythm, energetic articulation.
+    - **Calm / Cozy / Dialogue / Bedtime scenes**: Slower tempo, gentle sparse instrumentation, softer volume (`volume: 0.20–0.35`) so voiceovers stay crisp and intelligible.
+    - **Mystery / Suspense / Comedy / Celebration**: Shift tonal color and motifs (e.g., Dorian/minor sneaky plucks, bouncy comedic rhythms, bright celebratory fanfares).
+  - Implement dynamic BGM either as a **multi-section score** in a dedicated generator (`scripts/sfx/<name>.mjs` -> `public/audio/<name>.wav`, modeled after `scripts/sfx/medievalFantasyBgm.mjs`'s 5-section arc) OR as **sequential per-act BGM `AudioClipCue` entries** with explicit `duration` capped cleanly at each act boundary (and/or varying procedural `audioCues` tempo/density per act) so two BGM tracks never clash.
+- **Voice Clip Scene-Boundary Hygiene & Non-Overlapping Speakers**:
+  - Always check actual WAV duration (`generate_audio.mjs info`) and let each voice finish completely before scene/act changes unless an intentional cut-off is scripted (`act.endTime >= clip.startTime + wavDuration + 0.4..0.8s`).
+  - Whenever a character/scene changes, the previous character's voice must end at or before that transition — cap `AudioClipCue.duration` (`duration <= transitionTime - startTime`) so voice audio never bleeds into the next scene.
+  - Never overlap multiple characters' voice clips (`clipNext.startTime < clipPrevEnd`) unless specifically scripting simultaneous speech or interruptions; keep a `~0.25–0.6s` gap between speakers.
+- **Trimming & Gain**:
+  - Keep clip durations tight — trim silence from the start/end.
+  - Use `offsetSec` to skip an intro in a longer audio file.
+  - Use `volume: 0.20–0.35` for background music under voiceover so narration and character voices stay clear (`volume: 0.90–1.0`).
+  - Use the `info` subcommand of `generate_audio.mjs` to inspect duration and get a ready-to-paste `AudioClipCue` snippet.
 
 ---
 

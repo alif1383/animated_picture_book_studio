@@ -260,6 +260,30 @@ agy-node "<plugin-root>/skills/picture-book-voiceover/scripts/generate_audio.mjs
 3. **Synchronize with `acts[]` and `bookFrame`**:
    - If `bookFrame.enabled` is `true` on the **first scene**, the 3D cover opening animation takes `openDurationSec` (default `3.5s`). Start your first narration clip at `startTime: 3.6`–`4.0` so the voice begins just as the page settles open.
    - If `bookFrame.enabled` is `true` on the **last scene**, leave `closeDurationSec` (default `3.5s`) after the final narration clip finishes so the book cover closes gracefully after the final word.
-   - Ensure each act's `duration` in `scene.acts[]` is at least `clipEndTime - actStartTime + 0.8s` so the scene never cuts off a spoken sentence mid-word.
-   - Align character `speechText` bubble acts and `speaking: true` / `expression: 'happy' | 'surprised'` flags with the exact time window when that character's voice clip plays!
+
+---
+
+## Step 8: Mandatory Voiceover Timing, Scene-Change Cutoff, Mouth Animation & Dialogue Rules
+
+Enforce these rules on **every** voiced scene:
+
+1. **Complete Every Voice Before Scene Changes (Unless Intentionally Cut Off)**:
+   - Always measure the exact WAV duration of every generated clip (from `tts`/`dialogue` stdout or `generate_audio.mjs info`).
+   - Size each act's `endTime` so every spoken line finishes **completely** with a natural breathing beat before the scene/act transitions (`act.endTime >= clip.startTime + actualWavDuration + 0.4..0.8s`).
+   - **Intentional Cut-Off Exception**: Only cut a line short before completion when the story *purposefully* wants a character cut off mid-sentence (e.g., a comedic interruption or dramatic sudden cut).
+
+2. **End Voice Immediately When a Character or Scene Changes (Zero Audio Bleed)**:
+   - Whenever a scene/act transitions or the speaking character leaves the scene (`visible: false` / exits the shot), that character's voice **MUST end at or before the transition timestamp** — never let a voice clip bleed into the next scene after the scene or character has changed.
+   - Mechanically enforce this in `scene.audioClips[]` by setting an explicit `duration` capped at or before the transition (`duration <= transitionTime - startTime`), and simultaneously clearing `speechText: ''` and stopping mouth movement at that timestamp.
+
+3. **Animate the Character's Mouth Area Whenever They Talk**:
+   - Whenever adding voiceover dialogue for an on-screen character, **that character's mouth area MUST visibly move/animate** across stepped `6 FPS` `frameIndex` ticks (cycling open/closed/shaped mouth shapes) for the exact `[startTime, startTime + duration]` window of their voice clip, and return to a closed/neutral mouth the moment their line ends.
+   - Match the character's timeline keyframes (speaking/talking state, `speechText`, and `speechStyle: 'speech'`) tightly to the voice clip window.
+   - **Rig check**: Verify that the character's SVG rig in `src/assets/characters/<name>.ts` actually animates its mouth area in the pose used while talking (for example, `'singing'` already cycles open/closed mouths on rigs like `little_girl`, `birthday_strawberry`, `singing_radish`, and `crying_onion`). If a built-in or custom character speaks while standing, walking, sitting, or riding and its rig currently draws a static frozen mouth in that state, **extend the character rig** so its mouth area animates at `6 FPS` while speaking (e.g., driven by a dedicated speaking state/flag or active non-empty `speechText` when `speechStyle !== 'thought'`).
+
+4. **Do Not Overlap Multiple Characters' Voices (Unless Specifically Intended)**:
+   - **Never** let multiple characters talk over each other accidentally (`clipNext.startTime < clipPrev.startTime + clipPrev.actualDuration`). Only overlap voices when the script *explicitly wants* simultaneous talking, chaotic chatter, a chorus, or a deliberate interruption.
+   - For normal multi-character conversations, schedule consecutive voice clips strictly sequentially with a clean conversational gap (`~0.25–0.6s`, i.e., `clipB.startTime >= clipA.startTime + clipA.actualDuration + 0.25`) — or use `dialogue` for sequential turns — and ensure **only the currently speaking character's mouth animates** during each turn.
+   - *Tip*: Generating one WAV clip per spoken line via `tts` makes per-character mouth-movement timing, non-overlap checks, and exact scene-cut alignment much easier to verify than guessing mid-clip turn timestamps inside one combined WAV.
+
 

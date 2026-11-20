@@ -87,6 +87,14 @@ Every scene in the Picture-Book Studio is automatically framed inside a physical
    - **Mandatory Scene Audio & Voice Catalog Check (`docs/AUDIO_CATALOG.md` & `docs/VOICE_CATALOG.md`)**: Whenever planning or creating a new scene, the planning/director/coder agent **MUST** check `<workspace>/docs/AUDIO_CATALOG.md` (and `skills/picture-book-audio/references/audio-catalog.md`) for fitting background music and sound effects, **and** `<workspace>/docs/VOICE_CATALOG.md` (and `skills/picture-book-voiceover/references/voice-catalog.md`) to cast voices by `gender`, `ageGroup`, `roughness`, `pitch`, `accentAffinity`, `CharacterKind`, and story `themes`. Pass this complete audio + voice casting plan to the coder agent.
    - Customize cover titles, credits, cover material, or durations via `scene.bookFrame: BookFrameConfig` (or set `bookFrame: false` to disable), toggle live in the Studio UI via `#chk-book-frame`, or pass `?book_frame=1|0` in the URL.
 
+### Story Continuity, Transitions, Pacing & Proportional Scale Rules
+Enforce these mandatory storytelling and staging rules across every multi-act scene:
+1. **Location-Driven Background Changes**: Whenever the story moves to a new location between scenes/acts (e.g., castle courtyard → forest, indoors → street, beach → meadow), visibly change the background — update both Tier 1 `background_patch` layers (sky/ground/floor materials and silhouettes) and Tier 2 set dressing (`building` / `prop` nodes) so the location change is unmistakable.
+2. **Brisk Scene Transitions After All Characters Exit**: Once all active characters leave a scene (walk, ride, or move off-screen / exit through a doorway), transition to the next scene/act quickly (`~0.3–1.0s`) rather than lingering on an empty stage with dead air.
+3. **Chronological Day/Night Cycle Continuity**: Keep the story's time-of-day progression continuous and physically coherent (`Dawn/Morning → Midday/Afternoon → Sunset/Dusk → Night → next Morning`). Never jump erratically backwards or out of order (e.g., `Night → Midday → Morning`) unless explicitly framed as a deliberate flashback or dream; keep sky patches, `sun`/`moon`/`star_cluster`, and lights (`windowLit`, `street_lantern`, `campfire`) aligned with the current time of day.
+4. **In-Scene Object, Prop & Companion Permanence (No Vanishing Items)**: Items, props, vehicles, and animals/mounts must **never** abruptly pop out of existence (`visible: false`) within the same scene. For example, if a character dismounts a horse (`mounted: true` → `mounted: false`), keep the horse visible in the scene (e.g., tethered/standing nearby) or animate it walking off-screen naturally before removing it.
+5. **Believable Character-to-Scene Scale & Proportions**: Ensure character sizes make intuitive real-world sense relative to furniture, vehicles, props, animals, and architecture on the same depth plane (e.g., a standard table should come to waist/chest height and **not** be taller than a standing character; a full-sized car should be clearly wider/longer than a standing character's height; doorways must be taller than characters walking through them; pets/handheld items must be scaled appropriately).
+
 ---
 
 ## Code Authoring Routing (`picture-book-agent-coder` Standards)
@@ -118,7 +126,7 @@ Whenever the user provides photos or images (or asks the agent to generate refer
 skills/photo-to-crayon-asset/SKILL.md
 ```
 
-This skill contains the complete workflow for visual inspection, palette mapping to `TOKENS` colors (`agy-node "<plugin-root>/skills/photo-to-crayon-asset/scripts/analyze_reference_photo.mjs" "<photo_path>"`), SVG cutout decomposition using engine primitives, multi-state rigging, **mandatory predefined head-top speech/thought bubble anchor registration in `CHARACTER_SPEECH_ANCHORS` (`src/assets/characters/index.ts`)**, and the registration checklist (schema union types, render wiring, asset catalog, build verification).
+This skill contains the complete workflow for visual inspection, palette mapping to `TOKENS` colors (`agy-node "<plugin-root>/skills/photo-to-crayon-asset/scripts/analyze_reference_photo.mjs" "<photo_path>"`), SVG cutout decomposition using engine primitives, multi-state rigging (including **animated stepped `6 FPS` mouth movement** for any voiced/speaking character and **proportional SVG sizing** relative to standard `~95–105px` characters), **mandatory predefined head-top speech/thought bubble anchor registration in `CHARACTER_SPEECH_ANCHORS` (`src/assets/characters/index.ts`)**, and the registration checklist (schema union types, render wiring, asset catalog, build verification).
 
 ---
 
@@ -152,6 +160,11 @@ Follow these mandatory voiceover rules:
    - Use `tts` with `--character <40 character/narrator presets>` (or `--voice <30 prebuilt voices>`), `--style "<acting direction>"`, and inline vocal tags (`<laugh>`, `<sigh>`, `<gasp>`, `<yawn>`, `<short pause>`) for single-speaker narration or character lines.
    - Use `dialogue` with `--speakers` and `--styles` for multi-speaker character conversations in a single WAV file.
    - Use `voice-design` (`POST /v1beta/voices`, Paid Tier 1+) to create brand-new custom character voices from a natural-language prompt.
+5. **Mandatory Voiceover Timing, Scene-Change Cutoff, Mouth Animation & Non-Overlapping Dialogue**:
+   - **Complete Every Voice Before Scene Changes (Unless Intentionally Cut Off)**: Always check actual WAV duration (`generate_audio.mjs info`) and extend/size act transitions (`act.endTime >= clip.startTime + wavDuration + 0.4..0.8s`) so every spoken line finishes completely before switching scenes — only cut a line short if purposefully scripting an interruption or cut-off.
+   - **End Voice When Character/Scene Changes (Zero Bleed)**: Whenever a scene/act changes or the speaking character exits, that character's voice **must end at or before the transition** — cap `AudioClipCue.duration` (`duration <= transitionTime - startTime`), clear `speechText: ''`, and stop mouth movement so voice audio never bleeds across scene cuts.
+   - **Animate the Character's Mouth Area While Talking**: Whenever adding voiceovers for an on-screen character, their **mouth area MUST visibly animate** at stepped `6 FPS` during their exact spoken window and close when silent (extend character rigs if their current pose has a static mouth).
+   - **No Overlapping Speakers Unless Intentionally Scripted**: Never schedule multiple characters' voices to talk over each other (`clipNext.startTime < clipPrevEnd`) unless specifically intended by the script; leave `~0.25–0.6s` between consecutive speakers and animate only the currently speaking character's mouth.
 
 ---
 
@@ -173,6 +186,7 @@ Enforce these mandatory audio rules on every scene and audio task:
 1. **Check the Audio Catalog First (`docs/AUDIO_CATALOG.md`)**: When planning or creating any scene, read `<workspace>/docs/AUDIO_CATALOG.md` (and `skills/picture-book-audio/references/audio-catalog.md`) to see what existing background music and sound effects fit the story theme and determine what new theme-appropriate BGM/SFX must be created. Pass this audio plan to the coder agent.
 2. **Isolated Subagent(s) & One-File-Per-Sound-Effect Modularity**: To create new sound effects, the coder agent MUST load `skills/picture-book-audio/SKILL.md` and spin up **isolated subagent(s)** so that **every sound effect lives in its own separate modular file** (`src/audio/sfx/<name>.ts` for procedural WebAudio synthesizers and/or `scripts/sfx/<name>.mjs` generating `public/audio/<name>.wav` for WAV clips).
 3. **Register New Audio in the Catalog**: Every new sound effect or background track MUST be documented with its description, parameters/duration, and fitting story themes in both `<workspace>/docs/AUDIO_CATALOG.md` and `skills/picture-book-audio/references/audio-catalog.md`.
+4. **Dynamic Background Music Pacing & Mood Changes**: Vary background music tempo, rhythm, and energy across different sections/acts of the story rather than keeping one flat loop throughout (e.g., quicker, driving energetic music for action/chase/battle parts; calmer, softer ducked music `volume: 0.20–0.35` under cozy/bedtime/dialogue beats), authored via a multi-section score (`scripts/sfx/<name>.mjs`) or cleanly capped per-act BGM `audioClips`.
 
 ---
 

@@ -61,3 +61,12 @@
 - `lineBoilSeedCount`: `6` (Cycles seeds `1..6` at `6 FPS`)
 - `defaultCanvasWidth`: `1280`
 - `defaultCanvasHeight`: `720` (`16:9` widescreen picture-book aspect ratio; exports at `1920×1080` 1080p or `1280×720` 720p)
+
+## 4. Story Continuity, Visual Pacing, Speaking Mouths & Proportional Scale
+- **Location-Driven Backgrounds**: Change Tier 1 `background_patch` layers and Tier 2 buildings/props whenever a scene/act moves to a new location so the location transition is clear.
+- **Brisk Cuts When All Characters Leave**: Once all active characters exit a scene/shot, transition to the next scene quickly (`~0.3–1.0s`) rather than holding on an empty stage.
+- **Chronological Day/Night Continuity**: Respect forward time-of-day progression (`Dawn/Morning → Midday/Afternoon → Sunset/Dusk → Night → next Morning`) across sky patches, celestial bodies (`sun`/`moon`/`star_cluster`), and warm lights (`windowLit`, `street_lantern`, `campfire`); never jump incoherently backwards (e.g., `Night → Midday → Morning`) unless staged as an explicit flashback or dream.
+- **In-Scene Object & Companion Permanence**: Never pop items, vehicles, or animal companions out of existence (`visible: false`) mid-scene (e.g., if a character dismounts a horse, keep the horse visible/tethered nearby or animate it walking off-screen naturally).
+- **Speaking Mouth Animation**: Whenever a character has spoken voiceover, animate their mouth area across stepped `6 FPS` `frameIndex` ticks for the exact spoken window and close it when silent.
+- **Proportional Scale Baseline**: Relative to standard `~95–105px` standing characters (`scale: 1.0`), size furniture, vehicles, animals, and buildings believably on the same depth plane: tables at waist/chest height (`~42–65px`, never taller than a standing character), chairs/logs at knee/hip height (`~26–45px`), full-sized cars wider/longer than a character's height (`~190–280px+` wide), doorways taller than characters (`>= 110px`), and cottages/castles towering naturally above characters.
+

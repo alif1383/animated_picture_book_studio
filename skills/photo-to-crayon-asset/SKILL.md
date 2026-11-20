@@ -159,6 +159,21 @@ Every character model in `src/assets/characters/` **MUST** obey the canonical **
 Every character model in `src/assets/characters/` **MUST** define a predefined local head-top anchor `(x, y)` (relative to the character's ground-feet origin `(0, 0)`) in `CHARACTER_SPEECH_ANCHORS` inside `src/assets/characters/index.ts`, modeled after our built-in characters (`little_girl: { x: 0, y: -102 }`, `shopkeeper: { x: 0, y: -105 }`, `cat: { x: 10, y: -44 }`, etc.).
 - This allows any scene to set `speechText` and `speechStyle: 'speech' | 'thought'` (plus optional `speechTail: 'bottom-center' | 'bottom-left' | 'bottom-right'`) directly on the character's `CharacterNode` or `NodeKeyframe` (`speechText: ''` to clear), and the engine automatically anchors the speech tail tip or lowest thought puff directly above that character's head without manual coordinate guessing!
 
+### Animated Speaking Mouth Rigging (Mandatory for Voiced Characters)
+
+Whenever designing or modifying a character that will have spoken voiceovers:
+- **Never leave the mouth area static/frozen while the character speaks.**
+- Build stepped `6 FPS` mouth variations driven by `frameIndex` (e.g., cycling closed smile / half-open oval / open D-mouth across `frameIndex % 2` or `frameIndex % 3`) whenever the character is speaking/singing, and return to a calm closed mouth when silent.
+- Support mouth animation in whatever poses the character talks in (standing, walking, sitting, riding) — not only in `'singing'` — so scene timelines can synchronize visible mouth movement tightly to the character's voiceover `[startTime, startTime + duration]` window.
+
+### Proportional Local SVG Sizing & Object Permanence
+
+Design every custom character, prop, vehicle, mount, and building around the engine's standard character height baseline (**`~95–105px` tall at `scale: 1.0`**, origin `(0, 0)` at ground contact) so sizes make immediate visual sense together:
+- **Furniture**: Standard tables/desks/counters should be `~42–65px` tall (waist-to-chest height of a `~100px` character — **never taller than a standing character**); chairs/benches/logs `~26–45px` tall.
+- **Vehicles**: Full-sized cars/vans/carriages should be **`~190–280px+` wide** (clearly wider than a standing character's full height/length) and `~85–110px` tall so a character plausibly fits inside.
+- **Buildings & Doorways**: Doorways must exceed character height (`>= 110px` tall); cottages/shops typically span `~210–340px` tall.
+- **Pets, Mounts & Detachable Companions**: Size pets (`~40–50px`) and handheld items proportionally to human characters. When building a mountable creature or vehicle (e.g., a horse, bicycle, car) that a character dismounts/exits mid-scene, ensure a standalone prop or separate node exists so the horse/vehicle remains visible or can walk/roll off-screen naturally instead of disappearing!
+
 ---
 
 ## Step 4: Registration Checklist
