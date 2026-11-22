@@ -8,7 +8,7 @@
 
 | Fully Customized Voices (Gemini TTS API Key) | Text Bubbles Only (No API Key Required) |
 | :---: | :---: |
-| [![Sir Leo & the Dragon of Whispering Woods](assets/demo-sir-leo.svg)](https://drive.google.com/file/d/1HeEsPBsBL13gvFSLuyC9WZcXylAEZKFX/view) | [![Captain Jack & The Black Pearl](assets/demo-captain-jack.svg)](https://drive.google.com/file/d/1rC0WHMPXuP23nTViqiAs60hwnL_zLVQc/view) |
+| [![Sir Leo & the Dragon of Whispering Woods](assets/demo-sir-leo.jpg)](https://drive.google.com/file/d/1HeEsPBsBL13gvFSLuyC9WZcXylAEZKFX/view) | [![Captain Jack & The Black Pearl](assets/demo-captain-jack.jpg)](https://drive.google.com/file/d/1rC0WHMPXuP23nTViqiAs60hwnL_zLVQc/view) |
 | **[Watch: Sir Leo & the Dragon of Whispering Woods](https://drive.google.com/file/d/1HeEsPBsBL13gvFSLuyC9WZcXylAEZKFX/view)**<br>Generated with fully customized character voices & narration via a Google AI Studio API key. | **[Watch: Captain Jack & The Black Pearl](https://drive.google.com/file/d/1rC0WHMPXuP23nTViqiAs60hwnL_zLVQc/view)**<br>Generated with character text/speech bubbles only — zero narration or API key needed. |
 
 ---
