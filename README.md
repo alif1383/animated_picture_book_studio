@@ -4,6 +4,15 @@
 
 ---
 
+## Example Videos
+
+| Fully Customized Voices (Gemini TTS API Key) | Text Bubbles Only (No API Key Required) |
+| :---: | :---: |
+| [![Sir Leo & the Dragon of Whispering Woods](assets/demo-sir-leo.svg)](https://drive.google.com/file/d/1HeEsPBsBL13gvFSLuyC9WZcXylAEZKFX/view) | [![Captain Jack & The Black Pearl](assets/demo-captain-jack.svg)](https://drive.google.com/file/d/1rC0WHMPXuP23nTViqiAs60hwnL_zLVQc/view) |
+| **[Watch: Sir Leo & the Dragon of Whispering Woods](https://drive.google.com/file/d/1HeEsPBsBL13gvFSLuyC9WZcXylAEZKFX/view)**<br>Generated with fully customized character voices & narration via a Google AI Studio API key. | **[Watch: Captain Jack & The Black Pearl](https://drive.google.com/file/d/1rC0WHMPXuP23nTViqiAs60hwnL_zLVQc/view)**<br>Generated with character text/speech bubbles only — zero narration or API key needed. |
+
+---
+
 ## Installation
 
 ### Option 1: One-Command Install (Antigravity CLI)
@@ -54,6 +63,13 @@ It works out-of-the-box on **any machine with only Antigravity installed** (`agy
 - **Add and generate audio** — Sync built-in procedural sound effects, attach user-provided audio files, or generate narration and custom WAV sound effects at precise timestamps.
 - **Preview live** — Spin up the bundled studio dev server (`agy-node scripts/studio-cli.mjs dev`) and inspect your video interactively in the browser with playback controls, layer toggles, and SFX audition.
 - **Export MP4 directly via CLI** — Run `agy-node scripts/studio-cli.mjs export --scene <id> --resolution 1080p` to export the `.mp4` in headless mode without needing to open a visible browser tab or click buttons, then launch the dev server so you can inspect the live site as well.
+
+### Visual Modes: Classic vs. Vibrant Crayon Mode
+
+You can preview and export any video in either **Classic (non-vibrant)** or **Vibrant** mode (just ask in your prompt, toggle the **Vibrant Crayon Mode** checkbox in the Studio UI, pass `?vibrant=1|0` in the URL, or pass `--vibrant 1|0` to `studio-cli.mjs export`):
+
+- **Classic Mode (Non-Vibrant, default):** A warm, muted, vintage picture-book look with stronger cold-press watercolor paper grain and chalky dry-crayon texture showing through the pigment — ideal for cozy bedtime stories and moonlit scenes.
+- **Vibrant Mode (`--vibrant 1`):** Boosts crayon pigment saturation (`1.42×`) and contrast, fills strokes more densely, and softens the paper overlay so blues, greens, reds, and yellows pop off the page — ideal for bright daytime adventures and upbeat comedies.
 
 ---
 
