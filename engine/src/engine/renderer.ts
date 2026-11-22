@@ -63,6 +63,10 @@ function defaultBoundsForNode(node: SceneNode): FillMaskBounds {
         ? { x: -135, y: -180, width: 270, height: 315 }
         : node.kind === 'dragon' || node.kind === 'knight' || node.kind === 'soldier'
         ? { x: -115, y: -155, width: 230, height: 195 }
+        : node.kind === 'moonlit_cat'
+        ? { x: -50, y: -88, width: 92, height: 98 }
+        : node.kind === 'bandana_dog'
+        ? { x: -50, y: -88, width: 100, height: 92 }
         : { x: -30, y: -100, width: 65, height: 110 };
     case 'prop':
       return (
@@ -109,6 +113,8 @@ function renderSingleNode(
       });
     }
     case 'character': {
+      const activeSpeechText = (state.speechText ?? node.speechText ?? '').trim();
+      const activeSpeechStyle = state.speechStyle ?? node.speechStyle ?? 'speech';
       return renderCharacter({
         kind: node.kind,
         state: state.state ?? node.state,
@@ -119,6 +125,7 @@ function renderSingleNode(
         wearingFloatie: state.wearingFloatie ?? node.wearingFloatie,
         floatieVariant: state.floatieVariant ?? node.floatieVariant,
         mounted: state.mounted ?? node.mounted,
+        isSpeaking: activeSpeechText.length > 0 && activeSpeechStyle !== 'thought',
         fillMask: fillMaskUrl,
       });
     }

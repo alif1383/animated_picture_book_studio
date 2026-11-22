@@ -27,7 +27,9 @@ export type CharacterKind =
   | 'knight'
   | 'soldier'
   | 'dragon'
-  | 'villager';
+  | 'villager'
+  | 'moonlit_cat'
+  | 'bandana_dog';
 
 export type CharacterState =
   | 'idle'
@@ -73,7 +75,16 @@ export type PropKind =
   | 'pizza_slice'
   | 'campfire'
   | 'spooky_tree'
-  | 'dragon_fire';
+  | 'dragon_fire'
+  | 'wind_chime_arbor'
+  | 'garden_fountain'
+  | 'dog_tennis_ball'
+  | 'dog_house'
+  | 'dog_bowl'
+  | 'bramble_thorn'
+  | 'dragon_cave'
+  | 'feast_table'
+  | 'celebration_banner';
 
 export type BubbleStyle = 'none' | 'speech' | 'thought';
 
@@ -267,7 +278,10 @@ export type AudioCueKind =
   | 'fire_crackle'
   | 'dragon_fire'
   | 'spear_clink'
-  | 'medieval_lute';
+  | 'medieval_lute'
+  | 'garden_wind_chime'
+  | 'playful_bark'
+  | 'dragon_hiccup';
 
 export interface AudioNoteCue {
   time: number;

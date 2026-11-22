@@ -24,6 +24,9 @@ import { CORNER_STORE_DAY_SCENE } from '../scenes/cornerStoreDay';
 import { MOONLIT_GARDEN_SCENE } from '../scenes/moonlitGarden';
 import { STRAWBERRY_BEACH_BIRTHDAY_SCENE } from '../scenes/strawberryBeachBirthday';
 import { KNIGHT_DRAGON_QUEST_SCENE } from '../scenes/knightDragonQuest';
+import { STARTER_MOONLIT_CAT_SCENE } from '../scenes/starterMoonlitCat';
+import { STARTER_BANDANA_DOG_SCENE } from '../scenes/starterBandanaDog';
+import { STARTER_KNIGHT_DRAGON_HICCUPS_SCENE } from '../scenes/starterKnightDragonHiccups';
 
 export type ShortSampleId = '1' | '2' | '3' | '4' | '5' | '6';
 
@@ -43,12 +46,19 @@ export const SCENE_REGISTRY: Record<string, SceneDefinition> = {
   'beach-birthday': STRAWBERRY_BEACH_BIRTHDAY_SCENE,
   [KNIGHT_DRAGON_QUEST_SCENE.id]: KNIGHT_DRAGON_QUEST_SCENE,
   'dragon-quest': KNIGHT_DRAGON_QUEST_SCENE,
+  [STARTER_MOONLIT_CAT_SCENE.id]: STARTER_MOONLIT_CAT_SCENE,
+  [STARTER_BANDANA_DOG_SCENE.id]: STARTER_BANDANA_DOG_SCENE,
+  [STARTER_KNIGHT_DRAGON_HICCUPS_SCENE.id]: STARTER_KNIGHT_DRAGON_HICCUPS_SCENE,
 };
 
 const LEGACY_SHORT_SAMPLE_SCENE_IDS = new Set<string>([
   SHORT_SAMPLE_1_SCENE.id,
   MOONLIGHT_STORY_SCENE.id,
   MEADOW_PARTY_SCENE.id,
+  CORNER_STORE_DAY_SCENE.id,
+  MOONLIT_GARDEN_SCENE.id,
+  STRAWBERRY_BEACH_BIRTHDAY_SCENE.id,
+  KNIGHT_DRAGON_QUEST_SCENE.id,
 ]);
 
 const SCENE_SWITCHER_ICONS: Record<string, string> = {
@@ -56,6 +66,9 @@ const SCENE_SWITCHER_ICONS: Record<string, string> = {
   [MOONLIT_GARDEN_SCENE.id]: '🌸',
   [STRAWBERRY_BEACH_BIRTHDAY_SCENE.id]: '🏖️',
   [KNIGHT_DRAGON_QUEST_SCENE.id]: '🐉',
+  [STARTER_MOONLIT_CAT_SCENE.id]: '🌙',
+  [STARTER_BANDANA_DOG_SCENE.id]: '🐕',
+  [STARTER_KNIGHT_DRAGON_HICCUPS_SCENE.id]: '🔥',
 };
 
 /**
@@ -780,6 +793,120 @@ export const ASSET_CATALOG_ITEMS: readonly AssetCatalogItem[] = [
     jumpToTimeSec: 34.0,
     renderInner: (frameIndex) =>
       renderProp({ kind: 'dragon_fire', frameIndex, lit: true }),
+  },
+  {
+    id: 'cat-moonlit-cat',
+    title: 'Mochi the Moonlit Cat',
+    category: 'Character',
+    caption: 'Curious slate-blue & lavender tabby storybook cat with golden crescent-moon collar charm & animated speaking mouth.',
+    viewBox: '-56 -96 112 108',
+    jumpToTimeSec: 9.0,
+    states: ['idle', 'walking', 'curious', 'looking_up', 'waving', 'singing', 'sleeping'],
+    defaultState: 'idle',
+    renderInner: (frameIndex, state = 'idle') =>
+      renderCharacter({ kind: 'moonlit_cat', state, frameIndex }),
+  },
+  {
+    id: 'cat-wind-chime-arbor',
+    title: 'Moonflower Wind-Chime Arbor',
+    category: 'Prop',
+    caption: 'Wooden garden trellis draped in emerald vines, glowing moonflowers & swaying brass wind chimes.',
+    viewBox: '-110 -235 220 248',
+    jumpToTimeSec: 13.0,
+    renderInner: (frameIndex) =>
+      renderProp({ kind: 'wind_chime_arbor', frameIndex, lit: true }),
+  },
+  {
+    id: 'cat-garden-fountain',
+    title: 'Moonlit Firefly Garden Fountain',
+    category: 'Prop',
+    caption: 'Carved mossy stone garden fountain with rippling moonlit water, golden crescent reflection & dancing fireflies.',
+    viewBox: '-95 -145 190 160',
+    jumpToTimeSec: 21.0,
+    renderInner: (frameIndex) =>
+      renderProp({ kind: 'garden_fountain', frameIndex, lit: true }),
+  },
+  {
+    id: 'cat-bandana-dog',
+    title: 'Biscuit the Red-Bandana Dog',
+    category: 'Character',
+    caption: 'Photo-modeled shaggy golden doodle puppy with crimson red bandana, white chest blaze, floppy caramel ears, wagging tail & 6 FPS animated speaking mouth.',
+    viewBox: '-56 -96 112 108',
+    jumpToTimeSec: 10.5,
+    states: ['idle', 'sitting', 'walking', 'waving', 'singing', 'curious', 'blinking', 'sleeping'],
+    defaultState: 'sitting',
+    renderInner: (frameIndex, state = 'sitting') =>
+      renderCharacter({ kind: 'bandana_dog', state, frameIndex }),
+  },
+  {
+    id: 'cat-dog-tennis-ball',
+    title: 'Fuzzy Crayon Tennis Ball',
+    category: 'Prop',
+    caption: 'Bouncy yellow-green fuzzy wax-crayon tennis ball with curved white seam & 6 FPS stepped spin.',
+    viewBox: '-20 -30 40 38',
+    jumpToTimeSec: 17.5,
+    renderInner: (frameIndex) =>
+      renderProp({ kind: 'dog_tennis_ball', frameIndex }),
+  },
+  {
+    id: 'cat-dog-house',
+    title: 'Cozy Backyard Doghouse',
+    category: 'Prop',
+    caption: 'Ochre plank doghouse with scalloped terracotta shingle roof, arched doorway & cream bone nameplate.',
+    viewBox: '-76 -124 152 136',
+    jumpToTimeSec: 4.5,
+    renderInner: (frameIndex) =>
+      renderProp({ kind: 'dog_house', frameIndex }),
+  },
+  {
+    id: 'cat-dog-bowl',
+    title: 'Sky-Blue Kibble Dog Bowl',
+    category: 'Prop',
+    caption: 'Crayon sky-blue pet dish with cream bone emblem & golden-brown kibble mound.',
+    viewBox: '-32 -28 64 36',
+    jumpToTimeSec: 4.5,
+    renderInner: (frameIndex) =>
+      renderProp({ kind: 'dog_bowl', frameIndex }),
+  },
+  {
+    id: 'cat-bramble-thorn',
+    title: 'Giant Bramble Thorn',
+    category: 'Prop',
+    caption: 'Oversized storybook wooden bramble thorn with curved barbs, sore tip & sparkle-pop stars.',
+    viewBox: '-44 -36 88 72',
+    jumpToTimeSec: 37.5,
+    renderInner: (frameIndex) =>
+      renderProp({ kind: 'bramble_thorn', frameIndex, lit: true }),
+  },
+  {
+    id: 'cat-dragon-cave',
+    title: "Dragon's Rocky Cave & Bramble Bush",
+    category: 'Prop',
+    caption: 'Layered crayon hillside cave arch with hiccup soot marks and a prickly bramble bush.',
+    viewBox: '-190 -270 380 292',
+    jumpToTimeSec: 28.0,
+    renderInner: (frameIndex) =>
+      renderProp({ kind: 'dragon_cave', frameIndex }),
+  },
+  {
+    id: 'cat-feast-table',
+    title: 'Royal Castle Feast Table',
+    category: 'Prop',
+    caption: 'Waist-height medieval banquet table draped in red cloth with pies, cake, apples, goblets & candles.',
+    viewBox: '-132 -88 264 100',
+    jumpToTimeSec: 44.0,
+    renderInner: (frameIndex) =>
+      renderProp({ kind: 'feast_table', frameIndex, lit: true }),
+  },
+  {
+    id: 'cat-celebration-banner',
+    title: 'Castle Celebration Banner Arch',
+    category: 'Prop',
+    caption: 'Festive wooden-pole pennant bunting arch with a hand-lettered "HUZZAH!" parchment ribbon.',
+    viewBox: '-260 -234 520 256',
+    jumpToTimeSec: 44.0,
+    renderInner: (frameIndex) =>
+      renderProp({ kind: 'celebration_banner', frameIndex, variant: 1 }),
   },
 ];
 

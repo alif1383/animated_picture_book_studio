@@ -22,6 +22,15 @@ import { renderPizzaSlice } from './pizzaSlice';
 import { renderCampfire } from './campfire';
 import { renderSpookyTree } from './spookyTree';
 import { renderDragonFire } from './dragonFire';
+import { renderWindChimeArbor } from './windChimeArbor';
+import { renderGardenFountain } from './gardenFountain';
+import { renderDogTennisBall } from './dogTennisBall';
+import { renderDogHouse } from './dogHouse';
+import { renderDogBowl } from './dogBowl';
+import { renderBrambleThorn } from './brambleThorn';
+import { renderDragonCave } from './dragonCave';
+import { renderFeastTable } from './feastTable';
+import { renderCelebrationBanner } from './celebrationBanner';
 
 export type { PropRenderOptions } from './types';
 export { renderStarShape } from './shared';
@@ -48,6 +57,15 @@ export { renderPizzaSlice, renderHandheldPizzaSlice } from './pizzaSlice';
 export { renderCampfire } from './campfire';
 export { renderSpookyTree } from './spookyTree';
 export { renderDragonFire } from './dragonFire';
+export { renderWindChimeArbor } from './windChimeArbor';
+export { renderGardenFountain } from './gardenFountain';
+export { renderDogTennisBall } from './dogTennisBall';
+export { renderDogHouse } from './dogHouse';
+export { renderDogBowl } from './dogBowl';
+export { renderBrambleThorn } from './brambleThorn';
+export { renderDragonCave } from './dragonCave';
+export { renderFeastTable } from './feastTable';
+export { renderCelebrationBanner } from './celebrationBanner';
 
 /**
  * Renders any reusable prop (`'grass_patch' | 'tree' | 'music_notes' | 'star_cluster' |
@@ -124,6 +142,33 @@ export function renderProp(options: PropRenderOptions): string {
       break;
     case 'dragon_fire':
       inner = renderDragonFire(options);
+      break;
+    case 'wind_chime_arbor':
+      inner = renderWindChimeArbor(options);
+      break;
+    case 'garden_fountain':
+      inner = renderGardenFountain(options);
+      break;
+    case 'dog_tennis_ball':
+      inner = renderDogTennisBall(options);
+      break;
+    case 'dog_house':
+      inner = renderDogHouse(options);
+      break;
+    case 'dog_bowl':
+      inner = renderDogBowl(options);
+      break;
+    case 'bramble_thorn':
+      inner = renderBrambleThorn(options);
+      break;
+    case 'dragon_cave':
+      inner = renderDragonCave(options);
+      break;
+    case 'feast_table':
+      inner = renderFeastTable(options);
+      break;
+    case 'celebration_banner':
+      inner = renderCelebrationBanner(options);
       break;
   }
 

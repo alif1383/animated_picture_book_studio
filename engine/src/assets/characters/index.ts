@@ -23,6 +23,8 @@ import { renderKnight } from './knight';
 import { renderSoldier } from './soldier';
 import { renderDragon } from './dragon';
 import { renderVillager } from './villager';
+import { renderMoonlitCat } from './moonlitCat';
+import { renderBandanaDog } from './bandanaDog';
 
 export type { CharacterRenderOptions } from './types';
 export { renderCutoutStickerHalo, renderSheepPlushie } from './shared';
@@ -45,6 +47,8 @@ export { renderKnight } from './knight';
 export { renderSoldier } from './soldier';
 export { renderDragon } from './dragon';
 export { renderVillager } from './villager';
+export { renderMoonlitCat } from './moonlitCat';
+export { renderBandanaDog } from './bandanaDog';
 
 interface CharacterFloatieFit {
   cx: number;
@@ -228,6 +232,24 @@ const CHARACTER_FLOATIE_FITS: Record<CharacterKind, CharacterFloatieFit> = {
     skirtBottomY: 6,
     defaultVariant: 1,
   },
+  moonlit_cat: {
+    cx: -1,
+    waistY: -18,
+    rx: 34,
+    ry: 8,
+    tubeR: 6.5,
+    skirtBottomY: 10,
+    defaultVariant: 2,
+  },
+  bandana_dog: {
+    cx: 0,
+    waistY: -24,
+    rx: 42,
+    ry: 10,
+    tubeR: 7.5,
+    skirtBottomY: 10,
+    defaultVariant: 2,
+  },
 };
 
 /**
@@ -257,6 +279,8 @@ export const CHARACTER_SPEECH_ANCHORS: Record<
   soldier: { x: 0, y: -118 },
   dragon: { x: 10, y: -142 },
   villager: { x: 0, y: -104 },
+  moonlit_cat: { x: 4, y: -92 },
+  bandana_dog: { x: 10, y: -90 },
 };
 
 /**
@@ -282,6 +306,9 @@ export function getCharacterSpeechAnchor(
       return { x: 0, y: -82 };
     }
     return { x: 0, y: -92 };
+  }
+  if (kind === 'bandana_dog' && state === 'sleeping') {
+    return { x: 18, y: -44 };
   }
   return CHARACTER_SPEECH_ANCHORS[kind];
 }
@@ -367,6 +394,12 @@ export function renderCharacter(options: CharacterRenderOptions): string {
       break;
     case 'villager':
       inner = renderVillager(options);
+      break;
+    case 'moonlit_cat':
+      inner = renderMoonlitCat(options);
+      break;
+    case 'bandana_dog':
+      inner = renderBandanaDog(options);
       break;
   }
 

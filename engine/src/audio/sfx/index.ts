@@ -16,6 +16,9 @@ import { FIRE_CRACKLE_SFX } from './fireCrackle';
 import { DRAGON_FIRE_SFX } from './dragonFire';
 import { SPEAR_CLINK_SFX } from './spearClink';
 import { MEDIEVAL_LUTE_SFX } from './medievalLute';
+import { GARDEN_WIND_CHIME_SFX } from './gardenWindChime';
+import { PLAYFUL_BARK_SFX } from './playfulBark';
+import { DRAGON_HICCUP_SFX } from './dragonHiccup';
 
 export * from './types';
 export * from './shared';
@@ -38,6 +41,9 @@ export const PROCEDURAL_SFX_MODULES: readonly ProceduralSfxModule[] = [
   DRAGON_FIRE_SFX,
   SPEAR_CLINK_SFX,
   MEDIEVAL_LUTE_SFX,
+  GARDEN_WIND_CHIME_SFX,
+  PLAYFUL_BARK_SFX,
+  DRAGON_HICCUP_SFX,
 ] as const;
 
 export const PROCEDURAL_SFX_REGISTRY: Record<AudioCueKind, ProceduralSfxModule> = {
@@ -57,6 +63,9 @@ export const PROCEDURAL_SFX_REGISTRY: Record<AudioCueKind, ProceduralSfxModule> 
   dragon_fire: DRAGON_FIRE_SFX,
   spear_clink: SPEAR_CLINK_SFX,
   medieval_lute: MEDIEVAL_LUTE_SFX,
+  garden_wind_chime: GARDEN_WIND_CHIME_SFX,
+  playful_bark: PLAYFUL_BARK_SFX,
+  dragon_hiccup: DRAGON_HICCUP_SFX,
 };
 
 export const AUDIO_CLIP_CATALOG: readonly AudioClipCatalogEntry[] = [
@@ -124,5 +133,70 @@ export const AUDIO_CLIP_CATALOG: readonly AudioClipCatalogEntry[] = [
       'Rhythmic coconut-shell and dirt-path clip-clop hoof strikes for lead steed and accompanying cavalry with subtle metallic bridle jingles.',
     themes: ['medieval', 'horse', 'knight', 'travel', 'march', 'countryside', 'village'],
     generatorModule: 'scripts/sfx/horseTrot.mjs',
+  },
+  {
+    id: 'moonlit-cat-lullaby-bgm',
+    filename: 'moonlit-cat-lullaby-bgm.wav',
+    src: '/audio/moonlit-cat-lullaby-bgm.wav',
+    title: 'Moonlit Garden Lullaby Waltz',
+    category: 'bgm',
+    durationSec: 30.0,
+    defaultVolume: 0.28,
+    description:
+      '5-section F-major / D-minor 3/4 storybook lullaby score featuring warm music-box celesta, soft concert harp arpeggios, gentle cello pad bass, sparkling wind-chime bells, and whisper-quiet night crickets.',
+    themes: ['bedtime', 'lullaby', 'cat', 'garden', 'moonlit', 'night', 'magic', 'dreamy'],
+    generatorModule: 'scripts/sfx/moonlitCatLullabyBgm.mjs',
+  },
+  {
+    id: 'bandana-dog-bgm',
+    filename: 'bandana-dog-bgm.wav',
+    src: '/audio/bandana-dog-bgm.wav',
+    title: 'Sunny Backyard & Park Fetch Score',
+    category: 'bgm',
+    durationSec: 38.0,
+    defaultVolume: 0.26,
+    description:
+      'Dynamic 3-section picture-book soundtrack: Morning Backyard 104 BPM ukulele/marimba (0-15.8s), Park Fetch Chase 138 BPM energetic percussion & whistling melody (15.8-27.0s), and Golden Afternoon 92 BPM cozy harp lullaby fading cleanly by 37.8s.',
+    themes: ['dog', 'pet', 'backyard', 'park', 'sunny', 'playful', 'fetch', 'cozy_village', 'summer'],
+    generatorModule: 'scripts/sfx/bandanaDogBgm.mjs',
+  },
+  {
+    id: 'bandana-dog-playful-bark',
+    filename: 'bandana-dog-playful-bark.wav',
+    src: '/audio/bandana-dog-playful-bark.wav',
+    title: 'Playful Puppy Bark & Ball Bounce',
+    category: 'sfx',
+    durationSec: 1.4,
+    defaultVolume: 0.85,
+    description:
+      'Joyful 3-stage picture-book puppy SFX: twin dual-formant excited puppy yips ("Arf! Woof-Arf!"), double elastic rubber tennis-ball boing-bounces, and an ascending C-major marimba/glockenspiel sparkle.',
+    themes: ['dog', 'pet', 'playful', 'fetch', 'backyard', 'park', 'comedy', 'happy'],
+    generatorModule: 'scripts/sfx/bandanaDogPlayfulBark.mjs',
+  },
+  {
+    id: 'knight-hiccups-bgm',
+    filename: 'knight-hiccups-bgm.wav',
+    src: '/audio/knight-hiccups-bgm.wav',
+    title: 'Knight & Dragon Hiccups — Dynamic 4-Act Medieval Comedy Score',
+    category: 'bgm',
+    durationSec: 54.0,
+    defaultVolume: 0.52,
+    description:
+      'Dynamic 4-section silent-storytelling medieval comedy score: D-major harp opening, royal horn fanfare & 124 BPM march (0–15s); 92 BPM D-Dorian pizzicato village mystery (15–25s); 112 BPM quirky staccato bassoon/pizzicato comedy walk with timed hiccup rests, tension roll, dramatic silence breath at 37.3s & D-major relief flourish (25–41s); 136 BPM tambourine festival jig softening into a warm storybook cadence (41–54s).',
+    themes: ['medieval', 'comedy', 'knight', 'dragon', 'castle', 'village', 'mystery', 'celebration', 'storybook'],
+    generatorModule: 'scripts/sfx/knightHiccupsBgm.mjs',
+  },
+  {
+    id: 'knight-hiccups-thorn-pop',
+    filename: 'knight-hiccups-thorn-pop.wav',
+    src: '/audio/knight-hiccups-thorn-pop.wav',
+    title: 'Vine-Thorn Tug, Comic Cork POP & D-Major Relief Glissando',
+    category: 'sfx',
+    durationSec: 1.5,
+    defaultVolume: 0.92,
+    description:
+      '3-stage comic thorn extraction SFX: taut woody-vine tug & accelerating wood-friction creak (0.00–0.44s), resonant hollow cork/tooth upward pitch-snap POP (190 -> 920 Hz, 0.45–0.62s), and sparkling D-major relief harp/chime glissando (0.64–1.48s).',
+    themes: ['medieval', 'knight', 'dragon', 'comedy_pop', 'thorn_pull', 'relief', 'storybook'],
+    generatorModule: 'scripts/sfx/knightHiccupsThornPop.mjs',
   },
 ] as const;

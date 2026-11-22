@@ -10,6 +10,7 @@ export interface CharacterRenderOptions {
   wearingFloatie?: boolean;
   floatieVariant?: number;
   mounted?: boolean;
+  isSpeaking?: boolean;
   speechText?: string;
   speechStyle?: 'speech' | 'thought';
   speechTail?: 'bottom-center' | 'bottom-left' | 'bottom-right';

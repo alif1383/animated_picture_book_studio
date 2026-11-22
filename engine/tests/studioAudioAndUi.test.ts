@@ -315,21 +315,26 @@ describe('PictureBookSoundEngine live audioClips playback', () => {
 });
 
 describe('Studio Scene Switcher & SFX Audition removal', () => {
-  it('getSwitcherScenes returns only full scenes (no legacy short_sample demos) and includes new registry scenes', () => {
+  it('getSwitcherScenes returns only the 3 built-in starter scenes (hiding older legacy scenes) and includes new registry scenes', () => {
     const switcherScenes = getSwitcherScenes();
     const ids = switcherScenes.map((s) => s.id);
 
-    expect(ids).toContain('corner-store-day');
-    expect(ids).toContain('moonlit-garden');
-    expect(ids).toContain('strawberry-beach-birthday');
-    expect(ids).toContain('knight-dragon-quest');
+    expect(ids).toEqual([
+      'starter-moonlit-cat',
+      'starter-bandana-dog',
+      'starter-knight-dragon-hiccups',
+    ]);
 
     expect(ids).not.toContain('short_sample_1');
     expect(ids).not.toContain('moonlight-lullaby-story');
     expect(ids).not.toContain('meadow_party_3');
+    expect(ids).not.toContain('corner-store-day');
+    expect(ids).not.toContain('moonlit-garden');
+    expect(ids).not.toContain('strawberry-beach-birthday');
+    expect(ids).not.toContain('knight-dragon-quest');
 
     // All scenes (including legacy) remain accessible via getUniqueRegisteredScenes & SCENE_REGISTRY
-    expect(getUniqueRegisteredScenes().length).toBeGreaterThanOrEqual(7);
+    expect(getUniqueRegisteredScenes().length).toBeGreaterThanOrEqual(10);
     expect(SCENE_REGISTRY['1']).toBeDefined();
   });
 
@@ -411,11 +416,13 @@ describe('Studio Scene Switcher & SFX Audition removal', () => {
         KNIGHT_DRAGON_QUEST_SCENE
       );
 
-      // 1. Clean Scene Switcher: contains ?scene= links for full scenes, zero short_sample or footage sub-parts
-      expect(renderedHtml).toContain('?scene=knight-dragon-quest');
-      expect(renderedHtml).toContain('?scene=corner-store-day');
-      expect(renderedHtml).toContain('?scene=moonlit-garden');
-      expect(renderedHtml).toContain('?scene=strawberry-beach-birthday');
+      // 1. Clean Scene Switcher: contains ?scene= links for the 3 starter scenes, zero legacy/short_sample or footage sub-parts
+      expect(renderedHtml).toContain('?scene=starter-moonlit-cat');
+      expect(renderedHtml).toContain('?scene=starter-bandana-dog');
+      expect(renderedHtml).toContain('?scene=starter-knight-dragon-hiccups');
+      expect(renderedHtml).not.toContain('?scene=corner-store-day');
+      expect(renderedHtml).not.toContain('?scene=moonlit-garden');
+      expect(renderedHtml).not.toContain('?scene=strawberry-beach-birthday');
       expect(renderedHtml).not.toContain('short_sample=');
       expect(renderedHtml).not.toContain('&footage=');
       expect(renderedHtml).not.toContain('URL Footage Parameters');
