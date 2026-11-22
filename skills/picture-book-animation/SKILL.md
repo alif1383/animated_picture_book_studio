@@ -412,6 +412,8 @@ camera: [
 
 > [!IMPORTANT]
 > **Always use `speechText` and `speechStyle` directly on the speaking character (`CharacterNode` or `NodeKeyframe`)** for character dialogue and thoughts! Every character has a predefined head-top anchor (`CHARACTER_SPEECH_ANCHORS` in `src/assets/characters/index.ts`), so the engine automatically renders the bubble with its tail tip or thought puffs pointing directly above that character's head, tracks the character as they walk, never flips text backwards when `flipX: true`, and renders above all buildings/props.
+>
+> **Keep Text Bubbles Concise (`~20–30` characters soft guideline):** Aim to keep each individual speech or thought bubble around `20–30` characters (soft guideline, not a hard cutoff) so bubbles stay compact, legible, and don't stretch too wide or clip near canvas edges. For longer dialogue or thoughts, split them cleanly across consecutive timed keyframes.
 
 ```typescript
 // Recommended: Character-attached speech & thought bubbles on a character timeline track:

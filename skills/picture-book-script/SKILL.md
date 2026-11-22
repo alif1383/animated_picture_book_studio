@@ -59,6 +59,7 @@ For **every** speaking role, define:
 - **Sequential Turns by Default**: Write dialogue as clean sequential turns (`0.25–0.6s` gap between speakers). Never have characters talk over each other unless purposefully marked **`[INTENTIONAL OVERLAP]`** (e.g., simultaneous cheering or comedic interruption).
 - **Finish Every Line Before Scene Cuts**: Budget enough act time for every line to finish cleanly (`+0.4–0.8s` beat before cutting). Only cut someone off at a scene change if explicitly marked **`[INTENTIONAL CUT-OFF]`**.
 - **On-Screen Speaker Mouth Animation**: Clearly tag which on-screen character speaks each line (vs. off-screen `Narrator`) so downstream animators sync stepped `6 FPS` mouth movement and optional `speechText` bubbles to that character's exact clip window.
+- **Concise Speech/Thought Bubbles (`~20–30` chars soft guideline)**: Whenever scripting `speechText` bubbles (especially for stories using text bubbles instead of voiceover narration), aim to keep each bubble around `20–30` characters (soft guideline, not a hard rule) so bubbles stay compact and legible; split longer beats into sequential short bubbles rather than stuffing a long sentence into one bubble.
 
 ---
 
