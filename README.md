@@ -61,7 +61,7 @@ It works out-of-the-box on **any machine with only Antigravity installed** (`agy
 - **Create animated videos** — Design scenes with characters, props, buildings, camera movements, and hand-drawn annotations in a warm crayon/oil-pastel aesthetic, complete with an automatic **Storybook Cover Opening & Ending/Credits Book-Frame (`bookFrame`)** where a hardcover picture book opens to a 0% color charcoal sketch, progressively colors in from 0% to 100% as the camera zooms into the story, and un-colors back to a sketch at the end before closing the cover with `"The End ★"` and credits.
 - **Model assets after photos** — Turn user-provided photos into hand-crafted 2D cutout SVG characters, props, or buildings that match the storybook style.
 - **Add and generate audio** — Sync built-in procedural sound effects, attach user-provided audio files, or generate narration and custom WAV sound effects at precise timestamps.
-- **Preview live** — Spin up the bundled studio dev server (`agy-node scripts/studio-cli.mjs dev`) and inspect your video interactively in the browser with playback controls, layer toggles, and SFX audition.
+- **Preview live** — Spin up the bundled studio dev server (`agy-node scripts/studio-cli.mjs dev`) and inspect your video interactively in the browser with scene switching, playback controls, live audio/voiceover playback, and layer toggles.
 - **Export MP4 directly via CLI** — Run `agy-node scripts/studio-cli.mjs export --scene <id> --resolution 1080p` to export the `.mp4` in headless mode without needing to open a visible browser tab or click buttons, then launch the dev server so you can inspect the live site as well.
 
 ### Visual Modes: Classic vs. Vibrant Crayon Mode

@@ -85,27 +85,22 @@ The **Picture-Book Crayon Video Engine** is a declarative 2D stop-motion storybo
     - 16 standalone procedural SFX modules: `lullaby.ts`, `chime.ts`, `crayonScribble.ts`, `birthdaySong.ts`, `partyHorn.ts`, `confettiPop.ts`, `candleBlow.ts`, `cheerApplause.ts`, `giggle.ts`, `oceanWave.ts`, `waterSplash.ts`, `floatieSqueak.ts`, `fireCrackle.ts`, `dragonFire.ts`, `spearClink.ts`, `medievalLute.ts`.
     - `src/audio/sfx/index.ts` — Exports `PROCEDURAL_SFX_MODULES`, `PROCEDURAL_SFX_REGISTRY: Record<AudioCueKind, ProceduralSfxModule>`, `AUDIO_CLIP_CATALOG: readonly AudioClipCatalogEntry[]`, `VOICE_CATALOG`, and `CHARACTER_VOICE_PRESET_CATALOG`.
   - `src/audio/soundEngine.ts` — `PictureBookSoundEngine` delegating each `AudioCueKind` to `PROCEDURAL_SFX_REGISTRY[kind].synthesize(...)` synced to the stepped 6 FPS clock, plus:
-    - `renderOfflineAudio(cues, startSec, durSec, sampleRate, audioClips?)` — offline stereo `AudioBuffer` rendering for WebCodecs MP4 exports; mixes in `AudioClipCue[]` external audio files (fetches, decodes via `decodeAudioData`, schedules on `OfflineAudioContext`)
-    - `triggerClipsForFrame(clips, prevTime, curTime)` — live playback trigger for external audio clips synced to stepped 6 FPS clock
-    - `fetchAndDecodeClip(src)` / `preloadClips(clips)` — fetch + cache `AudioBuffer` for each `AudioClipCue.src`
-    - `stopAllClips()` — stops all currently playing clip sources (call on seek/scene change)
-    - `createRecordingStream()` / `stopRecordingStream()` for `MediaRecorder` fallback
-- `src/ui/` — Interactive Storybook Video Player Studio, URL Router, 16:9 Video Downloader & Asset Catalog:
-  - `src/ui/app.ts` — `mountStorybookStudio()`, `SCENE_REGISTRY` (keyed by both short ID `'1'..'5'` and `scene.id` / aliases including `'strawberry-beach-birthday'` and `'beach-birthday'`), `parseStudioUrlParams()`, `ASSET_CATALOG_ITEMS` (30 items), and `renderAssetPreviewSvg()` providing URL query parameter routing:
-    - `?short_sample=1|2|3|4|5|birthday|beach-birthday` — select built-in scene (legacy + beach alias)
-    - `?scene=<id|key>` — select any scene from SCENE_REGISTRY by key or scene.id (new)
-    - `?footage=<act-id|alias>` — loop a single act
-    - `?vibrant=1|0` — Vibrant Crayon Mode
-    - `?book_frame=1|0` — Storybook Cover Opening & Ending/Credits Book-Frame (`true` by default in Studio player and video export)
-    - `?t=<seconds>` — seek to time
-    - `?autoplay=1|0` — autoplay
-    - `?auto_export=1` — automatically trigger video export on mount (new)
-    - `?resolution=1080p|720p` — video export resolution for auto_export (new)
+    - `renderOfflineAudio(cues, startSec, durSec, sampleRate, audioClips?)` — offline stereo `AudioBuffer` rendering for WebCodecs MP4 exports; mixes in `AudioClipCue[]` external audio files (reusing `fetchAndDecodeClip` + shared window math on `OfflineAudioContext`)
+    - `triggerClipsForFrame(clips, prevTime, curTime, getLiveTimeSec?)` & `syncClipsAtTime(clips, timeSec, getLiveTimeSec?)` — live browser playback for BGM, voiceovers, and WAV SFX synced to the stepped 6 FPS clock with mid-clip lead-in on play/resume/seek/loop wrap, export-parity clip volume, and stale-decode epoch guards
+    - `fetchAndDecodeClip(src)` / `preloadClips(clips)` — deduplicated fetch + decode + `AudioBuffer` cache for each unique `AudioClipCue.src`
+    - `resumeContext()` / `isContextSuspended()` — browser WebAudio autoplay unlock helpers so suspended contexts resume and sync active clips cleanly on user gesture
+    - `stopAllClips()` — stops all currently playing clip sources and invalidates pending async clip loads (called on pause/seek/loop wrap/scene change)
+    - `liveOutputGain` master speaker gain for instant mute/unmute of playing clips without muting `createRecordingStream()` / `stopRecordingStream()` (`MediaRecorder` fallback)
+- `src/ui/` — Interactive Storybook Video Player Studio, Scene Switcher, URL Router, 16:9 Video Downloader & Asset Catalog:
+  - `src/ui/app.ts` — `mountStorybookStudio()`, `SCENE_REGISTRY` (keyed by both legacy short ID `'1'..'6'` and `scene.id` / aliases including `'moonlit-garden'`, `'strawberry-beach-birthday'`, `'beach-birthday'`, `'knight-dragon-quest'`, `'dragon-quest'`), `getUniqueRegisteredScenes()`, `getSwitcherScenes()`, `parseStudioUrlParams()`, `ASSET_CATALOG_ITEMS` (39 items), and `renderAssetPreviewSvg()` providing:
+    - Clean Scene Switcher bar (`#url-switcher-row`) listing only full scenes via `?scene=<id>` (excluding legacy `?short_sample=1..3` demos and per-act `&footage=` sub-parts, while automatically showing any new scene added to `SCENE_REGISTRY`)
+    - Live `audioClips` preloading, frame-synced triggering, mid-clip seek/resume syncing, and automatic user-gesture WebAudio unlock so BGM and voiceovers play identically to exported MP4s
+    - URL query parameter routing (`?scene=<id|key>`, legacy `?short_sample=1..6|birthday|beach-birthday|dragon-quest`, `?footage=<act-id|alias>`, `?vibrant=1|0`, `?book_frame=1|0`, `?t=<seconds>`, `?autoplay=1|0`, `?auto_export=1`, `?resolution=1080p|720p`)
     - 16:9 Fullscreen stage toggle (`#btn-fullscreen`)
     - 1080p/720p 16:9 Video Downloader (`#btn-download-video`) with save-export to `exports/` dir
     - `document.body.dataset.exportState` = `'exporting'|'done'|'error'` for CDP automation polling
     - `document.body.dataset.exportFilename` and `document.body.dataset.exportSavedPath` on completion
-    - Vibrant Mode toggle, Book Cover & Credits toggle (`#chk-book-frame`), Birthday SFX Audition bar, 3-Layer Stack toggles, live Stop-Motion Coloring Scrubber, and interactive Asset Catalog grid
+    - Vibrant Mode toggle, Book Cover & Credits toggle (`#chk-book-frame`), 3-Layer Stack toggles, live Stop-Motion Coloring Scrubber, Live Node Telemetry, and interactive Asset Catalog grid
   - `src/main.ts` — Browser entrypoint parsing `window.location.search` via `parseStudioUrlParams` and mounting the studio into `#app`.
 - `public/audio/` — Static audio assets served at `/audio/<filename>` by the dev server and included in production build. Place narration WAV/MP3s, background music, and SFX files here. See `public/audio/README.md`.
 - `exports/` — Output directory where the dev-server `/__studio/save-export` middleware saves exported MP4 files for agent access. Created automatically by the middleware.

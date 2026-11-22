@@ -6,7 +6,6 @@ import {
   RenderSceneOptions,
 } from '../engine/renderer';
 import type {
-  AudioCueKind,
   CharacterState,
   SceneDefinition,
 } from '../engine/schema';
@@ -40,12 +39,47 @@ export const SCENE_REGISTRY: Record<string, SceneDefinition> = {
   [MEADOW_PARTY_SCENE.id]: MEADOW_PARTY_SCENE,
   [CORNER_STORE_DAY_SCENE.id]: CORNER_STORE_DAY_SCENE,
   [MOONLIT_GARDEN_SCENE.id]: MOONLIT_GARDEN_SCENE,
-  'moonlit-garden': MOONLIT_GARDEN_SCENE,
   [STRAWBERRY_BEACH_BIRTHDAY_SCENE.id]: STRAWBERRY_BEACH_BIRTHDAY_SCENE,
   'beach-birthday': STRAWBERRY_BEACH_BIRTHDAY_SCENE,
   [KNIGHT_DRAGON_QUEST_SCENE.id]: KNIGHT_DRAGON_QUEST_SCENE,
   'dragon-quest': KNIGHT_DRAGON_QUEST_SCENE,
 };
+
+const LEGACY_SHORT_SAMPLE_SCENE_IDS = new Set<string>([
+  SHORT_SAMPLE_1_SCENE.id,
+  MOONLIGHT_STORY_SCENE.id,
+  MEADOW_PARTY_SCENE.id,
+]);
+
+const SCENE_SWITCHER_ICONS: Record<string, string> = {
+  [CORNER_STORE_DAY_SCENE.id]: '🍕',
+  [MOONLIT_GARDEN_SCENE.id]: '🌸',
+  [STRAWBERRY_BEACH_BIRTHDAY_SCENE.id]: '🏖️',
+  [KNIGHT_DRAGON_QUEST_SCENE.id]: '🐉',
+};
+
+/**
+ * Returns all unique scenes registered in `SCENE_REGISTRY`, preserving registration order.
+ */
+export function getUniqueRegisteredScenes(): SceneDefinition[] {
+  return Array.from(new Set(Object.values(SCENE_REGISTRY)));
+}
+
+/**
+ * Returns the full storybook scenes displayed in the Studio Scene Switcher bar
+ * (excluding legacy `?short_sample=1..3` prototype demos while automatically
+ * including any custom scenes added to `SCENE_REGISTRY`).
+ */
+export function getSwitcherScenes(): SceneDefinition[] {
+  return getUniqueRegisteredScenes().filter(
+    (scene) => !LEGACY_SHORT_SAMPLE_SCENE_IDS.has(scene.id)
+  );
+}
+
+function formatSceneSwitcherLabel(scene: SceneDefinition): string {
+  const icon = SCENE_SWITCHER_ICONS[scene.id] ?? '🎬';
+  return `${icon} ${scene.title}`;
+}
 
 export interface ParsedStudioParams {
   shortSample: ShortSampleId;
@@ -113,10 +147,9 @@ export function parseStudioUrlParams(
     if (byKey) {
       resolvedScene = byKey;
     } else {
-      // Also search by scene.id across all registry values
-      const all = Object.values(SCENE_REGISTRY);
-      const unique = all.filter((s, i) => all.findIndex((x) => x.id === s.id) === i);
-      resolvedScene = unique.find((s) => s.id === rawScene) ?? null;
+      // Also search by scene.id across all unique registry scenes
+      resolvedScene =
+        getUniqueRegisteredScenes().find((s) => s.id === rawScene) ?? null;
     }
   }
 
@@ -242,9 +275,13 @@ export function parseStudioUrlParams(
 
   const baseQuery = rawScene
     ? `?scene=${encodeURIComponent(rawScene)}`
+    : rawSample
+    ? footageId
+      ? `?short_sample=${shortSample}&footage=${footageId}`
+      : `?short_sample=${shortSample}`
     : footageId
-    ? `?short_sample=${shortSample}&footage=${footageId}`
-    : `?short_sample=${shortSample}`;
+    ? `?scene=${encodeURIComponent(scene.id)}&footage=${footageId}`
+    : `?scene=${encodeURIComponent(scene.id)}`;
   const canonicalQuery =
     rawVibrant !== null && !scene.vibrantMode
       ? `${baseQuery}&vibrant=${vibrant ? '1' : '0'}`
@@ -846,25 +883,16 @@ export function mountStorybookStudio(
         </div>
       </header>
 
-      <!-- Shareable URL Parameter & Footage Switcher Bar -->
-      <nav class="panel-card" style="margin-bottom: 16px; padding: 10px 14px;" aria-label="Shareable URL Parameter Switcher">
+      <!-- Scene Switcher Bar -->
+      <nav class="panel-card" style="margin-bottom: 16px; padding: 10px 14px;" aria-label="Scene Switcher">
         <div class="preset-row" id="url-switcher-row">
-          <span class="preset-label">🔗 URL Footage Parameters:</span>
-          <a href="?short_sample=1" class="btn btn-sm" data-url-query="?short_sample=1">🎬 ?short_sample=1 (Full 30s Sun→Moon Story)</a>
-          <a href="?short_sample=1&footage=morning" class="btn btn-sm" data-url-query="?short_sample=1&footage=morning">☀️ ?short_sample=1&footage=morning</a>
-          <a href="?short_sample=1&footage=sunset" class="btn btn-sm" data-url-query="?short_sample=1&footage=sunset">🌅 ?short_sample=1&footage=sunset</a>
-          <a href="?short_sample=1&footage=nightfall" class="btn btn-sm" data-url-query="?short_sample=1&footage=nightfall">🌆 ?short_sample=1&footage=nightfall</a>
-          <a href="?short_sample=1&footage=lullaby" class="btn btn-sm" data-url-query="?short_sample=1&footage=lullaby">🎵 ?short_sample=1&footage=lullaby</a>
-          <a href="?short_sample=1&footage=goodnight" class="btn btn-sm" data-url-query="?short_sample=1&footage=goodnight">🌙 ?short_sample=1&footage=goodnight</a>
-          <a href="?short_sample=1&vibrant=1" class="btn btn-sm" data-url-query="?short_sample=1&vibrant=1">🌈 ?short_sample=1&vibrant=1</a>
-          <a href="?short_sample=2" class="btn btn-sm" data-url-query="?short_sample=2">🏪 ?short_sample=2 (Corner Store Scene)</a>
-          <a href="?short_sample=3" class="btn btn-sm" data-url-query="?short_sample=3">🎂 ?short_sample=3 (Strawberry's Birthday Party)</a>
-          <a href="?short_sample=3&footage=song" class="btn btn-sm" data-url-query="?short_sample=3&footage=song">🎵 ?short_sample=3&footage=song</a>
-          <a href="?short_sample=3&footage=cake" class="btn btn-sm" data-url-query="?short_sample=3&footage=cake">🕯️ ?short_sample=3&footage=cake</a>
-          <a href="?short_sample=3&footage=celebration" class="btn btn-sm" data-url-query="?short_sample=3&footage=celebration">🎊 ?short_sample=3&footage=celebration</a>
-          <a href="?scene=corner-store-day" class="btn btn-sm" data-url-query="?scene=corner-store-day">🏪 ?scene=corner-store-day (Corner Store Day)</a>
-          <a href="?scene=strawberry-beach-birthday" class="btn btn-sm" data-url-query="?scene=strawberry-beach-birthday">🏖️ ?scene=strawberry-beach-birthday</a>
-          <a href="?scene=knight-dragon-quest" class="btn btn-sm" data-url-query="?scene=knight-dragon-quest">🐉 ?scene=knight-dragon-quest (Sir Leo &amp; Dragon Quest)</a>
+          <span class="preset-label">🎬 Scenes:</span>
+          ${getSwitcherScenes()
+            .map((scene) => {
+              const query = `?scene=${encodeURIComponent(scene.id)}`;
+              return `<a href="${query}" class="btn btn-sm" data-url-query="${query}" data-scene-id="${scene.id}" title="${query}">${formatSceneSwitcherLabel(scene)}</a>`;
+            })
+            .join('\n          ')}
         </div>
       </nav>
 
@@ -937,13 +965,13 @@ export function mountStorybookStudio(
               </label>
             </div>
             <div class="control-row" style="margin-top: 6px; padding-top: 6px; border-top: 1.5px dashed var(--paper-deep);">
-              <label style="font-weight: 700; color: var(--terracotta);">
+              <label style="font-weight: 700; color: var(--terracotta-roof);">
                 <input type="checkbox" id="chk-vibrant-mode" ${renderOptions.vibrant ? 'checked' : ''} />
                 🌈 Vibrant Crayon Mode (#vibrant-grade)
               </label>
             </div>
             <div class="control-row">
-              <label style="font-weight: 700; color: var(--charcoal);">
+              <label style="font-weight: 700; color: var(--charcoal-outline);">
                 <input type="checkbox" id="chk-book-frame" ${renderOptions.enableBookFrame !== false ? 'checked' : ''} />
                 📖 Book Cover & Credits (Opening/Ending)
               </label>
@@ -980,21 +1008,6 @@ export function mountStorybookStudio(
               <p class="asset-desc" style="margin-top: 6px;">
                 Drag in 10% stop-motion increments to watch the sunset, indigo night sky, and roofs color in stroke-by-stroke!
               </p>
-            </div>
-          </div>
-
-          <div class="inspector-section">
-            <h2>🔊 Birthday & Storybook SFX Audition</h2>
-            <div class="preset-row" id="sfx-audition-row" style="gap: 6px; flex-wrap: wrap;">
-              <button class="btn btn-sm" data-sfx-kind="party_horn" data-sfx-freq="440" data-sfx-dur="0.45" type="button">🎉 Party Horn</button>
-              <button class="btn btn-sm" data-sfx-kind="confetti_pop" data-sfx-freq="523.25" data-sfx-dur="0.5" type="button">🎊 Confetti Pop</button>
-              <button class="btn btn-sm" data-sfx-kind="candle_blow" data-sfx-freq="480" data-sfx-dur="0.7" type="button">🕯️ Blow Candles</button>
-              <button class="btn btn-sm" data-sfx-kind="cheer_applause" data-sfx-freq="523.25" data-sfx-dur="0.8" type="button">👏 Cheer & Clap</button>
-              <button class="btn btn-sm" data-sfx-kind="giggle" data-sfx-freq="659.25" data-sfx-dur="0.32" type="button">😄 Giggle</button>
-              <button class="btn btn-sm" data-sfx-kind="birthday_song" data-sfx-freq="523.25" data-sfx-dur="0.55" type="button">🎵 Birthday Note</button>
-              <button class="btn btn-sm" data-sfx-kind="ocean_wave" data-sfx-freq="220" data-sfx-dur="1.2" type="button">🌊 Ocean Wave</button>
-              <button class="btn btn-sm" data-sfx-kind="water_splash" data-sfx-freq="460" data-sfx-dur="0.48" type="button">💦 Water Splash</button>
-              <button class="btn btn-sm" data-sfx-kind="floatie_squeak" data-sfx-freq="740" data-sfx-dur="0.34" type="button">🦆 Floatie Squeak</button>
             </div>
           </div>
 
@@ -1114,7 +1127,7 @@ export function mountStorybookStudio(
       .forEach((link) => {
         link.classList.toggle(
           'btn-active',
-          link.dataset.urlQuery === studioConfig.canonicalQuery
+          link.dataset.sceneId === activeScene.id
         );
       });
   }
@@ -1199,8 +1212,14 @@ export function mountStorybookStudio(
         prevQuantizedTime,
         frame.clock.quantizedTimeSec
       );
+      soundEngine.triggerClipsForFrame(
+        activeScene.audioClips,
+        prevQuantizedTime,
+        frame.clock.quantizedTimeSec,
+        () => currentTimeSec
+      );
+      prevQuantizedTime = frame.clock.quantizedTimeSec;
     }
-    prevQuantizedTime = frame.clock.quantizedTimeSec;
 
     badgeUrlEl.textContent = studioConfig.canonicalQuery;
     badgeActEl.textContent =
@@ -1286,6 +1305,27 @@ export function mountStorybookStudio(
     renderCatalogCards(frame.clock.frameIndex);
   }
 
+  function syncActiveAudioAtCurrentTime(includeExactCues: boolean): void {
+    if (!isPlaying) return;
+    const clock = evaluateSteppedClock(
+      currentTimeSec,
+      activeFps,
+      activeScene.durationSec
+    );
+    if (includeExactCues) {
+      soundEngine.triggerCuesForFrame(
+        activeScene.audioCues,
+        clock.quantizedTimeSec - 0.01,
+        clock.quantizedTimeSec
+      );
+    }
+    soundEngine.syncClipsAtTime(
+      activeScene.audioClips,
+      currentTimeSec,
+      () => currentTimeSec
+    );
+  }
+
   function tick(now: number): void {
     if (!isPlaying) return;
     if (lastPerfTime === 0) lastPerfTime = now;
@@ -1298,10 +1338,14 @@ export function mountStorybookStudio(
 
     if (currentTimeSec >= endBound) {
       currentTimeSec = startBound;
+      soundEngine.stopAllClips();
       prevQuantizedTime = startBound - 0.01;
+      updateStage(true);
+      syncActiveAudioAtCurrentTime(false);
+    } else {
+      updateStage(false);
     }
 
-    updateStage(false);
     rafId = requestAnimationFrame(tick);
   }
 
@@ -1310,11 +1354,28 @@ export function mountStorybookStudio(
     isPlaying = true;
     lastPerfTime = 0;
     btnPlayPause.textContent = '⏸ Pause';
+    const clock = evaluateSteppedClock(
+      currentTimeSec,
+      activeFps,
+      activeScene.durationSec
+    );
+    prevQuantizedTime = clock.quantizedTimeSec;
+    const resumePromise = soundEngine.resumeContext();
+    if (!soundEngine.isContextSuspended()) {
+      syncActiveAudioAtCurrentTime(true);
+    } else {
+      void resumePromise.then((running) => {
+        if (running && isPlaying) {
+          syncActiveAudioAtCurrentTime(true);
+        }
+      });
+    }
     rafId = requestAnimationFrame(tick);
   }
 
   function pause(): void {
     isPlaying = false;
+    soundEngine.stopAllClips();
     btnPlayPause.textContent = '▶ Play Story';
     if (rafId !== null) {
       cancelAnimationFrame(rafId);
@@ -1323,17 +1384,36 @@ export function mountStorybookStudio(
   }
 
   function seek(timeSec: number): void {
+    soundEngine.stopAllClips();
     currentTimeSec = Math.max(0, Math.min(activeScene.durationSec, timeSec));
-    prevQuantizedTime = currentTimeSec - 0.01;
+    const clock = evaluateSteppedClock(
+      currentTimeSec,
+      activeFps,
+      activeScene.durationSec
+    );
+    prevQuantizedTime = clock.quantizedTimeSec;
     updateStage(true);
+    if (isPlaying) {
+      const resumePromise = soundEngine.resumeContext();
+      if (!soundEngine.isContextSuspended()) {
+        syncActiveAudioAtCurrentTime(true);
+      } else {
+        void resumePromise.then((running) => {
+          if (running && isPlaying) {
+            syncActiveAudioAtCurrentTime(true);
+          }
+        });
+      }
+    }
   }
 
   function applyUrlQuery(query: string): void {
+    pause();
     studioConfig = parseStudioUrlParams(query, initialScene);
     activeScene = studioConfig.scene;
     loopBounds = studioConfig.loopBounds;
     currentTimeSec = studioConfig.initialTimeSec;
-    prevQuantizedTime = currentTimeSec - 0.01;
+    prevQuantizedTime = -1;
     renderOptions.vibrant = studioConfig.vibrant;
     renderOptions.enableBookFrame = studioConfig.bookFrame;
     chkVibrantMode.checked = studioConfig.vibrant;
@@ -1343,6 +1423,7 @@ export function mountStorybookStudio(
     headerSubtitleEl.textContent = activeScene.subtitle ?? '';
     renderActButtons();
     updateUrlSwitcherHighlight();
+    void soundEngine.preloadClips(activeScene.audioClips);
 
     if (typeof window !== 'undefined' && window.history?.replaceState) {
       window.history.replaceState(null, '', query);
@@ -1359,12 +1440,33 @@ export function mountStorybookStudio(
     }
   }
 
+  const handleAudioUnlockGesture = () => {
+    if (!soundEngine.isContextSuspended()) return;
+    void soundEngine.resumeContext().then((running) => {
+      if (running && isPlaying) {
+        syncActiveAudioAtCurrentTime(false);
+      }
+    });
+  };
+  if (
+    typeof window !== 'undefined' &&
+    typeof window.addEventListener === 'function'
+  ) {
+    window.addEventListener('pointerdown', handleAudioUnlockGesture, {
+      passive: true,
+    });
+    window.addEventListener('keydown', handleAudioUnlockGesture, {
+      passive: true,
+    });
+  }
+
   container
     .querySelectorAll<HTMLAnchorElement>('[data-url-query]')
     .forEach((link) => {
       link.addEventListener('click', (e) => {
         e.preventDefault();
-        const q = link.dataset.urlQuery ?? '?short_sample=1';
+        const q =
+          link.dataset.urlQuery ?? `?scene=${encodeURIComponent(activeScene.id)}`;
         applyUrlQuery(q);
       });
     });
@@ -1391,8 +1493,23 @@ export function mountStorybookStudio(
   });
 
   btnMute.addEventListener('click', () => {
+    if (!soundEngine.isMuted() && soundEngine.isContextSuspended()) {
+      void soundEngine.resumeContext().then((running) => {
+        if (running && isPlaying) {
+          syncActiveAudioAtCurrentTime(false);
+        }
+      });
+      return;
+    }
     const muted = soundEngine.toggleMute();
     btnMute.textContent = muted ? '🔇 Muted' : '🔊 Sound On';
+    if (!muted && isPlaying) {
+      void soundEngine.resumeContext().then((running) => {
+        if (running && isPlaying) {
+          syncActiveAudioAtCurrentTime(false);
+        }
+      });
+    }
   });
 
   btnFullscreen.addEventListener('click', () => {
@@ -1518,17 +1635,6 @@ export function mountStorybookStudio(
     }
   });
 
-  container
-    .querySelectorAll<HTMLButtonElement>('[data-sfx-kind]')
-    .forEach((btn) => {
-      btn.addEventListener('click', () => {
-        const kind = (btn.dataset.sfxKind ?? 'birthday_song') as AudioCueKind;
-        const freq = parseFloat(btn.dataset.sfxFreq ?? '440');
-        const duration = parseFloat(btn.dataset.sfxDur ?? '0.45');
-        soundEngine.playCue({ time: 0, freq, duration, kind });
-      });
-    });
-
   chkCrayonFilter.addEventListener('change', () => {
     renderOptions.enableCrayonFilter = chkCrayonFilter.checked;
     updateStage(true);
@@ -1612,9 +1718,10 @@ export function mountStorybookStudio(
     }
   });
 
-  // Initialize Act buttons, URL switcher highlight, and initial render
+  // Initialize Act buttons, URL switcher highlight, audio clip preloading, and initial render
   renderActButtons();
   updateUrlSwitcherHighlight();
+  void soundEngine.preloadClips(activeScene.audioClips);
   updateStage(true);
 
   if (studioConfig.autoplay) {
@@ -1647,6 +1754,13 @@ export function mountStorybookStudio(
       options: { ...renderOptions },
     }),
     destroy: () => {
+      if (
+        typeof window !== 'undefined' &&
+        typeof window.removeEventListener === 'function'
+      ) {
+        window.removeEventListener('pointerdown', handleAudioUnlockGesture);
+        window.removeEventListener('keydown', handleAudioUnlockGesture);
+      }
       pause();
       soundEngine.dispose();
     },

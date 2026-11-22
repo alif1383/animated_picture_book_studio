@@ -741,6 +741,8 @@ export async function exportSceneTo16x9Video(
     throw new Error('Video export cancelled');
   }
 
+  await soundEngine?.preloadClips(scene.audioClips);
+
   const canvasStream = canvas.captureStream(30);
   const audioStream = soundEngine?.createRecordingStream() ?? null;
   const tracks: MediaStreamTrack[] = [
@@ -773,6 +775,7 @@ export async function exportSceneTo16x9Video(
         clearInterval(intervalId);
         intervalId = null;
       }
+      soundEngine?.stopAllClips();
       soundEngine?.stopRecordingStream();
       canvasStream.getTracks().forEach((t) => t.stop());
     };
@@ -877,12 +880,8 @@ export async function exportSceneTo16x9Video(
       startTimeSec - 0.01,
       firstRender.frame.clock.quantizedTimeSec
     );
-    // Trigger clips whose startTime falls at the initial frame
-    soundEngine?.triggerClipsForFrame(
-      scene.audioClips,
-      startTimeSec - 0.01,
-      firstRender.frame.clock.quantizedTimeSec
-    );
+    // Sync clips overlapping startTimeSec (including ongoing BGM/narration)
+    soundEngine?.syncClipsAtTime(scene.audioClips, startTimeSec);
 
     intervalId = setInterval(() => {
       if (signal?.aborted) return;

@@ -45,6 +45,7 @@ export interface SoundEngineOptions {
  */
 export class PictureBookSoundEngine {
   private ctx: AudioContext | null = null;
+  private liveOutputGain: GainNode | null = null;
   private muted: boolean;
   private readonly masterVolume: number;
   private readonly sfxHelpers: ProceduralSfxHelpers;
@@ -53,8 +54,15 @@ export class PictureBookSoundEngine {
 
   /** Cache of decoded AudioBuffers keyed by src URL to avoid repeat fetches */
   private readonly clipBufferCache = new Map<string, AudioBuffer>();
-  /** Currently playing AudioBufferSourceNodes for live clip playback, keyed by clip src+startTime */
+  /** In-flight fetch+decode promises keyed by src URL to deduplicate parallel loads */
+  private readonly inFlightClipFetches = new Map<
+    string,
+    Promise<AudioBuffer | null>
+  >();
+  /** Currently playing AudioBufferSourceNodes for live clip playback, keyed by clip key */
   private readonly activeClipNodes = new Map<string, AudioBufferSourceNode>();
+  /** Monotonic playback generation bumped on stopAllClips/dispose to cancel stale async decodes */
+  private clipPlaybackEpoch = 0;
 
   constructor(options: SoundEngineOptions = {}) {
     this.muted = options.muted ?? false;
@@ -71,11 +79,46 @@ export class PictureBookSoundEngine {
 
   public setMuted(muted: boolean): void {
     this.muted = muted;
+    this.syncLiveOutputGain();
   }
 
   public toggleMute(): boolean {
     this.muted = !this.muted;
+    this.syncLiveOutputGain();
     return this.muted;
+  }
+
+  public isContextSuspended(): boolean {
+    return this.ctx?.state === 'suspended';
+  }
+
+  /**
+   * Attempts to create/resume the WebAudio AudioContext (best called inside a user gesture).
+   * Returns `true` when the context is available and not suspended.
+   */
+  public async resumeContext(): Promise<boolean> {
+    const ctx = this.ensureContext();
+    if (!ctx) return false;
+    if (ctx.state === 'suspended' && typeof ctx.resume === 'function') {
+      try {
+        await ctx.resume();
+      } catch {
+        // Autoplay policy may keep context suspended until a user gesture
+      }
+    }
+    return ctx.state !== 'suspended';
+  }
+
+  private syncLiveOutputGain(): void {
+    if (!this.ctx || !this.liveOutputGain) return;
+    try {
+      this.liveOutputGain.gain.setValueAtTime(
+        this.muted ? 0 : 1,
+        this.ctx.currentTime
+      );
+    } catch {
+      // Ignore in minimal mock contexts
+    }
   }
 
   /**
@@ -137,7 +180,9 @@ export class PictureBookSoundEngine {
       sourceNode.connect(ctx.destination);
       return;
     }
-    if (!this.muted) {
+    if (this.liveOutputGain) {
+      sourceNode.connect(this.liveOutputGain);
+    } else if (!this.muted) {
       sourceNode.connect(ctx.destination);
     }
     if (this.recordingDest) {
@@ -257,23 +302,15 @@ export class PictureBookSoundEngine {
             if (clip.startTime > endTimeSec + 1e-4) return;
             if (clipEndTime < startTimeSec - 1e-4) return;
 
-            let buf = this.clipBufferCache.get(clip.src);
-            if (!buf) {
-              try {
-                if (typeof fetch !== 'function') return;
-                const resp = await fetch(clip.src);
-                if (!resp.ok) return;
-                const ab = await resp.arrayBuffer();
-                // decode on a temporary live context if the offline ctx doesn't support it
-                const tempCtx = this.ensureContext();
-                if (!tempCtx) return;
-                buf = await tempCtx.decodeAudioData(ab.slice(0));
-                this.clipBufferCache.set(clip.src, buf);
-              } catch {
-                return;
-              }
-            }
+            const buf = await this.fetchAndDecodeClip(clip.src);
             if (!buf) return;
+
+            const window = this.computeClipWindow(
+              clip,
+              Math.max(startTimeSec, clip.startTime),
+              buf.duration
+            );
+            if (!window) return;
 
             const gain = offlineCtx.createGain();
             const vol = Math.max(0, Math.min(2, clip.volume ?? 1.0));
@@ -284,17 +321,8 @@ export class PictureBookSoundEngine {
             source.buffer = buf;
             source.connect(gain);
 
-            const srcOffset = Math.max(0, clip.offsetSec ?? 0);
-            // When clip starts before export range, advance into the clip
-            const clipLeadIn = Math.max(0, startTimeSec - clip.startTime);
             const scheduleAt = Math.max(0, clip.startTime - startTimeSec);
-            const playOffset = srcOffset + clipLeadIn;
-            const maxDur =
-              clip.duration !== undefined
-                ? Math.max(0, clip.duration - clipLeadIn)
-                : undefined;
-
-            source.start(scheduleAt, playOffset, maxDur);
+            source.start(scheduleAt, window.playOffset, window.maxDuration);
           })
         );
       }
@@ -307,7 +335,7 @@ export class PictureBookSoundEngine {
 
   private ensureContext(): AudioContext | null {
     if (this.ctx) {
-      if (this.ctx.state === 'suspended') {
+      if (this.ctx.state === 'suspended' && typeof this.ctx.resume === 'function') {
         void this.ctx.resume().catch(() => {});
       }
       return this.ctx;
@@ -322,45 +350,101 @@ export class PictureBookSoundEngine {
 
     try {
       this.ctx = new AudioCtx();
+      if (typeof this.ctx.createGain === 'function') {
+        const masterGain = this.ctx.createGain();
+        masterGain.gain.setValueAtTime(this.muted ? 0 : 1, this.ctx.currentTime);
+        masterGain.connect(this.ctx.destination);
+        this.liveOutputGain = masterGain;
+      }
+      if (this.ctx.state === 'suspended' && typeof this.ctx.resume === 'function') {
+        void this.ctx.resume().catch(() => {});
+      }
       return this.ctx;
     } catch {
       return null;
     }
   }
 
+  private computeClipWindow(
+    clip: AudioClipCue,
+    atTimeSec: number,
+    bufferDuration?: number
+  ): { playOffset: number; maxDuration?: number } | null {
+    const srcOffset = Math.max(0, clip.offsetSec ?? 0);
+    const leadIn = Math.max(0, atTimeSec - clip.startTime);
+    const playOffset = srcOffset + leadIn;
+    if (
+      bufferDuration !== undefined &&
+      Number.isFinite(bufferDuration) &&
+      playOffset >= bufferDuration - 0.005
+    ) {
+      return null;
+    }
+    const maxDuration =
+      clip.duration !== undefined
+        ? Math.max(0, clip.duration - leadIn)
+        : undefined;
+    if (maxDuration !== undefined && maxDuration <= 0.005) {
+      return null;
+    }
+    return { playOffset, maxDuration };
+  }
+
+  private getClipKey(clip: AudioClipCue, index = 0): string {
+    return clip.id
+      ? `${clip.id}@${clip.startTime}`
+      : `${clip.src}@${clip.startTime}@${index}`;
+  }
+
   /**
-   * Fetches and decodes an audio file from `src`, caching the decoded `AudioBuffer`.
+   * Fetches and decodes an audio file from `src`, caching the decoded `AudioBuffer`
+   * and deduplicating concurrent in-flight requests for the same URL.
    * Returns `null` in headless/Node environments or on fetch/decode errors.
    */
   public async fetchAndDecodeClip(src: string): Promise<AudioBuffer | null> {
     if (this.clipBufferCache.has(src)) {
       return this.clipBufferCache.get(src)!;
     }
+    const existingPromise = this.inFlightClipFetches.get(src);
+    if (existingPromise) {
+      return existingPromise;
+    }
     if (typeof globalThis === 'undefined' || typeof fetch !== 'function')
       return null;
-    try {
-      const ctx = this.ensureContext();
-      if (!ctx) return null;
-      const resp = await fetch(src);
-      if (!resp.ok) return null;
-      const arrayBuffer = await resp.arrayBuffer();
-      const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
-      this.clipBufferCache.set(src, audioBuffer);
-      return audioBuffer;
-    } catch {
-      return null;
-    }
+
+    const loadPromise = (async (): Promise<AudioBuffer | null> => {
+      try {
+        const ctx = this.ensureContext();
+        if (!ctx || typeof ctx.decodeAudioData !== 'function') return null;
+        const resp = await fetch(src);
+        if (!resp.ok) return null;
+        const arrayBuffer = await resp.arrayBuffer();
+        const audioBuffer = await ctx.decodeAudioData(arrayBuffer.slice(0));
+        this.clipBufferCache.set(src, audioBuffer);
+        return audioBuffer;
+      } catch {
+        return null;
+      } finally {
+        this.inFlightClipFetches.delete(src);
+      }
+    })();
+
+    this.inFlightClipFetches.set(src, loadPromise);
+    return loadPromise;
   }
 
   /**
-   * Pre-fetches and decodes all audio clips in a scene's `audioClips` array.
+   * Pre-fetches and decodes all unique audio clips in a scene's `audioClips` array.
    * Call once after scene load so clips are ready for immediate playback.
    */
   public async preloadClips(
     clips: readonly AudioClipCue[] | undefined
   ): Promise<void> {
     if (!clips || clips.length === 0) return;
-    await Promise.allSettled(clips.map((c) => this.fetchAndDecodeClip(c.src)));
+    const uniqueSrcs = Array.from(new Set(clips.map((c) => c.src)));
+    await Promise.allSettled(
+      uniqueSrcs.map((src) => this.fetchAndDecodeClip(src))
+    );
   }
 
   /**
@@ -371,14 +455,16 @@ export class PictureBookSoundEngine {
   public triggerClipsForFrame(
     clips: readonly AudioClipCue[] | undefined,
     prevQuantizedTime: number,
-    currentQuantizedTime: number
+    currentQuantizedTime: number,
+    getLiveTimeSec?: () => number
   ): void {
     if (!clips || clips.length === 0) return;
     if (currentQuantizedTime <= prevQuantizedTime) return;
     if (this.muted && this.recordingDest === null) return;
 
     const eps = 1e-4;
-    for (const clip of clips) {
+    for (let i = 0; i < clips.length; i++) {
+      const clip = clips[i];
       const shouldTrigger =
         prevQuantizedTime < 0
           ? clip.startTime >= 0 && clip.startTime <= currentQuantizedTime + eps
@@ -387,32 +473,89 @@ export class PictureBookSoundEngine {
 
       if (!shouldTrigger) continue;
 
-      const clipKey = `${clip.src}@${clip.startTime}`;
-      if (this.activeClipNodes.has(clipKey)) continue; // already playing
+      this.startClipLive(
+        clip,
+        this.getClipKey(clip, i),
+        currentQuantizedTime,
+        getLiveTimeSec
+      );
+    }
+  }
 
-      const cached = this.clipBufferCache.get(clip.src);
-      if (!cached) {
-        // Kick off async decode then play; best-effort for live playback
-        void this.fetchAndDecodeClip(clip.src).then((buf) => {
-          if (buf) this.playClipBuffer(buf, clip, clipKey);
-        });
+  /**
+   * Starts all `AudioClipCue` entries active at `timeSec` (including mid-clip BGM or
+   * voiceovers that began before `timeSec`), computing the exact `offsetSec + leadIn`
+   * and remaining `duration`. Safe to call on play, resume, seek, loop wrap, or unmute.
+   */
+  public syncClipsAtTime(
+    clips: readonly AudioClipCue[] | undefined,
+    timeSec: number,
+    getLiveTimeSec?: () => number
+  ): void {
+    if (!clips || clips.length === 0) return;
+    if (this.muted && this.recordingDest === null) return;
+
+    const eps = 1e-4;
+    for (let i = 0; i < clips.length; i++) {
+      const clip = clips[i];
+      if (clip.startTime > timeSec + eps) continue;
+      if (
+        clip.duration !== undefined &&
+        timeSec >= clip.startTime + clip.duration - 0.005
+      ) {
         continue;
       }
-      this.playClipBuffer(cached, clip, clipKey);
+
+      this.startClipLive(
+        clip,
+        this.getClipKey(clip, i),
+        timeSec,
+        getLiveTimeSec
+      );
     }
+  }
+
+  private startClipLive(
+    clip: AudioClipCue,
+    clipKey: string,
+    atTimeSec: number,
+    getLiveTimeSec?: () => number
+  ): void {
+    if (this.activeClipNodes.has(clipKey)) return;
+
+    const cached = this.clipBufferCache.get(clip.src);
+    if (cached) {
+      this.playClipBuffer(cached, clip, clipKey, atTimeSec);
+      return;
+    }
+
+    const epoch = this.clipPlaybackEpoch;
+    void this.fetchAndDecodeClip(clip.src).then((buf) => {
+      if (!buf) return;
+      if (epoch !== this.clipPlaybackEpoch) return;
+      if (this.muted && this.recordingDest === null) return;
+      if (this.activeClipNodes.has(clipKey)) return;
+      const liveTime = getLiveTimeSec ? getLiveTimeSec() : atTimeSec;
+      this.playClipBuffer(buf, clip, clipKey, Math.max(clip.startTime, liveTime));
+    });
   }
 
   private playClipBuffer(
     buffer: AudioBuffer,
     clip: AudioClipCue,
-    clipKey: string
+    clipKey: string,
+    atTimeSec: number
   ): void {
     const ctx = this.ensureContext();
     if (!ctx) return;
+    // Do not queue frozen sources on a browser-suspended AudioContext; wait for resume+sync.
+    if (ctx.state === 'suspended' && this.recordingDest === null) return;
+
+    const window = this.computeClipWindow(clip, atTimeSec, buffer.duration);
+    if (!window) return;
 
     const gain = ctx.createGain();
-    const vol =
-      Math.max(0, Math.min(2, clip.volume ?? 1.0)) * this.masterVolume;
+    const vol = Math.max(0, Math.min(2, clip.volume ?? 1.0));
     gain.gain.setValueAtTime(vol, ctx.currentTime);
     this.connectOutput(ctx, gain);
 
@@ -420,23 +563,24 @@ export class PictureBookSoundEngine {
     source.buffer = buffer;
     source.connect(gain);
 
-    const offset = Math.max(0, clip.offsetSec ?? 0);
-    const maxDuration =
-      clip.duration !== undefined ? Math.max(0, clip.duration) : undefined;
-
-    source.start(ctx.currentTime, offset, maxDuration);
+    source.start(ctx.currentTime, window.playOffset, window.maxDuration);
     this.activeClipNodes.set(clipKey, source);
     source.onended = () => {
-      this.activeClipNodes.delete(clipKey);
+      if (this.activeClipNodes.get(clipKey) === source) {
+        this.activeClipNodes.delete(clipKey);
+      }
     };
   }
 
   /**
-   * Stops all currently-playing audio clip sources (e.g. on seek or scene change).
+   * Stops all currently-playing audio clip sources and invalidates any pending async clip loads
+   * (e.g. on pause, seek, loop wrap, or scene change).
    */
   public stopAllClips(): void {
+    this.clipPlaybackEpoch += 1;
     for (const [, node] of this.activeClipNodes) {
       try {
+        node.onended = null;
         node.stop();
       } catch {
         /* ignore */
@@ -449,6 +593,15 @@ export class PictureBookSoundEngine {
     this.stopRecordingStream();
     this.stopAllClips();
     this.clipBufferCache.clear();
+    this.inFlightClipFetches.clear();
+    if (this.liveOutputGain) {
+      try {
+        this.liveOutputGain.disconnect();
+      } catch {
+        /* ignore */
+      }
+      this.liveOutputGain = null;
+    }
     if (this.ctx) {
       void this.ctx.close().catch(() => {});
       this.ctx = null;
