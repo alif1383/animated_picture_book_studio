@@ -6,10 +6,10 @@
 
 ## Example Videos
 
-| Fully Customized Voices (Gemini TTS API Key) | Text Bubbles Only (No API Key Required) |
-| :---: | :---: |
-| [![Sir Leo & the Dragon of Whispering Woods](assets/demo-sir-leo.jpg)](https://drive.google.com/file/d/1HeEsPBsBL13gvFSLuyC9WZcXylAEZKFX/view) | [![Captain Jack & The Black Pearl](assets/demo-captain-jack.jpg)](https://drive.google.com/file/d/1rC0WHMPXuP23nTViqiAs60hwnL_zLVQc/view) |
-| **[Watch: Sir Leo & the Dragon of Whispering Woods](https://drive.google.com/file/d/1HeEsPBsBL13gvFSLuyC9WZcXylAEZKFX/view)**<br>Generated with fully customized character voices & narration via a Google AI Studio API key. | **[Watch: Captain Jack & The Black Pearl](https://drive.google.com/file/d/1rC0WHMPXuP23nTViqiAs60hwnL_zLVQc/view)**<br>Generated with character text/speech bubbles only — zero narration or API key needed. |
+| Quick 1-Prompt Starter Demo (Gemini 4 Neon) | Fully Customized Voices (Gemini TTS API Key) | Text Bubbles Only (No API Key Required) |
+| :---: | :---: | :---: |
+| [![Moonlit Garden — 30s Cat Story](assets/demo-moonlit-cat.jpg)](https://drive.google.com/file/d/12Iazq_Uld8pkpprac8Mw3PAqWvBpKDTu/view) | [![Sir Leo & the Dragon of Whispering Woods](assets/demo-sir-leo.jpg)](https://drive.google.com/file/d/1HeEsPBsBL13gvFSLuyC9WZcXylAEZKFX/view) | [![Captain Jack & The Black Pearl](assets/demo-captain-jack.jpg)](https://drive.google.com/file/d/1rC0WHMPXuP23nTViqiAs60hwnL_zLVQc/view) |
+| **[Watch: Moonlit Garden (30s Cat Story)](https://drive.google.com/file/d/12Iazq_Uld8pkpprac8Mw3PAqWvBpKDTu/view)**<br>Created on **Gemini 4 Neon** with the first starter prompt (*30-second cat video with a narrator*) and Gemini TTS audio — a quick example of what to expect out of the box. | **[Watch: Sir Leo & the Dragon of Whispering Woods](https://drive.google.com/file/d/1HeEsPBsBL13gvFSLuyC9WZcXylAEZKFX/view)**<br>Generated with fully customized character voices & narration via a Google AI Studio API key. | **[Watch: Captain Jack & The Black Pearl](https://drive.google.com/file/d/1rC0WHMPXuP23nTViqiAs60hwnL_zLVQc/view)**<br>Generated with character text/speech bubbles only — zero narration or API key needed. |
 
 ---
 
