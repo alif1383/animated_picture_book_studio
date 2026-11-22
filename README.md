@@ -1,8 +1,10 @@
 # Animated Picture Book Studio
 
-> Create charming crayon-style animated storybook videos from a single prompt, with custom photo characters, expressive voiceovers, music, live preview, and MP4 export.
+<p align="center">
+  <img src="assets/studio-preview.jpg" alt="Animated Picture Book Studio Live Preview" width="760" />
+</p>
 
-![Animated Picture Book Studio Live Preview](assets/studio-preview.jpg)
+> Create charming crayon-style animated storybook videos from a single prompt, with custom photo characters, expressive voiceovers, music, live preview, and MP4 export.
 
 ---
 
