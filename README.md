@@ -188,3 +188,9 @@ The single main producer, engineering coordinator, and export agent. Rather than
 | Tests | `agy-node scripts/studio-cli.mjs test` |
 | Build | `agy-node scripts/studio-cli.mjs build` |
 | Git / VCS | `agy-node scripts/vcs.mjs check` / `init` / `status` / `commit` / `log` |
+
+---
+
+## License
+
+Released under the [MIT License](LICENSE). See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for license notices covering bundled third-party libraries (`TypeScript` and `mp4-muxer`).
