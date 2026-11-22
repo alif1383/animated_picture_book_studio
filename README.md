@@ -2,11 +2,13 @@
 
 > Create charming crayon-style animated storybook videos from a single prompt, with custom photo characters, expressive voiceovers, music, live preview, and MP4 export.
 
+![Animated Picture Book Studio Live Preview](assets/studio-preview.jpg)
+
 ---
 
 ## Example Videos
 
-All three videos below were generated **simultaneously in parallel** (~27 min total wall-clock time across 3 isolated `picture-book-director` agents, from prompt to verified 1080p MP4) and are bundled directly inside `engine/` (scenes, characters, props, music, SFX & voiceovers) so you can play or remix them immediately in the Studio:
+All three videos below were generated on **Gemini 4 Neon (High)** **simultaneously in parallel** (~27 min total wall-clock time across 3 isolated `picture-book-director` agents, from prompt to verified 1080p MP4 — all individual generation times below are on **Gemini 4 Neon (High)**) and are bundled directly inside `engine/` (scenes, characters, props, music, SFX & voiceovers) so you can play or remix them immediately in the Studio:
 
 | Starter Prompt 1: Moonlit Garden Cat | Starter Prompt 2: Photo-to-Character Dog | Starter Prompt 3: Dragon's Fiery Hiccups |
 | :---: | :---: | :---: |
