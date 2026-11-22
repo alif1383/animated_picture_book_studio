@@ -49,7 +49,7 @@ const BUNDLED_ENGINE_DIR = isEngineRoot(path.join(PLUGIN_ROOT, 'engine'))
   ? path.join(PLUGIN_ROOT, 'engine')
   : PLUGIN_ROOT;
 
-const SKIP_DIRS = new Set(['node_modules', 'dist', '.git', '__pycache__']);
+const SKIP_DIRS = new Set(['node_modules', 'dist', 'exports', '.git', '__pycache__']);
 const PROMOTE_SUBDIRS = [
   'src',
   'public',
@@ -115,11 +115,7 @@ function copyTreeSync(srcDir, destDir, overwrite = true, copiedFiles = null) {
 }
 
 function ensureExportsKeep(dir) {
-  const exportsKeep = path.join(dir, 'exports', '.gitkeep');
-  fs.mkdirSync(path.dirname(exportsKeep), { recursive: true });
-  if (!fs.existsSync(exportsKeep)) {
-    fs.writeFileSync(exportsKeep, '', 'utf8');
-  }
+  fs.mkdirSync(path.join(dir, 'exports'), { recursive: true });
 }
 
 /**

@@ -1,12 +1,29 @@
 # Animated Picture Book Studio
 
-> Create, edit, preview, and export hand-crafted 2D crayon and oil-pastel animated picture-book videos with custom photo-modeled assets, procedural or generated voiceover/audio sync, live dev server preview, and automated MP4 video download.
+> Create charming crayon-style animated storybook videos from a single prompt, with custom photo characters, expressive voiceovers, music, live preview, and MP4 export.
+
+---
+
+## Installation
+
+### Option 1: One-Command Install (Antigravity CLI)
+```bash
+agy plugin install github.com/alif1383/animated_picture_book_studio
+```
+Plugins installed via the CLI automatically sync to the **Antigravity App**.
+
+### Option 2: Manual Install (Antigravity App / IDE)
+Clone or download this repository into your global plugins folder:
+```bash
+git clone https://github.com/alif1383/animated_picture_book_studio.git ~/.gemini/config/plugins/animated-picture-book-studio
+```
+*(On Windows PowerShell, clone into `$HOME\.gemini\config\plugins\animated-picture-book-studio`.)*
 
 ---
 
 ## Overview
 
-The **Animated Picture Book Studio** is a **100% standalone, zero-dependency** Antigravity plugin that bundles the complete Picture-Book Crayon Video Engine inside `<plugin-root>/engine/` (`~/.gemini/config/plugins/animated_picture_book_studio/engine/`), including pre-bundled pure-JS compilers and libraries (`vendor/typescript`, `vendor/mp4-muxer`, `vendor/vitest-shim`, `vendor/isomorphic-git`) and zero-dependency CLI tools (`scripts/studio-cli.mjs`, `scripts/vcs.mjs`, `scripts/generate_audio.mjs`, `scripts/analyze_reference_photo.mjs`).
+The **Animated Picture Book Studio** is a **100% standalone, zero-dependency** Antigravity plugin that bundles the complete Picture-Book Crayon Video Engine inside `<plugin-root>/engine/` (`~/.gemini/config/plugins/animated-picture-book-studio/engine/`), including pre-bundled pure-JS compilers and libraries (`vendor/typescript`, `vendor/mp4-muxer`, `vendor/vitest-shim`, `vendor/isomorphic-git`) and zero-dependency CLI tools (`scripts/studio-cli.mjs`, `scripts/vcs.mjs`, `scripts/generate_audio.mjs`, `scripts/analyze_reference_photo.mjs`).
 
 It works out-of-the-box on **any machine with only Antigravity installed** (`agy-node`)—no external `node`, `npm`, `pnpm`, `git`, or `python` installation is required. You can scaffold the bundled engine into any active `<workspace>` (or run it in-place) using `agy-node "<plugin-root>/scripts/ensure_engine.mjs"`. It provides skills, agents, rules, and the full engine so you can ask Antigravity to:
 
@@ -42,7 +59,7 @@ It works out-of-the-box on **any machine with only Antigravity installed** (`agy
 │   ├── docs/                                # ARCHITECTURE.md & STYLE_GUIDE.md
 │   ├── tests/                               # Unit & integration test suites
 │   ├── public/                              # Static assets & public/audio/
-│   ├── exports/.gitkeep                     # Target directory for exported .mp4 videos
+│   ├── exports/                             # Gitignored target directory for exported .mp4 videos (auto-created on export)
 │   ├── index.html                           # Studio entry HTML
 │   ├── package.json                         # Scripts routed to scripts/studio-cli.mjs
 │   └── tsconfig.json                        # Strict TypeScript config mapped to vendor/
@@ -149,7 +166,7 @@ The single main producer, engineering coordinator, and export agent. Rather than
 
 | Item | Location |
 |------|----------|
-| Bundled engine (100% standalone) | `<plugin-root>/engine/` (`~/.gemini/config/plugins/animated_picture_book_studio/engine/`) |
+| Bundled engine (100% standalone) | `<plugin-root>/engine/` (`~/.gemini/config/plugins/animated-picture-book-studio/engine/`) |
 | Engine resolver / scaffolder | `agy-node "<plugin-root>/scripts/ensure_engine.mjs"` |
 | Active engine workspace | `<workspace>` (where `ensure_engine.mjs` scaffolds `<plugin-root>/engine/`) |
 | Bundled pure-JS dependencies | `<workspace>/vendor/` (`typescript`, `mp4-muxer`, `vitest-shim`, `isomorphic-git`) |

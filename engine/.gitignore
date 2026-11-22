@@ -1,4 +1,7 @@
 node_modules/
 dist/
+exports/
+*.mp4
+*.webm
 *.log
 .DS_Store

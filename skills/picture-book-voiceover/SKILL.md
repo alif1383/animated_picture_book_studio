@@ -16,7 +16,7 @@ This skill uses Google AI Studio's **Generate Speech (Gemini TTS)** API (`gemini
 
 Find `<plugin-root>` using the first match:
 1. Current workspace root if it contains `plugin.json` and `skills/picture-book-voiceover/SKILL.md`
-2. `~/.gemini/config/plugins/animated_picture_book_studio` *(standard Antigravity user plugin path)*
+2. `~/.gemini/config/plugins/animated-picture-book-studio` or `~/.gemini/config/plugins/animated_picture_book_studio` *(standard Antigravity user plugin paths)*
 3. `~/.gemini/extensions/animated-picture-book-studio`, `/opt/antigravity/plugins/animated_picture_book_studio`, or `/opt/antigravity/plugins/animated-picture-book-studio`
 
 Resolve `agy-node`: use `agy-node` on `PATH` (if missing on a fresh install, bootstrap via `& "<plugin-root>/scripts/bootstrap-node.cmd"` on Windows PowerShell or `sh "<plugin-root>/scripts/bootstrap-node.sh"` on macOS/Linux), otherwise `/opt/antigravity/bin/node` or `node`.

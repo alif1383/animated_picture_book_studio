@@ -1,0 +1,8 @@
+node_modules/
+dist/
+exports/
+engine/exports/
+*.mp4
+*.webm
+*.log
+.DS_Store
