@@ -21,6 +21,28 @@ git clone https://github.com/alif1383/animated_picture_book_studio.git ~/.gemini
 
 ---
 
+## Before You Begin: Optional Voiceover & Narration Setup (API Key)
+
+You can create complete animated picture-book videos using **text/speech bubbles, music, and sound effects with no API key at all**.
+
+If you also want **expressive voiceovers, multi-character dialogue, or fully custom narrations**, the plugin uses Google AI Studio's Generate Speech (Gemini TTS) API, which requires a **Google AI Studio API key**:
+
+- **Free to start ($0, no credit card required):** A free Google AI Studio key unlocks all **30 studio voices**, **40 character/narrator presets**, acting direction prompts, accents, expressive vocal tags (`<laugh>`, `<sigh>`, `<gasp>`), and multi-speaker dialogue within free daily quotas.
+- **Very low cost if you upgrade to Paid Tier:** Enabling billing unlocks higher daily quotas and **fully custom prompted voice design** (`voice-design`). Pricing is roughly **$0.54–$0.81 per full hour** of generated audio — meaning a typical 30–60 second picture-book video costs **around 1–2 cents**.
+
+### How to Get & Save Your API Key (~15 seconds)
+1. Open **[Google AI Studio API Keys](https://aistudio.google.com/apikey)** *(or open the [Speech Playground](https://aistudio.google.com/generate-speech) and click **Get API key** in the sidebar)*.
+2. Sign in with your Google account and click **Create API key**.
+3. Copy the key (starts with `AIzaSy...`) and either:
+   - **Paste it in chat** when the agent asks for it (it saves the key for you automatically), **or**
+   - **Save it once via CLI**:
+     ```bash
+     agy-node ~/.gemini/config/plugins/animated-picture-book-studio/skills/picture-book-voiceover/scripts/generate_audio.mjs set-key "<YOUR_API_KEY>"
+     ```
+   *(The key is saved locally in `~/.gemini/config/animated_picture_book_studio/config.json` and persists across all future Antigravity sessions. You can also pass it via the `GEMINI_API_KEY` environment variable.)*
+
+---
+
 ## Overview
 
 The **Animated Picture Book Studio** is a **100% standalone, zero-dependency** Antigravity plugin that bundles the complete Picture-Book Crayon Video Engine inside `<plugin-root>/engine/` (`~/.gemini/config/plugins/animated-picture-book-studio/engine/`), including pre-bundled pure-JS compilers and libraries (`vendor/typescript`, `vendor/mp4-muxer`, `vendor/vitest-shim`, `vendor/isomorphic-git`) and zero-dependency CLI tools (`scripts/studio-cli.mjs`, `scripts/vcs.mjs`, `scripts/generate_audio.mjs`, `scripts/analyze_reference_photo.mjs`).
