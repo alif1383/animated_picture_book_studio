@@ -4,20 +4,76 @@
   <img src="assets/studio-preview.jpg" alt="Animated Picture Book Studio Live Preview" width="760" />
 </p>
 
-> Create animated storybook videos in **two distinct visual styles** — **Picture-Book Crayon** (`6 FPS` wax-crayon/oil-pastel stop-motion) or **Classic 1970s–80s Hand-Drawn Cel Animation** (`12 FPS` Xerox ink-and-paint & painted watercolor/gouache) — from a single prompt, with custom photo characters, expressive voiceovers, music, live preview, and MP4 export.
+> Create animated storybook videos across **pluggable animation modes** — starting with **Picture-Book Crayon** (`6 FPS` wax-crayon/oil-pastel stop-motion) and **Classic 1970s–80s Hand-Drawn Cel Animation** (`12 FPS` Xerox ink-and-paint & watercolor/pencil), with more modes coming soon — from a single prompt, with custom photo characters, expressive voiceovers, music, live preview, and MP4 export.
 
 ---
 
 ## Example Videos
 
-All three videos below were generated on **Gemini 4 Neon (High)** **simultaneously in parallel** (~27 min total wall-clock time across 3 isolated `picture-book-director` agents, from prompt to verified 1080p MP4 — all individual generation times below are on **Gemini 4 Neon (High)**) and are bundled directly inside `engine/` (scenes, characters, props, music, SFX & voiceovers) so you can play or remix them immediately in the Studio:
+### 🖍️ Picture-Book Crayon Mode (`/`)
+
+All three starter videos below were generated on **Gemini 4 Neon (High)** **simultaneously in parallel** (~27 min total wall-clock time across 3 isolated `picture-book-director` agents, from prompt to verified 1080p MP4 — all individual generation times below are on **Gemini 4 Neon (High)**) and are bundled directly inside `engine/` (scenes, characters, props, music, SFX & voiceovers) so you can play or remix them immediately in the Studio:
 
 | Starter Prompt 1: Moonlit Garden Cat | Starter Prompt 2: Photo-to-Character Dog | Starter Prompt 3: Dragon's Fiery Hiccups |
 | :---: | :---: | :---: |
 | <a href="https://drive.google.com/file/d/1VvgBGx_cFphVrS_iwxea7EHuWmIVBpsQ/view?usp=sharing" target="_blank" rel="noopener noreferrer"><img src="assets/demo-mochi-moonlit-garden.jpg" alt="Mochi's Moonlit Garden" /></a> | <a href="https://drive.google.com/file/d/1mNw0_vNDS-cA7FGQaB67LrtTppG41z2A/view?usp=sharing" target="_blank" rel="noopener noreferrer"><img src="assets/demo-biscuit-sunny-day.jpg" alt="Biscuit's Sunny Day" /></a> | <a href="https://drive.google.com/file/d/1-9GhbInbPeWPJCewOjXO9IT0aMnPn2Mc/view?usp=sharing" target="_blank" rel="noopener noreferrer"><img src="assets/demo-dragon-fiery-hiccups.jpg" alt="The Dragon's Fiery Hiccups" /></a> |
 | <a href="https://drive.google.com/file/d/1VvgBGx_cFphVrS_iwxea7EHuWmIVBpsQ/view?usp=sharing" target="_blank" rel="noopener noreferrer"><strong>Watch: Mochi's Moonlit Garden</strong></a><br><strong>Generation time:</strong> `25m 30s` (30s video)<br><strong>Requirements:</strong> **Gemini TTS API key** for narration & cat meows. | <a href="https://drive.google.com/file/d/1mNw0_vNDS-cA7FGQaB67LrtTppG41z2A/view?usp=sharing" target="_blank" rel="noopener noreferrer"><strong>Watch: Biscuit's Sunny Day</strong></a><br><strong>Generation time:</strong> `26m 32s` (38s video)<br><strong>Requirements:</strong> **Reference pet photo + Gemini TTS API key** for narrator & puppy voiceover. | <a href="https://drive.google.com/file/d/1-9GhbInbPeWPJCewOjXO9IT0aMnPn2Mc/view?usp=sharing" target="_blank" rel="noopener noreferrer"><strong>Watch: The Dragon's Fiery Hiccups</strong></a><br><strong>Generation time:</strong> `22m 24s` (54s video)<br><strong>Requirements:</strong> **No API key required** (100% text/speech bubbles, zero narration). |
 
+### 🎞️ Classic 1970s–80s Hand-Drawn Cel Mode (`/classic/...`)
+
+All three starter prompts have also been regenerated **simultaneously in parallel** in **Classic Hand-Drawn Cel Mode** alongside two original Classic Cel showcase shorts — every scene, flat-cel character, watercolor/pencil prop, dynamic score, and voiceover is bundled inside `engine/` so you can preview or export them immediately at `/classic/...`:
+
+| Classic Cel Short | Scene ID & Live Studio Route | Duration & Storytelling |
+| :--- | :--- | :--- |
+| **Clover's Moonlit Chimes** *(Classic Starter 1)* | `classic-starter-moonlit-cat` · `/classic/starter-moonlit-cat` | `30s` (`12 FPS` on twos) · 5-section 6/8 barcarolle lullaby BGM + 5 Gemini TTS voiceovers (bubble-free 4-stage lip-sync) |
+| **Biscuit's Sunny Day (Classic Cel)** *(Classic Starter 2)* | `classic-starter-bandana-dog` · `/classic/starter-bandana-dog` | `44s` (`12 FPS` on twos) · 3-section folk-orchestral BGM + `playful_bark` SFX + 4 Gemini TTS voiceovers (bubble-free lip-sync) |
+| **The Dragon's Fiery Hiccups (Classic Cel)** *(Classic Starter 3)* | `classic-starter-knight-dragon-hiccups` · `/classic/starter-knight-dragon-hiccups` | `54s` (`12 FPS` on twos) · 4-act medieval comedy BGM + `dragon_hiccup` / `knight-hiccups-thorn-pop` SFX · classic parchment speech bubbles (**no API key required**) |
+| **[Mochi's Moonlit Garden (Classic Cel)](https://drive.google.com/file/d/1JTuI1wWXBs5UeYgr8sny3k3LVZSR9uZg/view?usp=drivesdk)** *(Showcase)* | `classic-moonlit-cat` · `/classic/mochi` | `30s` (`12 FPS` on twos) · Direct 1970s cel & watercolor adaptation of Mochi's Moonlit Garden with lullaby score & Gemini TTS |
+| **Barnaby's Christmas Hearth** *(Original Dickensian Short)* | `classic-christmas-hearth` · `/classic/christmas-hearth` | `48s` (`12 FPS` on twos) · Original *Mickey's Christmas Carol*-inspired holiday short featuring Barnaby Badger, Pippin Squirrel & Bramble Robin with 6 Gemini TTS tracks & bubble-free lip-sync |
+
 For more example videos, check out the shared **[Animated Picture Book Studio Examples](https://drive.google.com/drive/folders/1-fXpca2eCJVwiKnQaO5K-KjcpFlC4a_5)** folder.
+
+---
+
+## Animation Modes
+
+Animated Picture Book Studio is built around an **extensible `artStyle` mode architecture**. Each mode owns its own rendering pipeline, frame cadence, design token palette (`src/theme/tokens.ts`), style-isolated asset library, opening/closing theatrical framing, dedicated Studio website route, and specialized agent skills — making it easy to switch looks today and add new animation modes over time.
+
+> **Currently available: 2 modes** (`crayon` and `classic_cel`) — **more animation modes are coming soon!**
+
+### Mode Comparison
+
+| Feature | 🖍️ Picture-Book Crayon (`crayon`) | 🎞️ Classic 1970s–80s Hand-Drawn Cel (`classic_cel`) |
+| :--- | :--- | :--- |
+| **Visual Inspiration** | Hand-crafted wax crayon, oil pastel & felt-tip marker picture books | 1970s–80s theatrical Disney animation (*Robin Hood* 1973, *Mickey's Christmas Carol* 1983) |
+| **Linework & Fills** | Rough wax-crayon strokes (`#crayon-stroke`) + 22+ paper-grain fill patterns | Raw electrostatic Xerox graphite outlines (`#xerox-ink`) + 100% flat matte analog cel paint on characters (zero gradients or neon halos) |
+| **Backgrounds** | Two-tier crayon terrain (`background_patch` + cutout props) on cold-press watercolor paper | Wet-on-wet blotchy watercolor washes (`#watercolor-wash-soft`, `#bg-board-texture`) overlaid with loose hand-drawn pencil foliage scribbles & slanted pencil grass strokes |
+| **Frame Rate & Export** | `6 FPS` stepped stop-motion in a `30 FPS` MP4 container | `12 FPS` ("animated on twos") in a theatrical `24 FPS` MP4 container |
+| **Opening & Closing** | **`bookFrame`** — Hardcover book opens to a `0%` charcoal sketch, colors in `0% → 100%`, then un-colors and closes with `"The End ★"` | **`theatricalFrame`** — Classic circular iris-in/iris-out with vintage gold-serif title & `"The End"` closing cards + ultra-subtle 35mm Eastmancolor film grain |
+| **Dialogue & Lip-Sync** | Character-attached speech/thought bubbles + stepped `6 FPS` mouths | Bubble-free `speaking: true` 4-phase `12 FPS` lip-sync (or clean cream cel parchment bubbles for silent comedies) |
+| **Asset Library** | `engine/src/assets/{characters,props,buildings}/` | `engine/src/assets/classicCel/{characters,props,buildings}/` |
+| **Studio Website Route** | `/` (and `/?scene=<id>`) | `/classic/...` (e.g. `/classic/mochi`, `/classic/starter-moonlit-cat`) |
+| **Domain Skills** | `picture-book-animation` + `photo-to-crayon-asset` | `classic-animation` + `classic-cel-asset` |
+
+### How Each Mode Works
+
+#### 1. Picture-Book Crayon Mode (`artStyle: 'crayon'`, route `/`)
+- **3-Layer Crayon Pipeline**: Composites cold-press watercolor paper grain, two-tier crayon terrain & cutout props, and stepped `6 FPS` stop-motion character rigs with organic line wobble.
+- **Classic vs. Vibrant Crayon Sub-Modes**: Within `crayon` mode, you can preview or export in either **Classic (Non-Vibrant, default)** — warm, muted, vintage chalky crayon texture ideal for cozy bedtime stories — or **Vibrant Mode** (`--vibrant 1` / `?vibrant=1` / Studio UI toggle), which boosts pigment saturation (`1.42×`) and stroke density for bright daytime adventures.
+
+#### 2. Classic 1970s–1980s Hand-Drawn Cel Mode (`artStyle: 'classic_cel'`, route `/classic/...`)
+- **Multiplane Acetate & Illustration-Board Pipeline**: Separates every frame into a painted illustration-board backdrop (`#layer-1a-painted-background` with mottled wet-on-wet watercolor washes, loose graphite foliage scribbles, and slanted pencil grass) and a foreground acetate cel layer (`#layer-1b-acetate-cels` with raw `#xerox-ink` contours, flat matte paint-jar fills, and subtle multiplane rostrum depth), unified under an Eastmancolor film grade and ultra-subtle 35mm grain (`#layer-3-film-composite`).
+- **Authentic Timing & Storytelling**: Animates on twos at `12 FPS` inside a `24 FPS` film container, automatically disables crayon-only effects (`crayon_scribble` SFX, `bookFrame`), and supports both **theatrical bubble-free voiceover acting** (`speaking: true` driving 4-phase lip-sync) and **classic cel parchment speech bubbles** for no-API-key silent comedies.
+
+### How to Choose or Switch Modes
+
+- **In your chat prompt**: Mention your preferred mode (e.g. *"make this in classic hand-drawn mode"* or *"use picture-book crayon style"*). If you don't specify a mode, `picture-book-director` automatically asks which mode you want right after checking your optional voiceover API key.
+- **In the Live Studio Website (`http://localhost:5173`)**: Use the top-bar style switcher to jump cleanly between **`🖍️ Picture Book (/)`** and **`🎞️ Classic Cel (/classic/mochi)`** — each route filters the scene switcher to its mode's library while keeping every scene accessible via URL.
+- **Via URL or Headless CLI Export**:
+  - Live preview override: `?scene=<id>&style=classic_cel` or `/classic/<sceneId>`
+  - Headless MP4 export: `agy-node scripts/studio-cli.mjs export --scene <id> --style classic_cel --resolution 1080p` (or `--style crayon --vibrant 1`)
+
+*Coming soon: Additional pluggable animation modes will plug into the same `artStyle` registry, dedicated `/<mode>/...` Studio routes, and style-isolated asset folders without affecting existing scenes.*
 
 ---
 
@@ -66,20 +122,11 @@ The **Animated Picture Book Studio** is a **100% standalone, zero-dependency** A
 
 It works out-of-the-box on **any machine with only Antigravity installed** (`agy-node`)—no external `node`, `npm`, `pnpm`, `git`, or `python` installation is required. You can scaffold the bundled engine into any active `<workspace>` (or run it in-place) using `agy-node "<plugin-root>/scripts/ensure_engine.mjs"`. It provides skills, agents, rules, and the full engine so you can ask Antigravity to:
 
-- **Create animated videos in two distinct styles** *(if you don't specify a style in your prompt, the agent will ask you which one you want right after checking your voiceover API key)*:
-  1. **Picture-Book Crayon Style (`artStyle: 'crayon'`, `6 FPS`, Studio route `/`)** — Warm wax-crayon & oil-pastel stop-motion on heavy cold-press watercolor paper, complete with an automatic **Storybook Cover Opening & Ending/Credits Book-Frame (`bookFrame`)** where a hardcover picture book opens to a `0%` charcoal sketch, progressively colors in `0% → 100%` as the camera zooms in, and un-colors back to a sketch before closing with `"The End ★"`.
-  2. **Classic Hand-Drawn Animation Style (`artStyle: 'classic_cel'`, `12 FPS` on twos, Studio route `/classic/...`)** — Authentic 1970s–1980s theatrical Disney cel animation inspired by ***Robin Hood* (1973)** and ***Mickey's Christmas Carol* (1983)**: raw electrostatic Xerox graphite toner outlines + flat matte analog cel paint characters (NO modern digital gradients or neon glow halos) hovering over dappled watercolor/gouache illustration-board backgrounds with subtle rostrum cel depth, organic `12 FPS` ("on twos") motion exported in a `24 FPS` film container, tangible 35mm Eastmancolor celluloid film grain & optical vignette, and classic **Theatrical Iris/Fade Opening & `"The End"` Closing Cards (`theatricalFrame`)**. Includes a full Classic Cel showcase of *Mochi's Moonlit Garden* at **`http://localhost:5173/classic/mochi`** (`/classic/classic-moonlit-cat`).
-- **Model assets after photos** — Turn user-provided photos into either hand-crafted 2D wax-crayon cutout SVG assets (`src/assets/`) or authentic Xerox flat-cel & dappled-gouache SVG assets (`src/assets/classicCel/`).
-- **Add and generate audio** — Sync built-in procedural sound effects, attach user-provided audio files, or generate narration and custom WAV sound effects at precise timestamps.
-- **Preview live** — Spin up the bundled studio dev server (`agy-node scripts/studio-cli.mjs dev`) and switch effortlessly between **`/`** (Picture-Book Crayon Studio) and **`/classic/mochi`** (Classic 1970s–80s Hand-Drawn Cel Studio), with playback controls, live audio/voiceover playback, and layer toggles.
+- **Create animated videos across pluggable animation modes** *(see [Animation Modes](#animation-modes) above — currently **Picture-Book Crayon** at `/` and **Classic 1970s–80s Hand-Drawn Cel** at `/classic/...`, with more modes coming soon; if you don't specify a mode in your prompt, the agent asks right after checking your optional voiceover API key)*.
+- **Model assets after photos** — Turn user-provided photos into either hand-crafted 2D wax-crayon cutout SVG assets (`src/assets/`) or authentic Xerox flat-cel & watercolor/pencil SVG assets (`src/assets/classicCel/`).
+- **Add and generate audio** — Sync built-in procedural sound effects (20 one-file-per-SFX modules), attach user-provided or bundled WAV tracks (13 pre-rendered scores & SFX clips), or generate expressive Gemini TTS narration and character voiceovers at precise timestamps.
+- **Preview live** — Spin up the bundled studio dev server (`agy-node scripts/studio-cli.mjs dev`) and switch effortlessly between **`/`** (Picture-Book Crayon Studio) and **`/classic/...`** (Classic 1970s–80s Hand-Drawn Cel Studio), with playback controls, live audio/voiceover playback, and layer toggles.
 - **Export MP4 directly via CLI** — Run `agy-node scripts/studio-cli.mjs export --scene <id> --resolution 1080p` (with optional `--style classic_cel|crayon`) to export the `.mp4` in headless mode without needing to open a visible browser tab or click buttons, then launch the dev server so you can inspect the live site as well.
-
-### Visual Modes: Classic vs. Vibrant Crayon Mode (`crayon` Style)
-
-In Picture-Book Crayon style, you can preview and export any video in either **Classic (non-vibrant)** or **Vibrant** mode (just ask in your prompt, toggle the **Vibrant Crayon Mode** checkbox in the Studio UI, pass `?vibrant=1|0` in the URL, or pass `--vibrant 1|0` to `studio-cli.mjs export`):
-
-- **Classic Mode (Non-Vibrant, default):** A warm, muted, vintage picture-book look with stronger cold-press watercolor paper grain and chalky dry-crayon texture showing through the pigment — ideal for cozy bedtime stories and moonlit scenes.
-- **Vibrant Mode (`--vibrant 1`):** Boosts crayon pigment saturation (`1.42×`) and contrast, fills strokes more densely, and softens the paper overlay so blues, greens, reds, and yellows pop off the page — ideal for bright daytime adventures and upbeat comedies.
 
 ---
 
@@ -197,8 +244,8 @@ Dedicated skill for generating expressive studio-grade voiceovers, character voi
 
 ### 🔊 `picture-book-audio` *(Shared — Both Styles)*
 Comprehensive guide to sound effects, dynamic background music, and `audioClips` integration (`docs/AUDIO_CATALOG.md`):
-- **Mode A — Modular Procedural SFX** (`audioCues`, `src/audio/sfx/<name>.ts`): 19 built-in one-file-per-SFX synthesizer modules synced to active scene FPS (`6 FPS` or `12 FPS`; omits `crayon_scribble` in `classic_cel` scenes)
-- **Mode B — External & Bundled WAV Files** (`audioClips`, `public/audio/*.wav`): Attach `.mp3`/`.wav` clips with dynamic BGM tempo/mood shifts across story sections (faster/energetic for action, calmer/softer ducked under dialogue)
+- **Mode A — Modular Procedural SFX** (`audioCues`, `src/audio/sfx/<name>.ts`): 20 built-in one-file-per-SFX synthesizer modules synced to active scene FPS (`6 FPS` or `12 FPS`; omits `crayon_scribble` in `classic_cel` scenes)
+- **Mode B — External & Bundled WAV Files** (`audioClips`, `public/audio/*.wav`): Attach `.mp3`/`.wav` clips (13 bundled BGM & SFX WAV tracks) with dynamic BGM tempo/mood shifts across story sections (faster/energetic for action, calmer/softer ducked under dialogue)
 - **Mode C — Isolated Per-SFX Generation** (`scripts/sfx/<name>.mjs` & `generate_audio.mjs`): Build new SFX/BGM concurrently alongside code & voiceover subagents
 
 ### 🎬 `picture-book-studio-export` *(Shared — Both Styles)*
@@ -237,7 +284,7 @@ The single main producer, engineering coordinator, and export agent. Always runs
 | Active engine workspace | `<workspace>` (where `ensure_engine.mjs` scaffolds `<plugin-root>/engine/`) |
 | Bundled pure-JS dependencies | `<workspace>/vendor/` (`typescript`, `mp4-muxer`, `vitest-shim`, `isomorphic-git`) |
 | Source code | `<workspace>/src/` |
-| Scenes | `<workspace>/src/scenes/` (incl. `classicMoonlitCat.ts`) |
+| Scenes | `<workspace>/src/scenes/` (incl. all 3 Crayon starters & all 5 Classic Cel scenes) |
 | Crayon Characters / Props / Buildings | `<workspace>/src/assets/{characters,props,buildings}/` |
 | Classic Cel Characters / Props / Buildings | `<workspace>/src/assets/classicCel/{characters,props,buildings}/` |
 | Audio engine | `<workspace>/src/audio/soundEngine.ts` |
