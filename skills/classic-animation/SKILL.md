@@ -106,7 +106,7 @@ Build **blotchy, soft-feathered wet-on-wet watercolor backdrops** with **crisp l
 | **Earthen Path & Hand-Drawn Pencil Grass** | `9–10` | Curved watercolor dirt/stone lane + restrained warm lantern wash + **slanted diagonal hand-drawn pencil grass strokes, crooked short grass blades, horizontal ground-shadow dashes, and scattered tiny pebble dots** (`pencilGrassStrokes` + `#pencil-bg-sketch`). |
 | **Painted Set Architecture & Foliage** | `11–20` | Watercolor/gouache illustration-board props & buildings (`src/assets/classicCel/{buildings,props}/`) with loose hand-inked wood/bark/shingle ticks. |
 | **Foreground Xerox Cel Characters** | `21–34` | Flat matte cel-painted character rigs (`src/assets/classicCel/characters/`) with raw `#xerox-ink` outlines, `xeroxSketchStroke` fur/cloth ticks, and `celContactShadow`. |
-| **Dialogue Bubbles & Annotations** | `35–40` | Clean parchment-cream cel bubbles (`#FBF7EE`) with Xerox charcoal borders (`speechText` / `speechStyle`). |
+| **Dialogue & Lip-Sync (Voiced vs. Text-Bubble)** | `35–40` | **Voiced theatrical shorts omit comic speech bubbles by default** — use `speaking: true` on `CharacterNode` / `NodeKeyframe` to drive 12 FPS mouth lip-sync cleanly! Reserve `speechText` / `speechStyle` bubbles (`#FBF7EE`) ONLY when the user explicitly requests silent/text-bubble storytelling. |
 
 ---
 
@@ -145,14 +145,14 @@ All narrative staging guardrails apply strictly to `classic_cel` scenes:
 2. **Brisk Cuts When Characters Exit**: Cut within `~0.3–1.0s` once all active characters leave a shot — never linger on an empty stage.
 3. **Chronological Day/Night Continuity**: Progress logically forward (`Dawn → Midday → Sunset → Dusk → Night → next Morning`) across sky washes, sun/moon/stars, and warm practical lights.
 4. **Object & Companion Permanence**: Never pop props, vehicles, or animal companions out of existence mid-scene.
-5. **Proportional Scale**: Keep standing characters `~95–105px` tall at `scale: 1.0` (`~15–30%` of the `720px` canvas height in wide/medium shots), tables waist/chest height (`42–65px`), doorways `>= 110px`, cottages `~210–340px`, full cars `190–280px+` wide.
+5. **Proportional Scale & Intimate Interior Framing**:
+   - In exterior wide/medium shots, keep standing characters `~95–105px` tall at `scale: 1.0` (`~15–30%` of the `720px` canvas height), tables waist/chest height (`42–65px`), doorways `>= 110px`, cottages `~210–340px`, full cars `190–280px+` wide.
+   - **Cozy Interior Rooms (`~1.7–2.0×` Medium-Shot Scale)**: When cutting indoors (e.g., a cottage parlor, workshop, or counting shop), scale up ALL interior furniture, windows, fireplaces, desks, and characters generously (`~1.7–2.0×`) so the room feels intimate, cozy, and filled like 1970s–80s Disney interiors (*Mickey's Christmas Carol*) — NEVER leave tiny `1.0×` furniture stranded beneath vast empty walls!
 6. **Canonical `+X` Forward Facing**: Every character rig faces RIGHT (`+X`) when `flipX: false` and LEFT (`-X`) when `flipX: true`. `evaluateSingleNode` enforces `flipX = next.x < prev.x` during horizontal `'walking'` segments.
-7. **12 FPS Cel Lip-Sync & Voiceover Hygiene**:
-   - Let every spoken line finish before scene transitions (`act.endTime >= clip.startTime + wavDuration + 0.4..0.8s`) unless intentionally cutting off.
-   - Cap `AudioClipCue.duration <= transitionTime - startTime` and clear `speechText: ''` at character/scene changes (zero bleed).
-   - Never overlap multiple speakers unless intentionally scripted (`~0.25–0.6s` gap).
-   - Animate the speaking character's 4-stage hand-drawn cel mouth (`Math.floor(frameIndex / 2) % 4` at 12 FPS) across their exact spoken window (`isSpeaking` is enabled automatically when `speechText` is non-empty and `speechStyle !== 'thought'`, or when `state === 'singing'`).
-   - Keep `speechText` bubbles concise (`~20–30` chars soft guideline).
+7. **12 FPS Cel Lip-Sync (`speaking: true`, No Default Comic Speech Bubbles) & Voiceover Hygiene**:
+   - **Voiced `classic_cel` Theatrical Shorts Omit Comic Speech Bubbles by Default**: Classic theatrical animation conveys dialogue through voice acting and expressive 12 FPS mouth animation, NOT comic-strip balloons. Set **`speaking: true`** on the speaking character's `CharacterNode` / `NodeKeyframe` across their exact `[startTime, startTime + duration]` voiceover window (and `speaking: false` when silent) to drive their 4-stage cel lip-sync mouth (`Math.floor(frameIndex / 2) % 4`) with **zero speech bubbles**.
+   - Reserve `speechText` / `speechStyle` bubbles ONLY when the user explicitly asks for silent or text-bubble storytelling (keeping bubbles `~20–30` chars soft guideline).
+   - Let every spoken line finish before scene transitions (`act.endTime >= clip.startTime + wavDuration + 0.4..0.8s`) unless intentionally cutting off; cap `AudioClipCue.duration <= transitionTime - startTime` and set `speaking: false` (and `speechText: ''` if used) at character/scene changes (zero bleed); never overlap multiple speakers unless intentionally scripted (`~0.25–0.6s` gap).
 
 ---
 
