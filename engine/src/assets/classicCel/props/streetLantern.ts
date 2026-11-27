@@ -1,22 +1,26 @@
-import { TOKENS, svgUrl } from '../../../theme/tokens';
+import { TOKENS } from '../../../theme/tokens';
 import { steppedOscillate } from '../../../engine/clock';
 import {
   celContactShadow,
   celPath,
   celShadedShape,
-  celStrokeAttrs,
+  deterministicJitter,
+  gouacheDabWash,
   round2,
   svgEl,
   svgTransform,
+  xeroxSketchStroke,
 } from '../../../engine/svgUtils';
+import type { GouacheDab } from '../../../engine/svgUtils';
 import type { PropRenderOptions } from '../../props/types';
 
 /**
- * Renders a classic 1980s Victorian wrought-iron garden lamp (`'street_lantern'`)
- * inspired by *Mickey's Christmas Carol* (1983): stepped base, slender iron post
- * with decorative scroll bracket, pitched finial cap, mullioned glass lantern box
- * with tiny flickering warm candle flame, multi-layered soft golden radial glow halo
- * (`#cel-soft-glow`), and ground amber light pool when `lit: true`.
+ * Renders an authentic 1980s *Mickey's Christmas Carol*-style hand-inked Victorian
+ * wrought-iron garden lamp (`'street_lantern'`): flat analog iron paint with sketchy
+ * Xerox toner ink (`celPath` + `xeroxSketchStroke`), warm parchment-gold painted glass
+ * panes, hand-drawn flickering candle flame, and a subtle painterly translucent warm
+ * ochre gouache wash (`gouacheDabWash`) + tiny sketchy light-ray ticks when `lit: true`
+ * (NO modern digital neon radial glow orb!).
  *
  * Origin: `(0, 0)` at lamp base.
  * Footprint: `~x: -16..52, y: -132..0`.
@@ -30,132 +34,90 @@ export function renderClassicStreetLantern(options: PropRenderOptions): string {
     id ?? `v${variant}-${Math.round(x ?? 0)}-${Math.round(y ?? 0)}`
   ).replace(/[^a-zA-Z0-9_-]/g, '');
 
-  // Gentle 12 FPS candle flicker & lantern breath
-  const flameTilt = steppedOscillate(frameIndex, 10, 5.5, variant * 3);
-  const flamePulse = steppedOscillate(frameIndex, 14, 0.09, variant * 5);
-  const haloBreath = steppedOscillate(frameIndex, 18, 1.8, variant * 2);
+  // Gentle 12 FPS hand-drawn candle flicker & subtle painterly wash breath
+  const flameTilt = steppedOscillate(frameIndex, 10, 6.0, variant * 3);
+  const flamePulse = steppedOscillate(frameIndex, 14, 0.1, variant * 5);
+  const washShift = steppedOscillate(frameIndex, 18, 1.2, variant * 2);
+  const wobble = round2(deterministicJitter(frameIndex % 12, variant, 0.4));
 
-  const haloGradId = `cc-lantern-halo-${uid}`;
-  const glassGradId = `cc-lantern-glass-${uid}`;
-  const poolGradId = `cc-lantern-pool-${uid}`;
-
-  const defs = svgEl('defs', {}, [
-    svgEl(
-      'radialGradient',
-      { id: haloGradId, cx: '50%', cy: '50%', r: '50%' },
-      [
-        svgEl('stop', {
-          offset: '0%',
-          'stop-color': c.warmAmberCore,
-          'stop-opacity': 0.72,
-        }),
-        svgEl('stop', {
-          offset: '38%',
-          'stop-color': c.warmAmberGlow,
-          'stop-opacity': 0.42,
-        }),
-        svgEl('stop', {
-          offset: '72%',
-          'stop-color': c.warmAmberWash,
-          'stop-opacity': 0.16,
-        }),
-        svgEl('stop', {
-          offset: '100%',
-          'stop-color': c.warmAmberDeep,
-          'stop-opacity': 0,
-        }),
-      ]
-    ),
-    svgEl(
-      'linearGradient',
-      { id: glassGradId, x1: '50%', y1: '0%', x2: '50%', y2: '100%' },
-      lit
-        ? [
-            svgEl('stop', { offset: '0%', 'stop-color': c.warmAmberGlow }),
-            svgEl('stop', { offset: '55%', 'stop-color': c.warmAmberCore }),
-            svgEl('stop', { offset: '100%', 'stop-color': c.warmAmberWash }),
-          ]
-        : [
-            svgEl('stop', { offset: '0%', 'stop-color': c.nightSkyHorizon }),
-            svgEl('stop', { offset: '100%', 'stop-color': c.stoneShadow }),
-          ]
-    ),
-    svgEl(
-      'radialGradient',
-      { id: poolGradId, cx: '50%', cy: '50%', r: '50%' },
-      [
-        svgEl('stop', {
-          offset: '0%',
-          'stop-color': c.warmAmberGlow,
-          'stop-opacity': 0.34,
-        }),
-        svgEl('stop', {
-          offset: '55%',
-          'stop-color': c.warmAmberWash,
-          'stop-opacity': 0.16,
-        }),
-        svgEl('stop', {
-          offset: '100%',
-          'stop-color': c.warmAmberDeep,
-          'stop-opacity': 0,
-        }),
-      ]
-    ),
-  ]);
-
-  // Ground amber light pool cast onto the garden path when lit
+  // Painterly translucent warm ochre wash pooling softly on the path when lit (no digital radialGradient)
+  const groundWashDabs: GouacheDab[] = [
+    { cx: 17, cy: 1.5, rx: round2(28 + washShift * 0.5), ry: 6.8, rotate: -2, fill: c.warmAmberWash, opacity: 0.2 },
+    { cx: 18, cy: 1, rx: round2(17 + washShift * 0.3), ry: 4.5, rotate: 3, fill: c.warmAmberGlow, opacity: 0.24 },
+    { cx: 14, cy: 2, rx: 11, ry: 3.2, rotate: -4, fill: c.ochreEarth, opacity: 0.18 },
+  ];
   const groundAmberPool = lit
-    ? svgEl('ellipse', {
-        'data-part': 'lantern-ground-pool',
-        cx: 18,
-        cy: 1,
-        rx: round2(32 + haloBreath * 0.6),
-        ry: round2(8.5 + haloBreath * 0.15),
-        fill: svgUrl(poolGradId),
-        opacity: round2(0.85 + flamePulse * 0.5),
-      })
+    ? svgEl('g', { 'data-part': 'lantern-ground-pool' }, [
+        gouacheDabWash(groundWashDabs, {
+          fill: c.warmAmberWash,
+          wetEdgeColor: c.warmAmberDeep,
+          wetEdgeOpacity: 0.08,
+          opacity: round2(0.82 + flamePulse * 0.4),
+          seed: variant * 13 + 2,
+        }),
+      ])
     : '';
 
-  // Multi-layered soft warm golden radial glow halo with optical halation (#cel-soft-glow)
-  const warmHalo = lit
-    ? svgEl(
-        'g',
-        {
-          'data-part': 'lantern-halo',
-          filter: svgUrl(TOKENS.classicCel.filters.ids.celSoftGlow),
-        },
-        [
-          svgEl('circle', {
-            cx: 18,
-            cy: -99,
-            r: round2(33 + haloBreath),
-            fill: svgUrl(haloGradId),
-            opacity: round2(0.88 + flamePulse * 0.5),
-          }),
-          svgEl('circle', {
-            cx: 18,
-            cy: -99,
-            r: round2(17 + haloBreath * 0.45),
-            fill: c.warmAmberGlow,
-            opacity: 0.34,
-          }),
-        ]
-      )
+  // Subtle painterly translucent warm ochre gouache atmospheric wash around lantern glass (replaces neon halo)
+  const haloDabs: GouacheDab[] = [
+    { cx: 18, cy: -99, rx: round2(27 + washShift), ry: round2(25 + washShift * 0.8), rotate: -8, fill: c.warmAmberWash, opacity: 0.18 },
+    { cx: round2(19 + wobble), cy: -100, rx: round2(20 + washShift * 0.6), ry: round2(19 + washShift * 0.5), rotate: 14, fill: c.warmAmberGlow, opacity: 0.22 },
+    { cx: 17.5, cy: -98.5, rx: round2(13 + washShift * 0.35), ry: round2(14 + washShift * 0.3), rotate: -5, fill: c.warmAmberCore, opacity: 0.24 },
+  ];
+
+  // Tiny sketchy hand-inked parchment-gold light-ray ticks radiating from the glass
+  const rayFlicker = round2(0.45 + (flamePulse + 0.1) * 1.4);
+  const warmPainterlyHalo = lit
+    ? svgEl('g', { 'data-part': 'lantern-halo' }, [
+        gouacheDabWash(haloDabs, {
+          fill: c.warmAmberGlow,
+          wetEdgeColor: c.warmAmberWash,
+          wetEdgeOpacity: 0.06,
+          opacity: round2(0.86 + flamePulse * 0.35),
+          seed: variant * 19 + 4,
+        }),
+        svgEl('g', { 'data-part': 'lantern-ray-ticks', opacity: rayFlicker }, [
+          xeroxSketchStroke(
+            `M 4 -103 L ${round2(-1 - washShift * 0.4)} -105 M 5 -93 L ${round2(0 - washShift * 0.3)} -91 M 32 -103 L ${round2(37 + washShift * 0.4)} -105 M 31 -93 L ${round2(36 + washShift * 0.3)} -91`,
+            {
+              stroke: c.parchmentCream,
+              strokeWidth: 0.95,
+              broken: true,
+              dasharray: '4 2',
+              opacity: 0.72,
+            }
+          ),
+          xeroxSketchStroke(
+            'M 30 -111 L 34 -115 M 7 -111 L 3 -115 M 29 -84 L 33 -80',
+            {
+              stroke: c.antiqueGold,
+              strokeWidth: 0.85,
+              opacity: 0.62,
+            }
+          ),
+        ]),
+      ])
     : '';
 
-  // Stepped Victorian cast-iron pedestal base (y: 0..-16, x: -12..12)
-  const plinthBase = celShadedShape({
-    d: 'M -12 0 L 12 0 L 11 -4.5 L 8 -5.5 L 7 -11 L 4.5 -14 L -4.5 -14 L -7 -11 L -8 -5.5 L -11 -4.5 Z',
-    baseFill: c.ironDark,
-    highlightPaths: [
-      'M 2 -14 L 12 -14 L 12 0 L 3 0 C 4 -5, 4 -10, 2 -14 Z',
-    ],
-    highlightFill: c.ironHighlight,
-    highlightOpacity: 0.48,
-    clipId: `cc-lantern-base-clip-${uid}`,
-    stroke: c.xeroxInk,
-    strokeWidth: s.xeroxFine,
-  });
+  // Stepped Victorian cast-iron pedestal base (flat matte analog iron paint + Xerox ink)
+  const plinthBase = svgEl('g', { 'data-part': 'lantern-base' }, [
+    celShadedShape({
+      d: 'M -12 0 L 12 0 L 11 -4.5 L 8 -5.5 L 7 -11 L 4.5 -14 L -4.5 -14 L -7 -11 L -8 -5.5 L -11 -4.5 Z',
+      baseFill: c.ironDark,
+      highlightPaths: ['M 2.5 -14 L 12 -14 L 12 0 L 3.5 0 C 4 -5, 4 -10, 2.5 -14 Z'],
+      highlightFill: c.ironHighlight,
+      highlightOpacity: 0.42,
+      clipId: `cc-lantern-base-clip-${uid}`,
+      stroke: c.xeroxInk,
+      strokeWidth: s.xeroxFine,
+    }),
+    xeroxSketchStroke('M -9 -5.5 L 8.5 -5.5 M -5.5 -11 L 5.5 -11', {
+      stroke: c.xeroxInk,
+      strokeWidth: 0.85,
+      broken: true,
+      opacity: 0.75,
+    }),
+  ]);
 
   // Slender tapered iron post + molded decorative collar rings
   const ironPost = svgEl('g', { 'data-part': 'lantern-post' }, [
@@ -164,15 +126,19 @@ export function renderClassicStreetLantern(options: PropRenderOptions): string {
       c.ironDark,
       { stroke: c.xeroxInk, strokeWidth: s.xeroxFine }
     ),
-    // Subtle moonlit metallic edge along right face of post
-    svgEl('path', {
-      d: 'M 1.1 -16 L 0.8 -114',
-      fill: 'none',
-      ...celStrokeAttrs({
-        stroke: c.ironHighlight,
-        strokeWidth: 0.9,
-        opacity: 0.65,
-      }),
+    // Broken sketchy iron edge highlight & hand-drawn ink hatch lines
+    xeroxSketchStroke('M 1.1 -17 L 0.8 -113', {
+      stroke: c.ironHighlight,
+      strokeWidth: 0.9,
+      broken: true,
+      dasharray: '14 6 9 5',
+      opacity: 0.58,
+    }),
+    xeroxSketchStroke('M -1.8 -28 L -1.5 -88', {
+      stroke: c.xeroxInk,
+      strokeWidth: 0.8,
+      broken: true,
+      opacity: 0.62,
     }),
     // Molded decorative iron collars
     celPath('M -5.2 -26 L 5.2 -26 L 4.5 -23 L -4.5 -23 Z', c.ironDark, {
@@ -183,69 +149,51 @@ export function renderClassicStreetLantern(options: PropRenderOptions): string {
       stroke: c.xeroxInk,
       strokeWidth: s.sketchLine,
     }),
-    // Top cap finial on post
-    celPath(
-      'M -4 -116 L 0 -124 L 4 -116 Z',
-      c.ironDark,
-      { stroke: c.xeroxInk, strokeWidth: s.sketchLine }
-    ),
+    // Post top finial tip
+    celPath('M -4 -116 L 0 -124 L 4 -116 Z', c.ironDark, {
+      stroke: c.xeroxInk,
+      strokeWidth: s.sketchLine,
+    }),
   ]);
 
   // Decorative Victorian wrought-iron scroll bracket supporting the lantern at x = 18
   const scrollBracket = svgEl('g', { 'data-part': 'lantern-bracket' }, [
-    // Main arched gooseneck arm
-    svgEl('path', {
-      d: 'M 0 -115 C 0 -128, 12 -131, 18 -126 L 18 -122',
-      fill: 'none',
-      ...celStrokeAttrs({
-        stroke: c.ironDark,
-        strokeWidth: 3.0,
-      }),
+    xeroxSketchStroke('M 0 -115 C 0 -128, 12 -131, 18 -126 L 18 -122', {
+      stroke: c.ironDark,
+      strokeWidth: 2.9,
+      feather: true,
+      opacity: 0.96,
     }),
-    // Fine moonlight highlight on upper gooseneck curve
-    svgEl('path', {
-      d: 'M 1.5 -117 C 2.5 -126.5, 11.5 -129, 17 -125.5',
-      fill: 'none',
-      ...celStrokeAttrs({
-        stroke: c.ironHighlight,
-        strokeWidth: 0.85,
-        opacity: 0.6,
-      }),
+    xeroxSketchStroke('M 1.8 -117 C 2.8 -126.5, 11.5 -129, 17 -125.5', {
+      stroke: c.ironHighlight,
+      strokeWidth: 0.8,
+      broken: true,
+      opacity: 0.54,
     }),
     // Ornamental S-scroll volute brace beneath bracket arm
-    svgEl('path', {
-      d: 'M 2 -100 C 11 -101, 14 -112, 8 -115 C 4 -117, 3 -111, 7 -110',
-      fill: 'none',
-      ...celStrokeAttrs({
-        stroke: c.ironDark,
-        strokeWidth: 1.8,
-      }),
+    xeroxSketchStroke('M 2 -100 C 11 -101, 14 -112, 8 -115 C 4 -117, 3 -111, 7 -110', {
+      stroke: c.xeroxInk,
+      strokeWidth: 1.75,
+      feather: true,
+      opacity: 0.92,
     }),
-    svgEl('path', {
-      d: 'M 2 -108 C 8 -113, 14 -120, 17 -124',
-      fill: 'none',
-      ...celStrokeAttrs({
-        stroke: c.xeroxInk,
-        strokeWidth: 1.35,
-      }),
+    xeroxSketchStroke('M 2 -108 C 8 -113, 14 -120, 17 -124', {
+      stroke: c.xeroxInk,
+      strokeWidth: 1.25,
+      broken: true,
+      opacity: 0.84,
     }),
   ]);
 
-  // Tiny flickering candle & warm flame inside mullioned glass box
+  // Hand-drawn flickering candle & warm flame inside glass
   const candleFlame = lit
     ? svgEl('g', { 'data-part': 'lantern-candle' }, [
-        // Wax candle stub
-        svgEl('rect', {
-          x: 16.5,
-          y: -92,
-          width: 3,
-          height: 5.5,
-          rx: 0.6,
-          fill: c.celCream,
+        // Wax candle stub (flat cel cream + Xerox outline)
+        celPath('M 16.4 -92 L 19.6 -92 L 19.4 -86.5 L 16.6 -86.5 Z', c.parchmentCream, {
           stroke: c.xeroxInkSoft,
-          'stroke-width': 0.6,
+          strokeWidth: 0.75,
         }),
-        // Animated teardrop flame
+        // Hand-drawn teardrop flame with organic 12 FPS wobble
         svgEl(
           'g',
           {
@@ -253,17 +201,18 @@ export function renderClassicStreetLantern(options: PropRenderOptions): string {
               x: 18,
               y: -92.5,
               rotate: flameTilt,
-              scaleX: round2(1 - flamePulse * 0.4),
+              scaleX: round2(1 - flamePulse * 0.35),
               scaleY: round2(1 + flamePulse),
             }),
           },
           [
+            celPath(
+              'M 0 0 C -2.8 -1.6, -2.5 -5.8, 0 -8.8 C 2.5 -5.8, 2.8 -1.6, 0 0 Z',
+              c.warmAmberWash,
+              { stroke: c.xeroxInkSoft, strokeWidth: 0.7 }
+            ),
             svgEl('path', {
-              d: 'M 0 0 C -2.8 -1.5, -2.5 -5.8, 0 -8.5 C 2.5 -5.8, 2.8 -1.5, 0 0 Z',
-              fill: c.warmAmberGlow,
-            }),
-            svgEl('path', {
-              d: 'M 0 -0.8 C -1.3 -1.8, -1.2 -4.2, 0 -6.1 C 1.2 -4.2, 1.3 -1.8, 0 -0.8 Z',
+              d: 'M 0 -0.8 C -1.4 -1.8, -1.3 -4.5, 0 -6.4 C 1.3 -4.5, 1.4 -1.8, 0 -0.8 Z',
               fill: c.warmAmberCore,
             }),
           ]
@@ -271,52 +220,56 @@ export function renderClassicStreetLantern(options: PropRenderOptions): string {
       ])
     : '';
 
-  // Hanging Victorian mullioned glass lantern box with pitched finial cap
+  // Hanging Victorian mullioned glass lantern box with pitched finial cap (flat analog cel paint, zero gradients!)
   const lanternHousing = svgEl('g', { 'data-part': 'lantern-housing' }, [
-    // Tapered glass panes
-    svgEl('path', {
+    celShadedShape({
       d: 'M 9 -112 L 27 -112 L 24 -86 L 12 -86 Z',
-      fill: svgUrl(glassGradId),
-      opacity: lit ? 0.94 : 0.58,
-      ...celStrokeAttrs({
-        stroke: c.xeroxInk,
-        strokeWidth: s.xeroxFine,
-      }),
+      baseFill: lit ? c.warmAmberGlow : c.slateBlue,
+      shadowPaths: lit
+        ? ['M 9 -112 L 13.5 -112 L 14.5 -86 L 12 -86 Z', 'M 22.5 -112 L 27 -112 L 24 -86 L 21.5 -86 Z']
+        : ['M 9 -112 L 16 -112 L 16.5 -86 L 12 -86 Z'],
+      shadowFill: lit ? c.warmAmberWash : c.stoneShadow,
+      shadowOpacity: lit ? 0.55 : 0.65,
+      highlightPaths: lit
+        ? ['M 14.2 -108 L 21.8 -108 L 20.8 -89 L 15.2 -89 Z']
+        : ['M 20 -110 L 25 -110 L 23 -92 L 19.5 -92 Z'],
+      highlightFill: lit ? c.warmAmberCore : c.stoneLight,
+      highlightOpacity: lit ? 0.68 : 0.35,
+      clipId: `cc-lantern-glass-clip-${uid}`,
+      stroke: c.xeroxInk,
+      strokeWidth: s.xeroxFine,
     }),
-    // Candle flame glowing inside glass
     candleFlame,
-    // Crisp wrought-iron vertical & diagonal glass mullions
-    svgEl('path', {
-      d: 'M 18 -112 L 18 -86 M 13.5 -112 L 14.5 -86 M 22.5 -112 L 21.5 -86',
-      fill: 'none',
-      ...celStrokeAttrs({
-        stroke: c.ironDark,
-        strokeWidth: 1.15,
-      }),
-    }),
-    // Upper lantern eaves cornice & pitched pagoda roof cap with finial spire
+    // Hand-inked iron mullions
+    xeroxSketchStroke(
+      'M 18 -112 L 18 -86 M 13.5 -112 L 14.5 -86 M 22.5 -112 L 21.5 -86',
+      {
+        stroke: c.xeroxInk,
+        strokeWidth: 1.2,
+        opacity: 0.92,
+      }
+    ),
+    // Upper lantern eaves cornice & pitched pagoda roof cap
     celShadedShape({
       d: 'M 6.5 -112 L 10 -116 L 18 -122.5 L 26 -116 L 29.5 -112 Z',
       baseFill: c.ironDark,
       highlightPaths: ['M 18 -123 L 30 -112 L 18 -112 Z'],
       highlightFill: c.ironHighlight,
-      highlightOpacity: 0.42,
+      highlightOpacity: 0.38,
       clipId: `cc-lantern-cap-clip-${uid}`,
       stroke: c.xeroxInk,
       strokeWidth: s.xeroxFine,
     }),
-    // Top finial ring & spire
-    celPath(
-      'M 16.2 -122.5 L 18 -129.5 L 19.8 -122.5 Z',
-      c.ironDark,
-      { stroke: c.xeroxInk, strokeWidth: s.sketchLine }
-    ),
+    // Finial ring & spire
+    celPath('M 16.2 -122.5 L 18 -129.5 L 19.8 -122.5 Z', c.ironDark, {
+      stroke: c.xeroxInk,
+      strokeWidth: s.sketchLine,
+    }),
     // Bottom iron cup & pendant drop finial
-    celPath(
-      'M 10.5 -86 L 25.5 -86 L 22 -82.5 L 18 -79.5 L 14 -82.5 Z',
-      c.ironDark,
-      { stroke: c.xeroxInk, strokeWidth: s.sketchLine }
-    ),
+    celPath('M 10.5 -86 L 25.5 -86 L 22 -82.5 L 18 -79.5 L 14 -82.5 Z', c.ironDark, {
+      stroke: c.xeroxInk,
+      strokeWidth: s.sketchLine,
+    }),
   ]);
 
   return svgEl(
@@ -327,10 +280,9 @@ export function renderClassicStreetLantern(options: PropRenderOptions): string {
       'data-lit': lit ? 'true' : 'false',
     },
     [
-      defs,
-      celContactShadow(0, 1, 14, 3.8, 0.34),
+      celContactShadow(0, 1, 13.5, 3.6, 0.3),
       groundAmberPool,
-      warmHalo,
+      warmPainterlyHalo,
       plinthBase,
       ironPost,
       scrollBracket,

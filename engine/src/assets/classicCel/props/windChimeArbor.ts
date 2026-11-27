@@ -4,83 +4,28 @@ import {
   celContactShadow,
   celPath,
   celShadedShape,
-  celStrokeAttrs,
-  gouachePath,
+  gouacheDabWash,
   round2,
   svgEl,
   svgTransform,
+  xeroxSketchStroke,
 } from '../../../engine/svgUtils';
 import type { PropRenderOptions } from '../../props/types';
 import { renderStarShape } from '../../props/shared';
 
 /**
- * Renders a classic 2-tone cel/gouache heart-shaped ivy leaf with moonlit rim edge.
- */
-function renderClassicHeartLeaf(
-  cx: number,
-  cy: number,
-  rot: number,
-  scale: number,
-  rimLit: boolean
-): string {
-  const c = TOKENS.classicCel.colors;
-  const s = TOKENS.classicCel.strokes;
-
-  return svgEl(
-    'g',
-    {
-      transform: svgTransform({ x: cx, y: cy, rotate: rot, scale }),
-    },
-    [
-      celPath(
-        'M 0 0 C -8 -3, -12 -11, -6 -16 C -2 -19, 0 -15, 0 -13 C 0 -15, 2 -19, 6 -16 C 12 -11, 8 -3, 0 0 Z',
-        rimLit ? c.foliageLit : c.foliageMid,
-        { stroke: c.xeroxInkSoft, strokeWidth: s.xeroxFine }
-      ),
-      // Shaded right half of leaf
-      svgEl('path', {
-        d: 'M 0 0 C 0 -5, 0 -10, 0 -13 C 0 -15, 2 -19, 6 -16 C 12 -11, 8 -3, 0 0 Z',
-        fill: c.foliageShadow,
-        opacity: 0.48,
-      }),
-      // Crisp moonlight rim highlight along left leaf edge
-      rimLit
-        ? svgEl('path', {
-            d: 'M -2.5 -2.5 C -7.5 -5.5, -9.5 -10.5, -5.5 -14.5',
-            fill: 'none',
-            stroke: c.foliageRim,
-            'stroke-width': 1.4,
-            'stroke-linecap': 'round',
-            opacity: 0.9,
-          })
-        : '',
-      // Delicate central stem vein
-      svgEl('path', {
-        d: 'M 0 -2 Q 0 -7.5, 0 -12.5',
-        fill: 'none',
-        stroke: c.foliageRim,
-        'stroke-width': 0.85,
-        'stroke-linecap': 'round',
-        opacity: 0.55,
-      }),
-    ]
-  );
-}
-
-/**
- * Renders a luminous painted cream moonflower with warm golden center and soft aura.
+ * Renders a loose, painterly 1970s watercolor moonflower with sketchy sepia petal penwork
+ * (NO digital neon glow halos).
  */
 function renderClassicMoonflower(
   cx: number,
   cy: number,
   scale: number,
   rot: number,
-  lit: boolean,
-  auraGradUrl: string
+  lit: boolean
 ): string {
   const c = TOKENS.classicCel.colors;
   const s = TOKENS.classicCel.strokes;
-  const softGlowFilter = svgUrl(TOKENS.classicCel.filters.ids.celSoftGlow);
 
   return svgEl(
     'g',
@@ -89,47 +34,50 @@ function renderClassicMoonflower(
       transform: svgTransform({ x: cx, y: cy, rotate: rot, scale }),
     },
     [
-      // Soft optical moonlight halo behind bloom
-      svgEl('circle', {
-        cx: 0,
-        cy: 0,
-        r: lit ? 19 : 14,
-        fill: auraGradUrl,
-        filter: lit ? softGlowFilter : undefined,
-        opacity: lit ? 0.9 : 0.45,
-      }),
-      // Outer 5 scalloped cream gouache petals
+      // Soft painted translucent cream gouache wash behind bloom (subtle, non-neon)
+      lit
+        ? gouacheDabWash(
+            [{ cx: 0, cy: 0, rx: 14.5, ry: 13.5, opacity: 0.24 }],
+            {
+              fill: c.warmAmberGlow,
+              wetEdgeOpacity: 0,
+              softEdge: true,
+              seed: Math.abs(Math.round(cx + cy)) + 3,
+            }
+          )
+        : '',
+      // Flat painted scalloped cream petals with raw Xerox ink edge
       celPath(
-        'M 0 -12.5 C 5 -14.5, 9.5 -8.5, 6.2 -3.2 C 12.2 -3.2, 14.5 4.2, 8.2 7.2 C 11.2 12.2, 4.2 15.2, 0 10.2 C -4.2 15.2, -11.2 12.2, -8.2 7.2 C -14.5 4.2, -12.2 -3.2, -6.2 -3.2 C -9.5 -8.5, -5 -14.5, 0 -12.5 Z',
+        'M 0 -12.2 C 5 -14.2, 9.2 -8.2, 6.0 -3.0 C 12.0 -3.0, 14.2 4.0, 8.0 7.0 C 11.0 12.0, 4.0 15.0, 0 10.0 C -4.0 15.0, -11.0 12.0, -8.0 7.0 C -14.2 4.0, -12.0 -3.0, -6.0 -3.0 C -9.2 -8.2, -5 -14.2, 0 -12.2 Z',
         c.flowerCream,
         { stroke: c.xeroxInkSoft, strokeWidth: s.xeroxFine }
       ),
-      // Soft shaded petal cup depth
+      // Subtle painted cup shading & inner parchment petals
       svgEl('circle', {
-        cx: 0.6,
-        cy: 0.8,
-        r: 7.4,
+        cx: 0.5,
+        cy: 0.7,
+        r: 6.8,
         fill: c.mochiCreamShadow,
-        opacity: 0.45,
+        opacity: 0.42,
       }),
-      // Inner luminous cel-cream star petals
       celPath(
-        'M 0 -8.5 C 3 -6, 6 -4, 8 -1.5 C 5 1, 5 4.5, 5.5 7.5 C 2 6, -2 6, -5.5 7.5 C -5 4.5, -5 1, -8 -1.5 C -6 -4, -3 -6, 0 -8.5 Z',
-        c.celCream,
-        { stroke: c.xeroxInkSoft, strokeWidth: 0.85 }
+        'M 0 -8.2 C 2.8 -5.8, 5.8 -3.8, 7.6 -1.4 C 4.8 1.0, 4.8 4.2, 5.2 7.2 C 1.8 5.8, -1.8 5.8, -5.2 7.2 C -4.8 4.2, -4.8 1.0, -7.6 -1.4 C -5.8 -3.8, -2.8 -5.8, 0 -8.2 Z',
+        c.parchmentCream,
+        { stroke: c.xeroxInkSoft, strokeWidth: 0.8 }
       ),
-      // Warm glowing golden pollen heart
+      // Flat antique-gold pollen center + tiny sepia stipple tick
       svgEl('circle', {
         cx: 0,
         cy: 0,
-        r: 4.2,
-        fill: c.warmAmberGlow,
-        ...celStrokeAttrs({ stroke: c.xeroxInkSoft, strokeWidth: 1.0 }),
+        r: 4.0,
+        fill: lit ? c.warmAmberGlow : c.antiqueGold,
+        stroke: c.xeroxInkSoft,
+        'stroke-width': 0.95,
       }),
       svgEl('circle', {
         cx: -0.7,
         cy: -0.7,
-        r: 2.1,
+        r: 1.7,
         fill: c.warmAmberCore,
       }),
     ]
@@ -137,136 +85,129 @@ function renderClassicMoonflower(
 }
 
 /**
- * Renders soft optical fairy-dust golden shimmer rings & 4-point classic animation
- * star sparkles around the ringing chimes (`lit === true`) at smooth 12 FPS.
+ * Renders authentic 1970s hand-drawn chime ringing effects (`lit === true`):
+ * thin broken dry-brush Xerox chime vibration lines + tiny flat hand-inked
+ * 4-point parchment/gold sparkle star-crosses + a subtle painted parchment dab
+ * (NO digital neon blur rings!).
  */
-function renderClassicChimeShimmer(
-  frameIndex: number,
-  variant: number,
-  shimmerGradUrl: string
-): string {
+function renderClassicChimeShimmer(frameIndex: number, variant: number): string {
   const c = TOKENS.classicCel.colors;
-  const softGlowFilter = svgUrl(TOKENS.classicCel.filters.ids.celSoftGlow);
 
-  // Smooth 12 FPS pulsing acoustic shimmer waves
   const pulseA = steppedOscillate(frameIndex, 18, 1, variant);
   const pulseB = steppedOscillate(frameIndex, 18, 1, variant + 6);
   const pulseC = steppedOscillate(frameIndex, 24, 1, variant + 12);
 
-  const ring1R = round2(18 + (pulseA + 1) * 4.5);
-  const ring2R = round2(26 + (pulseB + 1) * 5.5);
+  // Subtle hand-painted translucent warm wash dab right behind the ringing star catcher
+  const subtleCatcherWash = gouacheDabWash(
+    [
+      {
+        cx: 0,
+        cy: -78,
+        rx: round2(18 + pulseA * 2.2),
+        ry: round2(16.5 + pulseB * 2.0),
+        opacity: 0.22,
+      },
+    ],
+    {
+      fill: c.warmAmberGlow,
+      wetEdgeColor: c.warmAmberWash,
+      wetEdgeOpacity: 0.08,
+      softEdge: true,
+      seed: 19,
+    }
+  );
 
-  const acousticArcs = [
-    // Luminous golden halation aura centered on the star catcher at (0, -78)
-    svgEl('circle', {
-      cx: 0,
-      cy: -78,
-      r: round2(30 + pulseA * 3),
-      fill: shimmerGradUrl,
-      opacity: round2(0.75 + pulseA * 0.15),
+  // Thin hand-inked dry-brush acoustic vibration arcs flanking the tubes & star catcher
+  const vibrationLines = [
+    xeroxSketchStroke('M -26 -136 Q -36 -118, -28 -99', {
+      stroke: c.parchmentCream,
+      strokeWidth: 1.5,
+      broken: true,
+      opacity: round2(0.58 + pulseA * 0.28),
     }),
-    // Concentric fairy-dust shimmer rings around star catcher
-    svgEl('circle', {
-      cx: 0,
-      cy: -78,
-      r: ring1R,
-      fill: 'none',
-      stroke: c.warmAmberCore,
-      'stroke-width': 1.5,
-      'stroke-dasharray': '7 5',
-      opacity: round2(0.72 - pulseA * 0.22),
-    }),
-    svgEl('circle', {
-      cx: 0,
-      cy: -78,
-      r: ring2R,
-      fill: 'none',
+    xeroxSketchStroke('M -33 -142 Q -46 -118, -36 -93', {
       stroke: c.warmAmberGlow,
-      'stroke-width': 1.2,
-      'stroke-dasharray': '4 7',
-      opacity: round2(0.55 - pulseB * 0.2),
+      strokeWidth: 1.15,
+      dasharray: '5 5 3 4',
+      opacity: round2(0.45 + pulseB * 0.26),
     }),
-    // Left & right ringing golden resonance arcs flanking the metallic chime tubes
-    svgEl('path', {
-      d: 'M -27 -136 Q -38 -118, -29 -98',
-      fill: 'none',
-      stroke: c.warmAmberCore,
-      'stroke-width': 1.8,
-      'stroke-linecap': 'round',
-      opacity: round2(0.68 + pulseA * 0.24),
+    xeroxSketchStroke('M 26 -136 Q 36 -118, 28 -99', {
+      stroke: c.parchmentCream,
+      strokeWidth: 1.5,
+      broken: true,
+      opacity: round2(0.58 + pulseB * 0.28),
     }),
-    svgEl('path', {
-      d: 'M -35 -143 Q -49 -118, -38 -91',
-      fill: 'none',
+    xeroxSketchStroke('M 33 -142 Q 46 -118, 36 -93', {
       stroke: c.warmAmberGlow,
-      'stroke-width': 1.3,
-      'stroke-dasharray': '5 5',
-      'stroke-linecap': 'round',
-      opacity: round2(0.52 + pulseB * 0.24),
+      strokeWidth: 1.15,
+      dasharray: '5 5 3 4',
+      opacity: round2(0.45 + pulseC * 0.26),
     }),
-    svgEl('path', {
-      d: 'M 27 -136 Q 38 -118, 29 -98',
-      fill: 'none',
+    // Delicate broken hand-drawn ringing brackets around the star catcher (0, -78)
+    xeroxSketchStroke('M -17 -87 Q -23 -78, -16 -68 M 17 -87 Q 23 -78, 16 -68', {
       stroke: c.warmAmberCore,
-      'stroke-width': 1.8,
-      'stroke-linecap': 'round',
-      opacity: round2(0.68 + pulseB * 0.24),
-    }),
-    svgEl('path', {
-      d: 'M 35 -143 Q 49 -118, 38 -91',
-      fill: 'none',
-      stroke: c.warmAmberGlow,
-      'stroke-width': 1.3,
-      'stroke-dasharray': '5 5',
-      'stroke-linecap': 'round',
-      opacity: round2(0.52 + pulseC * 0.24),
+      strokeWidth: 1.35,
+      broken: true,
+      opacity: round2(0.6 + pulseA * 0.24),
     }),
   ];
 
-  // Classic Disney 4-point diamond fairy-dust sparkles drifting gently at 12 FPS
+  // Crisp tiny hand-inked 4-point sparkle star-crosses (classic cel pen ticks, zero blur!)
   const sparkleSpecs: ReadonlyArray<{
     bx: number;
     by: number;
     size: number;
     phase: number;
   }> = [
-    { bx: -32, by: -148, size: 5.2, phase: 0 },
-    { bx: 33, by: -144, size: 4.8, phase: 3 },
-    { bx: -26, by: -89, size: 5.6, phase: 6 },
-    { bx: 28, by: -84, size: 5.0, phase: 9 },
-    { bx: -17, by: -64, size: 4.4, phase: 12 },
-    { bx: 19, by: -67, size: 4.6, phase: 15 },
-    { bx: 0, by: -162, size: 4.2, phase: 18 },
+    { bx: -31, by: -148, size: 4.8, phase: 0 },
+    { bx: 32, by: -144, size: 4.4, phase: 3 },
+    { bx: -25, by: -89, size: 5.2, phase: 6 },
+    { bx: 27, by: -84, size: 4.6, phase: 9 },
+    { bx: -16, by: -64, size: 4.0, phase: 12 },
+    { bx: 18, by: -67, size: 4.2, phase: 15 },
+    { bx: 0, by: -162, size: 3.8, phase: 18 },
   ];
 
   const sparkles = sparkleSpecs.map((sp, i) => {
-    const dx = steppedOscillate(frameIndex, 24, 2.2, variant + sp.phase);
-    const dy = steppedOscillate(frameIndex, 18, 2.6, variant + sp.phase + 4);
+    const dx = steppedOscillate(frameIndex, 24, 2.0, variant + sp.phase);
+    const dy = steppedOscillate(frameIndex, 18, 2.4, variant + sp.phase + 4);
     const twinkle = steppedOscillate(frameIndex, 12, 1, variant + sp.phase);
     const sx = round2(sp.bx + dx);
     const sy = round2(sp.by + dy);
-    const r = round2(sp.size * (0.72 + (twinkle + 1) * 0.28));
-    const inner = round2(r * 0.26);
-    const fill = i % 2 === 0 ? c.starGlow : c.warmAmberCore;
+    const r = round2(sp.size * (0.7 + (twinkle + 1) * 0.28));
+    const color = i % 2 === 0 ? c.parchmentCream : c.warmAmberCore;
+    const op = round2(0.58 + (twinkle + 1) * 0.2);
 
-    return svgEl('path', {
-      d: `M ${sx} ${round2(sy - r)} Q ${round2(sx + inner)} ${round2(sy - inner)}, ${round2(sx + r)} ${sy} Q ${round2(sx + inner)} ${round2(sy + inner)}, ${sx} ${round2(sy + r)} Q ${round2(sx - inner)} ${round2(sy + inner)}, ${round2(sx - r)} ${sy} Q ${round2(sx - inner)} ${round2(sy - inner)}, ${sx} ${round2(sy - r)} Z`,
-      fill,
-      opacity: round2(0.55 + (twinkle + 1) * 0.22),
-    });
+    return svgEl('g', { opacity: op }, [
+      xeroxSketchStroke(
+        `M ${sx} ${round2(sy - r)} L ${sx} ${round2(sy + r)} M ${round2(sx - r)} ${sy} L ${round2(sx + r)} ${sy}`,
+        {
+          stroke: color,
+          strokeWidth: 1.4,
+          opacity: 0.95,
+        }
+      ),
+      svgEl('circle', {
+        cx: sx,
+        cy: sy,
+        r: 1.15,
+        fill: c.starGlow,
+      }),
+    ]);
   });
 
-  return svgEl(
-    'g',
-    { 'data-part': 'chime-shimmer', filter: softGlowFilter },
-    [...acousticArcs, ...sparkles]
-  );
+  return svgEl('g', { 'data-part': 'chime-shimmer' }, [
+    subtleCatcherWash,
+    ...vibrationLines,
+    ...sparkles,
+  ]);
 }
 
 /**
- * Renders the gleaming 2-tone cel metallic gold & silver wind-chime cluster
- * anchored at `(0, -178)` with smooth 12 FPS sway and dangling star catcher
- * (`data-anchor="chime-catcher"`) at `(0, -78)`.
+ * Renders the flat analog cel-painted brass & silver wind-chime cluster
+ * anchored at `(0, -178)` with raw Xerox toner outlines (`#xerox-ink`),
+ * smooth 12 FPS sway, and dangling star catcher (`data-anchor="chime-catcher"`)
+ * at `(0, -78)`.
  */
 function renderClassicWindChimeCluster(
   frameIndex: number,
@@ -276,9 +217,7 @@ function renderClassicWindChimeCluster(
 ): string {
   const c = TOKENS.classicCel.colors;
   const s = TOKENS.classicCel.strokes;
-  const softGlowFilter = svgUrl(TOKENS.classicCel.filters.ids.celSoftGlow);
 
-  // Smooth 12 FPS ("on twos") gentle sway; livelier melodic swing when lit
   const clusterSway = steppedOscillate(
     frameIndex,
     lit ? 18 : 38,
@@ -286,7 +225,7 @@ function renderClassicWindChimeCluster(
     variant
   );
 
-  // 4 staggered gleaming metallic cel tubes (alternating gold & moonlit silver)
+  // 4 staggered flat analog cel metallic chime tubes (alternating antique brass & muted silver)
   const tubeSpecs: ReadonlyArray<{
     x: number;
     topY: number;
@@ -319,11 +258,11 @@ function renderClassicWindChimeCluster(
     const halfW = round2(tube.width / 2);
     const xL = round2(tube.x - halfW);
     const xR = round2(tube.x + halfW);
-    const midX = round2(tube.x + 0.6);
+    const midX = round2(tube.x + 0.7);
 
     const bodyD = `M ${xL} ${tube.topY + 2} Q ${tube.x} ${tube.topY - 1}, ${xR} ${tube.topY + 2} L ${xR} ${tube.bottomY - 2} Q ${tube.x} ${tube.bottomY + 1}, ${xL} ${tube.bottomY - 2} Z`;
     const shadowBandD = `M ${midX} ${tube.topY - 2} L ${round2(xR + 1)} ${tube.topY - 2} L ${round2(xR + 1)} ${tube.bottomY + 2} L ${midX} ${tube.bottomY + 2} Z`;
-    const gleamBandD = `M ${round2(xL + 0.9)} ${tube.topY + 3} L ${round2(xL + 2.3)} ${tube.topY + 3} L ${round2(xL + 2.3)} ${tube.bottomY - 4} L ${round2(xL + 0.9)} ${tube.bottomY - 4} Z`;
+    const gleamBandD = `M ${round2(xL + 0.9)} ${tube.topY + 4} L ${round2(xL + 2.1)} ${tube.topY + 4} L ${round2(xL + 2.1)} ${tube.bottomY - 5} L ${round2(xL + 0.9)} ${tube.bottomY - 5} Z`;
 
     return svgEl(
       'g',
@@ -336,43 +275,28 @@ function renderClassicWindChimeCluster(
         }),
       },
       [
-        // Crisp taut suspension filament
-        svgEl('path', {
-          d: `M ${tube.x} -155 L ${tube.x} ${tube.topY}`,
-          fill: 'none',
-          ...celStrokeAttrs({
-            stroke: c.xeroxInkSoft,
-            strokeWidth: s.sketchLine,
-          }),
+        xeroxSketchStroke(`M ${tube.x} -155 L ${tube.x} ${tube.topY}`, {
+          stroke: c.xeroxInkSoft,
+          strokeWidth: s.sketchLine,
         }),
-        // 2-tone cel metallic tube with shadow plane & crisp specular gleam
+        // Flat opaque 2-tone cel metallic tube with raw Xerox outline
         celShadedShape({
           d: bodyD,
-          baseFill: tube.isGold ? c.mochiGold : c.stoneLight,
+          baseFill: tube.isGold ? c.antiqueGold : c.stoneLight,
           shadowPaths: [shadowBandD],
           shadowFill: tube.isGold ? c.warmAmberDeep : c.stoneShadow,
-          shadowOpacity: 0.85,
+          shadowOpacity: 0.78,
           highlightPaths: [gleamBandD],
-          highlightFill: tube.isGold ? c.mochiGoldHighlight : c.celCream,
-          highlightOpacity: 0.94,
+          highlightFill: tube.isGold ? c.mochiGoldHighlight : c.parchmentCream,
+          highlightOpacity: 0.88,
           clipId: pid(`tube-${idx + 1}-clip`),
           stroke: c.xeroxInk,
           strokeWidth: s.xeroxFine,
-        }),
-        // Crisp metallic top rim highlight ellipse
-        svgEl('ellipse', {
-          cx: tube.x,
-          cy: round2(tube.topY + 1.5),
-          rx: round2(halfW - 0.6),
-          ry: 1.1,
-          fill: tube.isGold ? c.warmAmberCore : c.celCream,
-          opacity: 0.85,
         }),
       ]
     );
   });
 
-  // Trailing follow-through sway on center cord & dangling star catcher (pivot y = -155)
   const catcherSway = round2(
     steppedOscillate(
       frameIndex,
@@ -397,29 +321,28 @@ function renderClassicWindChimeCluster(
       }),
     },
     [
-      // Top wrought-iron hook & gleaming brass eye-ring at (0, -178)
-      svgEl('path', {
-        d: 'M 0 -184 L 0 -176',
-        fill: 'none',
-        ...celStrokeAttrs({ stroke: c.ironDark, strokeWidth: 2.0 }),
+      // Wrought-iron suspension hook & antique brass eye-ring at (0, -178)
+      xeroxSketchStroke('M 0 -184 L 0 -176', {
+        stroke: c.ironDark,
+        strokeWidth: 2.0,
+        opacity: 0.95,
       }),
       svgEl('circle', {
         cx: 0,
         cy: -178,
         r: 2.8,
-        fill: c.mochiGold,
-        ...celStrokeAttrs({ stroke: c.xeroxInk, strokeWidth: s.xeroxFine }),
+        fill: c.antiqueGold,
+        stroke: c.xeroxInk,
+        'stroke-width': s.xeroxFine,
+        filter: svgUrl(TOKENS.classicCel.filters.ids.xeroxInk),
       }),
-      // Gleaming 2-tone cel crescent moon & tucked star crown hanger
+      // Flat cel crescent moon & tiny tucked star hanger
       celShadedShape({
         d: 'M -14 -171 C -9 -178, 8 -178, 14 -169 C 10 -161, -6 -160, -14 -167 C -8 -166, 3 -166, 7 -170 C 2 -173, -8 -173, -14 -171 Z',
         baseFill: c.moonCream,
         shadowPaths: ['M -14 -166 L 15 -166 L 15 -158 L -14 -158 Z'],
         shadowFill: c.moonShadow,
         shadowOpacity: 0.72,
-        highlightPaths: ['M -10 -177 L 6 -177 L 4 -173 L -10 -173 Z'],
-        highlightFill: c.starGlow,
-        highlightOpacity: 0.9,
         clipId: pid('crescent-clip'),
         stroke: c.xeroxInk,
         strokeWidth: s.xeroxFine,
@@ -428,29 +351,23 @@ function renderClassicWindChimeCluster(
         stroke: c.xeroxInk,
         strokeWidth: 1.0,
       }),
-      // Suspension cords down to walnut crossbar
-      svgEl('path', {
-        d: 'M -10 -163 L -15 -155 M 10 -163 L 15 -155',
-        fill: 'none',
-        ...celStrokeAttrs({ stroke: c.xeroxInkSoft, strokeWidth: s.sketchLine }),
+      xeroxSketchStroke('M -10 -163 L -15 -155 M 10 -163 L 15 -155', {
+        stroke: c.xeroxInkSoft,
+        strokeWidth: s.sketchLine,
       }),
-      // Walnut & brass suspension crossbar at y = -155
+      // Rustic flat-cel walnut suspension crossbar at y = -155
       celShadedShape({
         d: 'M -23 -157.5 Q 0 -159.5, 23 -157.5 L 22 -153 Q 0 -154.5, -22 -153 Z',
         baseFill: c.woodMid,
         shadowPaths: ['M -23 -155.2 L 23 -155.2 L 23 -152 L -23 -152 Z'],
         shadowFill: c.woodDark,
-        shadowOpacity: 0.75,
-        highlightPaths: ['M -22 -159.5 L 22 -159.5 L 22 -157 L -22 -157 Z'],
-        highlightFill: c.woodLit,
-        highlightOpacity: 0.7,
+        shadowOpacity: 0.78,
         clipId: pid('crossbar-clip'),
         stroke: c.xeroxInk,
         strokeWidth: s.xeroxFine,
       }),
-      // 4 gleaming metallic chime tubes
       ...tubesSvg,
-      // Center clapper & dangling star wind-catcher (resting center at 0, -78)
+      // Center striker & dangling star catcher (resting center at 0, -78)
       svgEl(
         'g',
         {
@@ -462,32 +379,22 @@ function renderClassicWindChimeCluster(
           }),
         },
         [
-          svgEl('path', {
-            d: 'M 0 -153 L 0 -87',
-            fill: 'none',
-            ...celStrokeAttrs({
-              stroke: c.xeroxInkSoft,
-              strokeWidth: s.sketchLine,
-            }),
+          xeroxSketchStroke('M 0 -153 L 0 -87', {
+            stroke: c.xeroxInkSoft,
+            strokeWidth: s.sketchLine,
           }),
-          // Carved walnut clapper striker disc nestled among the tubes
+          // Carved wooden striker disc nestled among tubes
           svgEl('ellipse', {
             cx: 0,
             cy: -119,
-            rx: 5.5,
-            ry: 3.1,
+            rx: 5.4,
+            ry: 3.0,
             fill: c.woodMid,
-            ...celStrokeAttrs({ stroke: c.xeroxInk, strokeWidth: s.xeroxFine }),
+            stroke: c.xeroxInk,
+            'stroke-width': s.xeroxFine,
+            filter: svgUrl(TOKENS.classicCel.filters.ids.xeroxInk),
           }),
-          svgEl('ellipse', {
-            cx: -1,
-            cy: -120,
-            rx: 3,
-            ry: 1.1,
-            fill: c.woodLit,
-            opacity: 0.7,
-          }),
-          // Gleaming 2-tone cel 5-point star wind-catcher at (0, -78) — paw-tap height for Mochi!
+          // Flat analog cel 5-point golden star catcher at (0, -78) — paw-tap height!
           svgEl(
             'g',
             {
@@ -495,40 +402,24 @@ function renderClassicWindChimeCluster(
               transform: svgTransform({ x: 0, y: -78, rotate: starSpin }),
             },
             [
-              lit
-                ? svgEl('circle', {
-                    cx: 0,
-                    cy: 0,
-                    r: 13.5,
-                    fill: c.warmAmberGlow,
-                    filter: softGlowFilter,
-                    opacity: 0.42,
-                  })
-                : '',
               celShadedShape({
                 d: renderStarShape(0, 0, 11.4, 0),
-                baseFill: c.mochiGold,
+                baseFill: c.antiqueGold,
                 shadowPaths: ['M 0 -12 L 13 -12 L 13 13 L -2 13 Z'],
                 shadowFill: c.warmAmberDeep,
-                shadowOpacity: 0.52,
+                shadowOpacity: 0.48,
                 highlightPaths: ['M -12 -12 L 1 -12 L -2 2 L -12 4 Z'],
                 highlightFill: c.mochiGoldHighlight,
-                highlightOpacity: 0.85,
+                highlightOpacity: 0.78,
                 clipId: pid('star-catcher-clip'),
                 stroke: c.xeroxInk,
                 strokeWidth: s.xeroxFine,
               }),
-              // Inner gleaming facet star
+              // Flat inner warm cream facet
               svgEl('path', {
-                d: renderStarShape(0, 0, 5.2, 0),
+                d: renderStarShape(0, 0, 4.8, 0),
                 fill: c.warmAmberCore,
-                opacity: 0.9,
-              }),
-              svgEl('circle', {
-                cx: -1.8,
-                cy: -2.0,
-                r: 1.4,
-                fill: c.celCream,
+                opacity: 0.88,
               }),
             ]
           ),
@@ -539,10 +430,11 @@ function renderClassicWindChimeCluster(
 }
 
 /**
- * Renders the Classic 1970s–1980s Disney painted walnut-wood garden wind-chime arbor
- * (`'wind_chime_arbor'`) draped with layered dark-emerald moonlit ivy, luminous cream
- * moonflowers, gleaming 2-tone cel metallic gold/silver chime tubes swaying smoothly
- * at 12 FPS, and soft fairy-dust golden shimmer rings (`#cel-soft-glow`) when `lit: true`.
+ * Renders the Classic 1970s–1980s Disney rustic hand-inked garden wind-chime arbor
+ * (`'wind_chime_arbor'`) with dappled impressionistic watercolor ivy clumps (`gouacheDabWash`),
+ * sparse broken ink leaf & wood-grain penwork (`xeroxSketchStroke`), painterly cream
+ * moonflowers, and flat analog cel-painted brass/silver chimes (`#xerox-ink`) swaying
+ * smoothly at 12 FPS with crisp hand-inked ringing ticks & sparkles when `lit: true`.
  *
  * Local origin `(0, 0)` sits at ground center between the two trellis posts.
  * Open walk-through: `x: -68..68`, arch apex `y: -186`.
@@ -564,68 +456,8 @@ export function renderClassicWindChimeArbor(
     : '';
   const pid = (name: string): string => `cc-arbor-${name}${safeSuffix}`;
 
-  const woodGradId = pid('wood-grad');
-  const shimmerGradId = pid('shimmer-grad');
-  const flowerAuraId = pid('flower-aura');
   const outerArchClipId = pid('outer-arch-clip');
   const innerArchClipId = pid('inner-arch-clip');
-
-  const defs = svgEl('defs', {}, [
-    // Painted walnut timber gouache wash
-    svgEl(
-      'linearGradient',
-      { id: woodGradId, x1: '0%', y1: '0%', x2: '100%', y2: '100%' },
-      [
-        svgEl('stop', { offset: '0%', 'stop-color': c.woodLit }),
-        svgEl('stop', { offset: '45%', 'stop-color': c.woodMid }),
-        svgEl('stop', { offset: '100%', 'stop-color': c.woodDark }),
-      ]
-    ),
-    // Soft radial golden fairy-dust shimmer aura
-    svgEl(
-      'radialGradient',
-      { id: shimmerGradId, cx: '50%', cy: '50%', r: '50%' },
-      [
-        svgEl('stop', {
-          offset: '0%',
-          'stop-color': c.warmAmberCore,
-          'stop-opacity': 0.52,
-        }),
-        svgEl('stop', {
-          offset: '52%',
-          'stop-color': c.warmAmberGlow,
-          'stop-opacity': 0.22,
-        }),
-        svgEl('stop', {
-          offset: '100%',
-          'stop-color': c.warmAmberWash,
-          'stop-opacity': 0,
-        }),
-      ]
-    ),
-    // Soft luminous moonflower aura
-    svgEl(
-      'radialGradient',
-      { id: flowerAuraId, cx: '50%', cy: '50%', r: '50%' },
-      [
-        svgEl('stop', {
-          offset: '0%',
-          'stop-color': c.starGlow,
-          'stop-opacity': 0.5,
-        }),
-        svgEl('stop', {
-          offset: '60%',
-          'stop-color': c.warmAmberGlow,
-          'stop-opacity': 0.16,
-        }),
-        svgEl('stop', {
-          offset: '100%',
-          'stop-color': c.warmAmberGlow,
-          'stop-opacity': 0,
-        }),
-      ]
-    ),
-  ]);
 
   // Gentle 12 FPS breeze rustle for blooming moonflowers
   const flowerSway = (idx: number): number =>
@@ -646,30 +478,7 @@ export function renderClassicWindChimeArbor(
     )
     .join(' ');
 
-  // Heart-shaped ivy leaves distributed around trellis pillars & crown
-  const heartLeaves: ReadonlyArray<{
-    x: number;
-    y: number;
-    rot: number;
-    scale: number;
-    rimLit?: boolean;
-  }> = [
-    { x: -91, y: -32, rot: -54, scale: 0.78, rimLit: true },
-    { x: -72, y: -56, rot: 46, scale: 0.72 },
-    { x: -93, y: -112, rot: -62, scale: 0.85, rimLit: true },
-    { x: -64, y: -142, rot: 125, scale: 0.74 },
-    { x: -83, y: -180, rot: -38, scale: 0.92, rimLit: true },
-    { x: -52, y: -207, rot: -20, scale: 0.88, rimLit: true },
-    { x: -6, y: -215, rot: -6, scale: 0.86, rimLit: true },
-    { x: 48, y: -206, rot: 22, scale: 0.88 },
-    { x: 82, y: -178, rot: 40, scale: 0.92, rimLit: true },
-    { x: 64, y: -140, rot: -128, scale: 0.74 },
-    { x: 92, y: -108, rot: 60, scale: 0.84 },
-    { x: 72, y: -52, rot: -48, scale: 0.72 },
-    { x: 91, y: -28, rot: 52, scale: 0.78 },
-  ];
-
-  // 6 luminous moonflowers framing pillars and arch crown
+  // 6 painterly cream moonflowers framing pillars and arch crown
   const moonflowers: ReadonlyArray<{
     x: number;
     y: number;
@@ -697,59 +506,65 @@ export function renderClassicWindChimeArbor(
       'data-lit': String(lit),
     },
     [
-      defs,
-
-      // 1. Ground contact shadows & painted moonlit grass tufts anchoring posts at y = 0..5
+      // 1. Ground contact shadows & loose Robin-Hood-style inked grass flicks
       svgEl('g', { 'data-part': 'ground-tufts' }, [
-        celContactShadow(-81, 1.8, 24, 4.4, 0.36),
-        celContactShadow(81, 1.8, 24, 4.4, 0.36),
-        svgEl('path', {
-          d: 'M -95 3 Q -98 -4, -100 -9 M -89 4 Q -91 -5, -87 -11 M -74 4 Q -72 -4, -67 -8 M 68 4 Q 72 -4, 75 -9 M 84 4 Q 87 -5, 91 -11 M 95 3 Q 98 -3, 100 -8',
-          fill: 'none',
-          stroke: c.grassNightDeep,
-          'stroke-width': 2.6,
-          'stroke-linecap': 'round',
-        }),
-        svgEl('path', {
-          d: 'M -94 3 Q -97 -4, -99 -8 M -88 3 Q -89 -4, -86 -10 M 70 3 Q 73 -3, 75 -8 M 86 3 Q 88 -4, 91 -9',
-          fill: 'none',
-          stroke: c.foliageRim,
-          'stroke-width': 1.2,
-          'stroke-linecap': 'round',
-          opacity: 0.72,
-        }),
+        celContactShadow(-81, 1.8, 24, 4.2, 0.36),
+        celContactShadow(81, 1.8, 24, 4.2, 0.36),
+        gouacheDabWash(
+          [
+            { cx: -86, cy: 1, rx: 14, ry: 4.5, fill: c.grassNightDeep, opacity: 0.52 },
+            { cx: 85, cy: 1, rx: 14, ry: 4.5, fill: c.grassNightDeep, opacity: 0.52 },
+          ],
+          { fill: c.grassNightDeep, wetEdgeOpacity: 0.14, softEdge: true, seed: 7 }
+        ),
+        xeroxSketchStroke(
+          'M -96 3 Q -99 -4, -101 -8 M -90 4 Q -91 -5, -88 -10 M -73 4 Q -71 -3, -67 -7 M 68 4 Q 72 -4, 75 -8 M 85 4 Q 88 -5, 91 -10 M 95 3 Q 99 -3, 101 -7',
+          { stroke: c.xeroxInkSoft, strokeWidth: 1.35, opacity: 0.85 }
+        ),
       ]),
 
-      // 2. Painted walnut-wood trellis pillars, diamond lattice & arched crown
+      // 2. Rustic hand-inked garden timber pillars, diamond lattice & arched crown
       svgEl('g', { 'data-part': 'wooden-archway' }, [
-        // Left & right diamond lattice bars (dark shadow stroke + mid walnut fill + sepia ink)
+        // Diamond lattice bars (flat timber + sketchy ink lines)
         svgEl('path', {
           d: leftLatticeLines,
           fill: 'none',
           stroke: c.woodDark,
-          'stroke-width': 3.6,
+          'stroke-width': 3.5,
           'stroke-linecap': 'round',
         }),
         svgEl('path', {
           d: leftLatticeLines,
           fill: 'none',
           stroke: c.woodMid,
-          'stroke-width': 2.0,
+          'stroke-width': 1.8,
           'stroke-linecap': 'round',
+        }),
+        xeroxSketchStroke(leftLatticeLines, {
+          stroke: c.xeroxInkSoft,
+          strokeWidth: s.sketchLine,
+          broken: true,
+          opacity: 0.72,
         }),
         svgEl('path', {
           d: rightLatticeLines,
           fill: 'none',
           stroke: c.woodDark,
-          'stroke-width': 3.6,
+          'stroke-width': 3.5,
           'stroke-linecap': 'round',
         }),
         svgEl('path', {
           d: rightLatticeLines,
           fill: 'none',
           stroke: c.woodMid,
-          'stroke-width': 2.0,
+          'stroke-width': 1.8,
           'stroke-linecap': 'round',
+        }),
+        xeroxSketchStroke(rightLatticeLines, {
+          stroke: c.xeroxInkSoft,
+          strokeWidth: s.sketchLine,
+          broken: true,
+          opacity: 0.72,
         }),
 
         // Radial wooden crossbars spanning between inner & outer curved arch ribs
@@ -757,53 +572,53 @@ export function renderClassicWindChimeArbor(
           d: 'M -70 -142 L -91 -150 M -54 -168 L -71 -186 M -28 -182 L -36 -206 M 0 -186 L 0 -213 M 28 -182 L 36 -206 M 54 -168 L 71 -186 M 70 -142 L 91 -150',
           fill: 'none',
           stroke: c.woodDark,
-          'stroke-width': 4.8,
+          'stroke-width': 4.6,
           'stroke-linecap': 'round',
         }),
         svgEl('path', {
           d: 'M -70 -142 L -91 -150 M -54 -168 L -71 -186 M -28 -182 L -36 -206 M 0 -186 L 0 -213 M 28 -182 L 36 -206 M 54 -168 L 71 -186 M 70 -142 L 91 -150',
           fill: 'none',
           stroke: c.woodLit,
-          'stroke-width': 1.8,
+          'stroke-width': 1.7,
           'stroke-linecap': 'round',
           opacity: 0.72,
         }),
 
-        // Outer walnut arch rib with 2-tone gouache shadow & moonlight rim highlight
+        // Outer rustic walnut arch rib (flat analog wood paint + crisp shadow plane + Xerox outline)
         celShadedShape({
           d: outerArchD,
-          baseFill: svgUrl(woodGradId),
+          baseFill: c.woodMid,
           shadowPaths: [
             'M 10 -216 L 98 -216 L 98 4 L 84 4 L 84 -140 Q 60 -196, 10 -206 Z',
           ],
           shadowFill: c.woodDark,
-          shadowOpacity: 0.52,
+          shadowOpacity: 0.62,
           highlightPaths: [
             'M -95 -130 C -95 -193, -46 -215, 0 -215 L 0 -211 C -44 -211, -90 -190, -90 -130 L -90 1 L -95 1 Z',
           ],
           highlightFill: c.woodLit,
           highlightOpacity: 0.65,
           clipId: outerArchClipId,
-          stroke: c.xeroxInkSoft,
+          stroke: c.xeroxInk,
           strokeWidth: s.xeroxMedium,
         }),
 
-        // Inner walnut arch rib framing the open walk-through (x: -68..68, apex y: -186)
+        // Inner rustic walnut arch rib framing the wide open walk-through (x: -68..68, apex y: -186)
         celShadedShape({
           d: innerArchD,
-          baseFill: svgUrl(woodGradId),
+          baseFill: c.woodMid,
           shadowPaths: [
             'M -70 -130 C -70 -175, -34 -188, 0 -188 C 34 -188, 70 -175, 70 -130 L 70 1 L 67 1 L 67 -130 C 67 -172, 33 -184, 0 -184 C -33 -184, -67 -172, -67 -130 L -67 1 Z',
           ],
           shadowFill: c.woodDark,
-          shadowOpacity: 0.65,
+          shadowOpacity: 0.68,
           highlightPaths: [
             'M -76 -130 C -76 -180, -38 -194, 0 -194 L 0 -191 C -36 -191, -73 -178, -73 -130 L -73 1 L -76 1 Z',
           ],
           highlightFill: c.woodLit,
           highlightOpacity: 0.55,
           clipId: innerArchClipId,
-          stroke: c.xeroxInkSoft,
+          stroke: c.xeroxInk,
           strokeWidth: s.xeroxMedium,
         }),
 
@@ -815,135 +630,129 @@ export function renderClassicWindChimeArbor(
         ),
 
         // Carved timber footing shoes anchoring both posts cleanly at y = 0
-        celPath(
-          'M -96 -5 L -66 -5 L -65 2 Q -81 3.5, -97 2 Z',
-          c.woodDark,
-          { stroke: c.xeroxInkSoft, strokeWidth: s.xeroxFine }
-        ),
-        celPath(
-          'M 66 -5 L 96 -5 L 97 2 Q 81 3.5, 65 2 Z',
-          c.woodDark,
-          { stroke: c.xeroxInkSoft, strokeWidth: s.xeroxFine }
-        ),
+        celPath('M -96 -5 L -66 -5 L -65 2 Q -81 3.5, -97 2 Z', c.woodDark, {
+          stroke: c.xeroxInk,
+          strokeWidth: s.xeroxFine,
+        }),
+        celPath('M 66 -5 L 96 -5 L 97 2 Q 81 3.5, 65 2 Z', c.woodDark, {
+          stroke: c.xeroxInk,
+          strokeWidth: s.xeroxFine,
+        }),
 
-        // Sketchy hand-inked wood-grain accents along posts and arch
-        svgEl('path', {
-          d: 'M -90 -18 L -90 -116 M -72 -14 L -72 -122 M 72 -14 L 72 -122 M 90 -18 L 90 -116 M -46 -197 Q 0 -211, 46 -197',
-          fill: 'none',
-          ...celStrokeAttrs({
-            stroke: c.woodLit,
+        // Loose sketchy Xerox wood-grain scratches & bark knots along posts and arch
+        xeroxSketchStroke(
+          [
+            'M -91 -12 L -91 -122',
+            'M -88 -34 L -88 -88',
+            'M -72 -14 L -72 -124',
+            'M 72 -16 L 72 -120',
+            'M 90 -14 L 90 -118',
+            'M 88 -42 L 88 -96',
+            'M -48 -198 Q 0 -211, 48 -198',
+            'M -34 -188 Q 0 -192, 34 -188',
+          ].join(' '),
+          {
+            stroke: c.xeroxInk,
             strokeWidth: s.sketchLine,
-            dasharray: '9 5 4 6',
-            opacity: 0.52,
-          }),
-        }),
+            broken: true,
+            feather: true,
+            opacity: 0.62,
+          }
+        ),
       ]),
 
-      // 3. Layered painted dark-emerald ivy foliage clusters & moonlit heart leaves
+      // 3. Dappled impressionistic Robin-Hood watercolor ivy clumps + sparse broken leaf ticks
       svgEl('g', { 'data-part': 'garden-vines' }, [
-        // Deep gouache shadow foliage backing masses on shoulders & crown
-        gouachePath(
-          'M -98 -144 C -104 -164, -92 -185, -74 -186 C -67 -175, -63 -158, -74 -146 C -84 -138, -94 -136, -98 -144 Z',
-          c.foliageShadow,
-          { softEdge: false, stroke: c.xeroxInkSoft, strokeWidth: s.xeroxFine }
+        // Deep shadow foliage watercolor under-dabs (NO uniform heavy circle outlines!)
+        gouacheDabWash(
+          [
+            // Left pillar & shoulder clumps
+            { cx: -86, cy: -34, rx: 14, ry: 11, rotate: -14, opacity: 0.84 },
+            { cx: -84, cy: -84, rx: 16, ry: 16, rotate: 10, opacity: 0.88 },
+            { cx: -86, cy: -158, rx: 18, ry: 22, rotate: -12, opacity: 0.9 },
+            // Arch crown lush dappled canopy (stays inside y: -234..6)
+            { cx: -52, cy: -202, rx: 22, ry: 15, rotate: -18, opacity: 0.9 },
+            { cx: -18, cy: -214, rx: 25, ry: 15, rotate: -4, opacity: 0.92 },
+            { cx: 20, cy: -214, rx: 25, ry: 15, rotate: 6, opacity: 0.92 },
+            { cx: 54, cy: -201, rx: 22, ry: 15, rotate: 16, opacity: 0.9 },
+            // Right shoulder & pillar clumps
+            { cx: 86, cy: -156, rx: 18, ry: 22, rotate: 12, opacity: 0.9 },
+            { cx: 85, cy: -82, rx: 16, ry: 16, rotate: -8, opacity: 0.88 },
+            { cx: 86, cy: -32, rx: 13, ry: 10, rotate: 14, opacity: 0.82 },
+          ],
+          {
+            fill: c.foliageShadow,
+            wetEdgeColor: c.foliageShadow,
+            wetEdgeOpacity: 0.28,
+            softEdge: true,
+            seed: 71,
+          }
         ),
-        gouachePath(
-          'M -95 -148 C -99 -163, -88 -180, -75 -181 C -71 -173, -68 -159, -76 -149 C -84 -143, -92 -142, -95 -148 Z',
-          c.foliageMid,
-          { softEdge: false }
+        // Midtone olive & sage impressionistic leaf-cluster brush dabs
+        gouacheDabWash(
+          [
+            { cx: -88, cy: -38, rx: 11, ry: 8, fill: c.foliageMid, opacity: 0.86 },
+            { cx: -86, cy: -86, rx: 13, ry: 12, fill: c.oliveCanopy, opacity: 0.85 },
+            { cx: -84, cy: -162, rx: 15, ry: 17, fill: c.foliageMid, opacity: 0.88 },
+            { cx: -50, cy: -206, rx: 18, ry: 12, fill: c.oliveCanopy, opacity: 0.88 },
+            { cx: -16, cy: -217, rx: 20, ry: 12, fill: c.sageFoliage, opacity: 0.82 },
+            { cx: 22, cy: -216, rx: 20, ry: 12, fill: c.oliveCanopy, opacity: 0.86 },
+            { cx: 52, cy: -204, rx: 17, ry: 12, fill: c.foliageMid, opacity: 0.88 },
+            { cx: 84, cy: -160, rx: 14, ry: 16, fill: c.oliveCanopy, opacity: 0.84 },
+            { cx: 84, cy: -84, rx: 13, ry: 12, fill: c.foliageMid, opacity: 0.84 },
+          ],
+          {
+            fill: c.foliageMid,
+            wetEdgeColor: c.foliageShadow,
+            wetEdgeOpacity: 0.24,
+            highlightFill: c.foliageRim,
+            highlightOpacity: 0.34,
+            softEdge: true,
+            seed: 79,
+          }
         ),
-        // Arch crown foliage mass (up to ~y: -229, well inside y: -234..6)
-        gouachePath(
-          'M -66 -198 C -58 -218, -35 -227, -14 -219 C 0 -230, 28 -229, 44 -216 C 60 -218, 74 -205, 67 -190 C 52 -184, 34 -186, 18 -192 C 2 -186, -24 -186, -44 -190 C -58 -188, -70 -190, -66 -198 Z',
-          c.foliageShadow,
-          { softEdge: false, stroke: c.xeroxInkSoft, strokeWidth: s.xeroxFine }
+        // Twining hand-inked vine stems & sparse loose Robin-Hood leaf-cluster pen ticks
+        xeroxSketchStroke(
+          [
+            'M -86 -8 C -96 -34, -68 -58, -88 -88 C -96 -116, -70 -142, -82 -172 C -70 -202, -32 -218, 0 -214 C 34 -218, 72 -200, 82 -170 C 70 -140, 96 -114, 86 -84 C 68 -56, 96 -32, 84 -8',
+            'M -68 -148 Q -58 -142, -55 -130',
+            'M 68 -146 Q 58 -140, 56 -128',
+          ].join(' '),
+          {
+            stroke: c.xeroxInkSoft,
+            strokeWidth: 1.85,
+            broken: true,
+            opacity: 0.82,
+          }
         ),
-        gouachePath(
-          'M -60 -201 C -52 -216, -32 -223, -14 -216 C 0 -226, 25 -225, 40 -214 C 53 -215, 64 -204, 59 -193 C 46 -188, 30 -190, 16 -195 C 1 -190, -24 -190, -42 -193 C -53 -192, -62 -195, -60 -201 Z',
-          c.foliageMid,
-          { softEdge: false }
-        ),
-        // Cool moonlit gouache crown rim highlights
-        gouachePath(
-          'M -52 -208 C -42 -218, -24 -221, -10 -215 C 4 -223, 24 -222, 36 -213 C 22 -215, 6 -214, -8 -209 C -24 -212, -40 -212, -52 -208 Z',
-          c.foliageLit,
-          { softEdge: false, opacity: 0.85 }
-        ),
-        // Right shoulder foliage cluster
-        gouachePath(
-          'M 74 -184 C 92 -182, 104 -161, 98 -142 C 93 -134, 80 -138, 72 -146 C 63 -158, 66 -175, 74 -184 Z',
-          c.foliageShadow,
-          { softEdge: false, stroke: c.xeroxInkSoft, strokeWidth: s.xeroxFine }
-        ),
-        gouachePath(
-          'M 75 -179 C 89 -177, 98 -160, 93 -146 C 89 -140, 80 -142, 74 -149 C 68 -159, 69 -173, 75 -179 Z',
-          c.foliageMid,
-          { softEdge: false }
-        ),
-        // Mid-pillar leafy ivy clusters
-        gouachePath(
-          'M -97 -74 C -102 -89, -89 -103, -74 -97 C -66 -86, -70 -68, -82 -66 C -91 -65, -95 -68, -97 -74 Z',
-          c.foliageShadow,
-          { softEdge: false, stroke: c.xeroxInkSoft, strokeWidth: s.xeroxFine }
-        ),
-        gouachePath(
-          'M -93 -76 C -96 -87, -86 -97, -76 -92 C -71 -84, -74 -72, -83 -70 C -89 -69, -92 -72, -93 -76 Z',
-          c.foliageLit,
-          { softEdge: false, opacity: 0.8 }
-        ),
-        gouachePath(
-          'M 74 -93 C 89 -99, 101 -85, 96 -70 C 93 -62, 82 -62, 74 -68 C 68 -74, 68 -87, 74 -93 Z',
-          c.foliageShadow,
-          { softEdge: false, stroke: c.xeroxInkSoft, strokeWidth: s.xeroxFine }
-        ),
-        gouachePath(
-          'M 76 -89 C 87 -93, 95 -83, 91 -72 C 89 -67, 81 -67, 76 -72 C 72 -76, 72 -85, 76 -89 Z',
-          c.foliageMid,
-          { softEdge: false }
-        ),
-
-        // Twining woody ivy vine stems & inner corner tendrils
-        svgEl('path', {
-          d: 'M -86 -8 C -96 -34, -68 -58, -88 -88 C -96 -116, -70 -142, -82 -172 C -70 -202, -32 -218, 0 -214 C 34 -218, 72 -200, 82 -170 C 70 -140, 96 -114, 86 -84 C 68 -56, 96 -32, 84 -8',
-          fill: 'none',
-          ...celStrokeAttrs({ stroke: c.foliageShadow, strokeWidth: 3.4 }),
-        }),
-        svgEl('path', {
-          d: 'M -86 -8 C -96 -34, -68 -58, -88 -88 C -96 -116, -70 -142, -82 -172 C -70 -202, -32 -218, 0 -214 C 34 -218, 72 -200, 82 -170 C 70 -140, 96 -114, 86 -84 C 68 -56, 96 -32, 84 -8',
-          fill: 'none',
-          ...celStrokeAttrs({
-            stroke: c.foliageLit,
-            strokeWidth: 1.5,
+        // Sparse broken irregular hand-inked leaf-flick accents scattered in the ivy
+        xeroxSketchStroke(
+          [
+            'M -96 -32 Q -91 -38, -85 -33 M -76 -54 Q -70 -59, -68 -52',
+            'M -97 -112 Q -92 -119, -86 -113 M -90 -178 Q -84 -185, -77 -179',
+            'M -60 -208 Q -52 -216, -44 -209 M -26 -220 Q -16 -227, -6 -219',
+            'M 8 -222 Q 18 -228, 28 -220 M 44 -212 Q 54 -217, 62 -207',
+            'M 78 -180 Q 86 -184, 92 -176 M 88 -108 Q 95 -113, 98 -104',
+            'M 72 -52 Q 77 -58, 82 -51 M 86 -28 Q 93 -33, 97 -26',
+            'M -65 -140 Q -61 -146, -57 -139 M 65 -138 Q 61 -144, 57 -137',
+          ].join(' '),
+          {
+            stroke: c.xeroxInk,
+            strokeWidth: s.sketchLine,
+            broken: true,
+            feather: true,
             opacity: 0.78,
-          }),
-        }),
-        svgEl('path', {
-          d: 'M -68 -148 Q -58 -142, -55 -130 M 68 -146 Q 58 -140, 56 -128',
-          fill: 'none',
-          ...celStrokeAttrs({ stroke: c.foliageMid, strokeWidth: 2.0 }),
-        }),
-
-        // Individual 2-tone heart-shaped ivy leaves with moonlight rims
-        ...heartLeaves.map((leaf) =>
-          renderClassicHeartLeaf(
-            leaf.x,
-            leaf.y,
-            leaf.rot,
-            leaf.scale,
-            Boolean(leaf.rimLit)
-          )
+          }
         ),
       ]),
 
-      // 4. Gleaming 2-tone metallic wind chime cluster (pivot 0, -178; star catcher 0, -78)
+      // 4. Flat analog cel-painted brass/silver wind chimes (pivot 0, -178; star catcher 0, -78)
       renderClassicWindChimeCluster(frameIndex, lit, variant, pid),
 
-      // 5. Soft fairy-dust golden shimmer rings & sparkles (#cel-soft-glow) when lit
-      lit
-        ? renderClassicChimeShimmer(frameIndex, variant, svgUrl(shimmerGradId))
-        : '',
+      // 5. Crisp hand-inked vibration arcs & sparkle crosses when lit (NO neon rings!)
+      lit ? renderClassicChimeShimmer(frameIndex, variant) : '',
 
-      // 6. Luminous cream moonflowers blooming along the vines
+      // 6. Painterly cream moonflowers blooming along the vines
       svgEl(
         'g',
         { 'data-part': 'moonflower-blooms' },
@@ -953,8 +762,7 @@ export function renderClassicWindChimeArbor(
             f.y,
             f.scale,
             round2(f.rot + flowerSway(idx)),
-            lit,
-            svgUrl(flowerAuraId)
+            lit
           )
         )
       ),

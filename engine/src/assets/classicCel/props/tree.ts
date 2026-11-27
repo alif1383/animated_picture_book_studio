@@ -1,118 +1,223 @@
-import { TOKENS, svgUrl } from '../../../theme/tokens';
+import { TOKENS } from '../../../theme/tokens';
 import { steppedOscillate } from '../../../engine/clock';
 import {
-  celContactShadow,
-  celShadedShape,
-  celStrokeAttrs,
   deterministicJitter,
+  gouacheDabWash,
   gouachePath,
   round2,
   svgEl,
   svgTransform,
+  xeroxSketchStroke,
 } from '../../../engine/svgUtils';
+import type { GouacheDab } from '../../../engine/svgUtils';
 import type { PropRenderOptions } from '../../props/types';
 
 /**
- * Renders a classic 1970s–80s Disney painted gouache woodland tree (`'tree'`)
- * inspired by *Robin Hood* (1973): gnarled dark-bark trunk with root toes and sketchy
- * sepia ink strokes, multi-layered gouache foliage masses (midnight-teal under-canopy
- * shadow, forest-sage main puffs, cool silver-sage moonlight top rims, subtle ink
- * leaf scallops), and gentle 12 FPS wind sway seeded by `variant`.
+ * Renders an authentic 1973 *Robin Hood*-style dappled watercolor/gouache woodland
+ * tree (`'tree'`) on illustration board: overlapping translucent irregular sage/olive/
+ * deep-teal foliage brush daubs with soft wet-edges (`gouacheDabWash`, NO hard black
+ * outline around the canopy!), subtle pale sky/moonlight peeking through foliage gaps,
+ * a gnarled painted bark trunk with broken sepia Xerox ink bark lines (`xeroxSketchStroke`),
+ * sparse loose hand-inked branch & leaf-cluster flicks inside the foliage, and gentle
+ * 12 FPS wind sway seeded by `variant`.
  *
  * Origin: `(0, 0)` at trunk base.
  * Footprint: `~x: -66..66, y: -140..0`.
  */
 export function renderClassicTree(options: PropRenderOptions): string {
-  const { frameIndex = 0, variant = 1, id, x, y } = options;
+  const { frameIndex = 0, variant = 1 } = options;
   const c = TOKENS.classicCel.colors;
   const s = TOKENS.classicCel.strokes;
 
-  const uid = (
-    id ?? `v${variant}-${Math.round(x ?? 0)}-${Math.round(y ?? 0)}`
-  ).replace(/[^a-zA-Z0-9_-]/g, '');
+  // Gentle 12 FPS woodland breeze sway seeded by variant
+  const crownSway = steppedOscillate(frameIndex, 36, 1.25, variant * 7);
+  const upperSway = steppedOscillate(frameIndex, 36, 0.7, variant * 7 + 4);
+  const trunkFlex = round2(crownSway * 0.2);
 
-  // Deterministic gentle 12 FPS woodland breeze sway seeded by variant
-  const crownSway = steppedOscillate(frameIndex, 36, 1.35, variant * 7);
-  const upperBoughSway = steppedOscillate(frameIndex, 36, 0.75, variant * 7 + 4);
-  const trunkFlex = round2(crownSway * 0.25);
-
-  // Subtle variant-driven organic asymmetry so neighboring trees feel hand-painted
+  // Subtle variant-driven organic asymmetry so neighboring trees feel individually painted
   const mirrorSign = variant % 2 === 0 ? -1 : 1;
-  const jx = (idx: number, amp: number): number =>
+  const j = (idx: number, amp: number): number =>
     round2(deterministicJitter(idx, variant, amp));
 
-  // Gnarled trunk path with flared root toes gripping ground at y = 0
-  const trunkD =
-    'M -20 0 C -14 -4, -12 -14, -10 -32 C -9 -48, -11 -62, -16 -76 L -8 -82 C -5 -68, -2 -68, 1 -80 L 14 -76 C 9 -62, 8 -46, 10 -28 C 11 -14, 14 -4, 21 0 C 12 -1, 7 -3, 2 -1 C -3 1, -8 -2, -20 0 Z';
-
-  // Moonlit bark shadow & rim inside clipped trunk
-  const trunkShadowPaths = [
-    'M -22 2 L -22 -84 L -2 -84 C -4 -58, -4 -30, -1 2 Z',
-    'M -20 0 C -10 -7, -2 -6, 6 -4 L 6 4 L -22 4 Z',
+  // Grounded dappled watercolor shadow wash beneath the roots
+  const groundWashDabs: GouacheDab[] = [
+    { cx: -12, cy: 1.5, rx: 16, ry: 4.2, rotate: -3, opacity: 0.34 },
+    { cx: 5, cy: 2, rx: 19, ry: 4.6, rotate: 2, opacity: 0.38 },
+    { cx: 16, cy: 0.5, rx: 11, ry: 3.4, rotate: 5, opacity: 0.28 },
   ];
-  const trunkHighlightPaths = [
-    'M 6 -78 C 8 -58, 9 -36, 13 -12 C 15 -6, 18 -2, 22 0 L 22 -82 Z',
-  ];
+  const groundWash = gouacheDabWash(groundWashDabs, {
+    fill: c.foliageShadow,
+    wetEdgeColor: c.contactShadow,
+    wetEdgeOpacity: 0.16,
+    opacity: 0.78,
+    seed: variant * 7 + 1,
+  });
 
-  // Sketchy sepia/charcoal ink bark grain & knot strokes (*Robin Hood* style)
-  const barkInkLines = svgEl(
-    'g',
-    { 'data-part': 'trunk-ink-detail', opacity: 0.68 },
-    [
-      svgEl('path', {
-        d: 'M -6 -6 C -5 -22, -6 -40, -5 -58 M 3 -8 C 2 -28, 3 -46, 5 -66',
-        fill: 'none',
-        ...celStrokeAttrs({
-          stroke: c.xeroxInk,
-          strokeWidth: s.sketchLine,
-        }),
-      }),
-      // Small bark knot & root crease
-      svgEl('path', {
-        d: 'M -3 -35 C 0 -39, 3 -36, 1 -31 C -1 -28, -4 -31, -3 -35 M -13 -3 Q -8 -7, -5 -12 M 13 -3 Q 8 -8, 6 -15',
-        fill: 'none',
-        ...celStrokeAttrs({
-          stroke: c.xeroxInkSoft,
-          strokeWidth: s.sketchLine,
-        }),
-      }),
-      // Upper forked limbs vanishing into foliage shadow
-      svgEl('path', {
-        d: 'M -9 -68 Q -18 -78, -25 -82 M 7 -66 Q 17 -76, 24 -79',
-        fill: 'none',
-        ...celStrokeAttrs({
-          stroke: c.woodDark,
-          strokeWidth: 3.2,
-        }),
-      }),
-    ]
-  );
+  // Gnarled painted gouache trunk & reaching boughs (no glossy digital gradients!)
+  const trunkBaseD =
+    'M -19 0 C -13 -5, -11 -16, -9.5 -34 C -8.5 -50, -10.5 -64, -17 -79 L -9 -84 C -6 -72, -3 -72, 0.5 -84 L 12.5 -78 C 8 -63, 7.5 -47, 9 -29 C 10.5 -15, 13.5 -5, 20 0 C 12 -1, 6 -3, 1.5 -1 C -3.5 1, -9 -2, -19 0 Z';
+  const trunkShadowD =
+    'M -19 0 C -13 -5, -11 -16, -9.5 -34 C -8.5 -50, -10.5 -64, -17 -79 L -10 -82 C -5 -60, -4 -30, -2 -1 C -7 -2, -13 -1, -19 0 Z';
+  const trunkLitD =
+    'M 5 -76 C 7.5 -56, 8 -34, 11.5 -12 C 13 -6, 15.5 -2, 18.5 0 L 14 -1 C 9.5 -12, 8 -36, 7 -58 Z';
 
-  // Foliage gradient defs for rich painterly gouache depth
-  const gradMainId = `cc-tree-foliage-mid-${uid}`;
-  const gradLitId = `cc-tree-foliage-lit-${uid}`;
-  const gradDefs = svgEl('defs', {}, [
-    svgEl(
-      'linearGradient',
-      { id: gradMainId, x1: '15%', y1: '0%', x2: '85%', y2: '100%' },
-      [
-        svgEl('stop', { offset: '0%', 'stop-color': c.foliageLit }),
-        svgEl('stop', { offset: '48%', 'stop-color': c.foliageMid }),
-        svgEl('stop', { offset: '100%', 'stop-color': c.foliageShadow }),
-      ]
+  // Reaching limbs peeking dimly inside the dappled canopy gaps
+  const innerBoughs = svgEl('g', { 'data-part': 'inner-boughs', opacity: 0.72 }, [
+    gouachePath(
+      'M -10 -72 Q -22 -86, -32 -95 L -28 -97 Q -17 -87, -6 -74 Z',
+      c.woodDark,
+      { softEdge: true }
     ),
-    svgEl(
-      'linearGradient',
-      { id: gradLitId, x1: '75%', y1: '0%', x2: '15%', y2: '100%' },
-      [
-        svgEl('stop', { offset: '0%', 'stop-color': c.foliageRim }),
-        svgEl('stop', { offset: '55%', 'stop-color': c.foliageLit }),
-        svgEl('stop', { offset: '100%', 'stop-color': c.foliageMid }),
-      ]
+    gouachePath(
+      'M 5 -74 Q 18 -89, 28 -98 L 31 -95 Q 20 -85, 9 -72 Z',
+      c.woodDark,
+      { softEdge: true }
+    ),
+    gouachePath(
+      'M -1 -78 Q 2 -95, 0 -106 L 4 -105 Q 6 -94, 3 -77 Z',
+      c.woodDark,
+      { softEdge: true, opacity: 0.65 }
     ),
   ]);
 
-  // Multi-layered gouache foliage canopy (origin-relative within x: -64..64, y: -138..-44)
+  // Broken sketchy sepia/graphite Xerox ink bark contour & grain strokes
+  const trunkInk = svgEl('g', { 'data-part': 'trunk-ink-detail' }, [
+    // Broken outer left & right bark edges (selective pen inking, not a heavy uniform box)
+    xeroxSketchStroke(
+      'M -18 -1 C -12 -7, -10.5 -19, -9.5 -35 C -8.5 -51, -10.5 -65, -16 -77',
+      {
+        stroke: c.xeroxInk,
+        strokeWidth: s.xeroxFine,
+        broken: true,
+        dasharray: '14 3 9 2.5 16 4',
+        feather: true,
+        opacity: 0.8,
+      }
+    ),
+    xeroxSketchStroke(
+      'M 19 -1 C 13 -7, 10.5 -18, 9 -34 C 8 -49, 8.5 -63, 12.5 -77',
+      {
+        stroke: c.xeroxInkSoft,
+        strokeWidth: s.sketchLine,
+        broken: true,
+        dasharray: '11 4 8 3 12 4',
+        opacity: 0.72,
+      }
+    ),
+    // Vertical bark grooves, gnarl knot, and root toes
+    xeroxSketchStroke(
+      'M -5.5 -6 C -4.5 -22, -5.5 -39, -4.5 -58 M 2.5 -9 C 1.8 -27, 2.8 -46, 4.5 -66',
+      {
+        stroke: c.xeroxInkSoft,
+        strokeWidth: s.sketchLine,
+        broken: true,
+        dasharray: '8 3 5 3',
+        opacity: 0.68,
+      }
+    ),
+    xeroxSketchStroke(
+      'M -3 -35 C -0.5 -39, 2.5 -36.5, 0.8 -31.5 C -1 -28.5, -3.5 -31, -3 -35 M -12 -3 Q -7 -7, -4.5 -13 M 12 -3 Q 7.5 -8, 5.5 -15',
+      {
+        stroke: c.xeroxInk,
+        strokeWidth: 0.85,
+        opacity: 0.65,
+      }
+    ),
+    // Sparse limb ink ticks inside lower canopy
+    xeroxSketchStroke(
+      'M -12 -74 Q -21 -83, -29 -91 M 8 -74 Q 17 -84, 25 -92',
+      {
+        stroke: c.xeroxInkSoft,
+        strokeWidth: 0.9,
+        broken: true,
+        opacity: 0.62,
+      }
+    ),
+  ]);
+
+  // ── Layer 1: Deep back-canopy shadow watercolor daubs ──
+  const shadowDabs: GouacheDab[] = [
+    { cx: round2(-38 + j(1, 3)), cy: -74, rx: 22, ry: 17, rotate: -14, opacity: 0.82 },
+    { cx: round2(-20 + j(2, 3)), cy: -98, rx: 25, ry: 20, rotate: 8, opacity: 0.84 },
+    { cx: round2(4 + j(3, 3)), cy: -112, rx: 27, ry: 21, rotate: -6, opacity: 0.82 },
+    { cx: round2(31 + j(4, 3)), cy: -96, rx: 24, ry: 19, rotate: 16, opacity: 0.82 },
+    { cx: round2(38 + j(5, 3)), cy: -72, rx: 22, ry: 16, rotate: -9, opacity: 0.8 },
+    { cx: round2(2 + j(6, 3)), cy: -68, rx: 28, ry: 17, rotate: 4, opacity: 0.84 },
+    { cx: round2(-16 + j(7, 2)), cy: -62, rx: 20, ry: 14, rotate: -10, opacity: 0.78 },
+  ];
+
+  // ── Layer 2: Mid-tone dappled olive & forest-sage brush blotches ──
+  const midDabs: GouacheDab[] = [
+    { cx: round2(-44 + j(8, 3)), cy: -84, rx: 17, ry: 13, rotate: -18, fill: c.foliageMid, opacity: 0.78 },
+    { cx: round2(-26 + j(9, 3)), cy: -108, rx: 19, ry: 15, rotate: 12, fill: c.oliveCanopy, opacity: 0.76 },
+    { cx: round2(-6 + j(10, 3)), cy: -120, rx: 21, ry: 16, rotate: -10, fill: c.foliageLit, opacity: 0.78 },
+    { cx: round2(20 + j(11, 3)), cy: -114, rx: 20, ry: 15, rotate: 14, fill: c.oliveCanopy, opacity: 0.76 },
+    { cx: round2(41 + j(12, 3)), cy: -90, rx: 18, ry: 14, rotate: -12, fill: c.foliageMid, opacity: 0.78 },
+    { cx: round2(26 + j(13, 3)), cy: -76, rx: 19, ry: 13, rotate: 9, fill: c.oliveCanopy, opacity: 0.74 },
+    { cx: round2(-10 + j(14, 3)), cy: -84, rx: 22, ry: 16, rotate: -7, fill: c.foliageMid, opacity: 0.76 },
+    { cx: round2(-32 + j(15, 2)), cy: -68, rx: 16, ry: 12, rotate: 15, fill: c.oliveCanopy, opacity: 0.72 },
+    { cx: round2(8 + j(16, 2)), cy: -96, rx: 18, ry: 14, rotate: -15, fill: c.foliageLit, opacity: 0.72 },
+    { cx: round2(46 + j(17, 2)), cy: -74, rx: 14, ry: 11, rotate: 18, fill: c.foliageLit, opacity: 0.68 },
+  ];
+
+  // ── Layer 3: Upper dappled moonlit sage washes & subtle sky-peek holes ──
+  const litDabs: GouacheDab[] = [
+    { cx: round2(-14 + j(18, 2)), cy: -124, rx: 14, ry: 10, rotate: -14, fill: c.sageFoliage, opacity: 0.62 },
+    { cx: round2(12 + j(19, 2)), cy: -126, rx: 15, ry: 10, rotate: 10, fill: c.foliageRim, opacity: 0.56 },
+    { cx: round2(34 + j(20, 2)), cy: -104, rx: 13, ry: 10, rotate: 18, fill: c.sageFoliage, opacity: 0.58 },
+    { cx: round2(-38 + j(21, 2)), cy: -96, rx: 12, ry: 9, rotate: -20, fill: c.sageFoliage, opacity: 0.52 },
+    { cx: round2(2 + j(22, 2)), cy: -104, rx: 13, ry: 9, rotate: 6, fill: c.foliageRim, opacity: 0.44 },
+    { cx: round2(44 + j(23, 2)), cy: -82, rx: 11, ry: 8, rotate: -8, fill: c.foliageRim, opacity: 0.48 },
+  ];
+
+  // Tiny pale sky/moonlight breathing holes peeking through loose foliage gaps (like Robin Hood!)
+  const skyPeekDabs: GouacheDab[] = [
+    { cx: round2(-26 + j(24, 2)), cy: -86, rx: 5.2, ry: 3.8, rotate: 12, fill: c.nightSkyHorizon, opacity: 0.34 },
+    { cx: round2(24 + j(25, 2)), cy: -96, rx: 5.5, ry: 3.6, rotate: -18, fill: c.nightMistTeal, opacity: 0.32 },
+    { cx: round2(6 + j(26, 2)), cy: -78, rx: 4.5, ry: 3.2, rotate: 8, fill: c.nightSkyHorizon, opacity: 0.28 },
+  ];
+
+  // ── Layer 4: Sparse, loose hand-inked foliage & twig flicks (Robin Hood penwork!) ──
+  const foliageFlicks = svgEl(
+    'g',
+    { 'data-part': 'foliage-ink-flicks', opacity: 0.64 },
+    [
+      // Loose broken leaf-cluster ticks & short curved zig-zags scattered inside canopy pockets
+      xeroxSketchStroke(
+        'M -48 -80 q 3 -4 6 -1 m 2 -3 q 4 -3 7 1 M -34 -108 q 4 -4 8 -1 m 3 -2 q 4 -2 6 2',
+        { stroke: c.xeroxInkSoft, strokeWidth: 1.05, opacity: 0.72 }
+      ),
+      xeroxSketchStroke(
+        'M -14 -126 q 5 -3 9 0 m 5 -1 q 5 -3 9 1 M 24 -116 q 5 -2 8 2 m 4 1 q 4 -2 7 3',
+        { stroke: c.xeroxInkSoft, strokeWidth: 1.0, opacity: 0.68 }
+      ),
+      xeroxSketchStroke(
+        'M 38 -88 q 5 -2 8 2 m -2 6 q 5 0 7 4 M -38 -65 q 5 2 9 -1 m 7 2 q 6 3 11 0 M 14 -64 q 6 2 10 -1 m 6 -1 q 5 2 9 -2',
+        { stroke: c.xeroxInk, strokeWidth: 1.1, opacity: 0.7 }
+      ),
+      xeroxSketchStroke(
+        'M -20 -88 q 4 -3 8 0 m -6 5 q 5 -2 9 1 M 6 -96 q 5 -3 9 0 m -4 6 q 4 -2 8 1',
+        { stroke: c.xeroxInk, strokeWidth: 0.95, opacity: 0.62 }
+      ),
+      // Tiny dark painterly leaf stipple flecks scattered organically (authentic 1973 brushwork)
+      ...[
+        [-52, -88, 1.3], [-42, -104, 1.1], [-22, -122, 1.2], [-2, -133, 1.4],
+        [18, -128, 1.1], [38, -112, 1.3], [54, -92, 1.2], [52, -72, 1.1],
+        [28, -62, 1.3], [-8, -62, 1.2], [-46, -68, 1.2], [-12, -102, 1.4],
+        [16, -86, 1.3], [32, -82, 1.1], [-28, -76, 1.2],
+      ].map(([fx, fy, fr], idx) =>
+        svgEl('circle', {
+          cx: round2(fx + j(30 + idx, 2)),
+          cy: round2(fy + j(50 + idx, 2)),
+          r: fr,
+          fill: idx % 3 === 0 ? c.xeroxInk : c.foliageShadow,
+          opacity: 0.62,
+        })
+      ),
+    ]
+  );
+
+  // Dappled woodland canopy assembled with gentle secondary phase sway
   const canopyLayer = svgEl(
     'g',
     {
@@ -126,103 +231,49 @@ export function renderClassicTree(options: PropRenderOptions): string {
       }),
     },
     [
-      // Layer 1: Deep midnight-teal under-canopy shadow mass
-      gouachePath(
-        `M ${round2(-50 + jx(1, 2))} -68 C ${round2(-65 + jx(2, 1.5))} -86, -58 -114, -34 -120 C -22 -136, 16 -140, 32 -124 C 56 -122, 66 -94, 54 -72 C 60 -54, 34 -44, 6 -48 C -14 -42, -56 -48, ${round2(-50 + jx(1, 2))} -68 Z`,
-        c.foliageShadow,
-        { softEdge: true, opacity: 0.96 }
-      ),
-
-      // Layer 2: Mid forest-sage painted bough puffs
-      gouachePath(
-        `M -52 -78 C -60 -98, -42 -118, -20 -114 C -10 -122, 4 -112, -2 -96 C 4 -78, -24 -64, -44 -70 C -50 -72, -52 -74, -52 -78 Z`,
-        svgUrl(gradMainId),
-        { softEdge: true, opacity: 0.92 }
-      ),
-      gouachePath(
-        `M -22 -96 C -26 -124, 6 -138, 28 -124 C 46 -116, 46 -90, 26 -78 C 8 -70, -18 -76, -22 -96 Z`,
-        svgUrl(gradMainId),
-        { softEdge: true, opacity: 0.95 }
-      ),
-      gouachePath(
-        `M 10 -78 C 12 -98, 36 -110, 52 -96 C 63 -84, 56 -64, 36 -60 C 18 -58, 8 -68, 10 -78 Z`,
-        svgUrl(gradMainId),
-        { softEdge: true, opacity: 0.9 }
-      ),
-
-      // Layer 3: Upper moonlit sage-green leaf clusters (slight secondary phase sway)
+      gouacheDabWash(shadowDabs, {
+        fill: c.foliageShadow,
+        wetEdgeColor: c.nightDeepGlade,
+        wetEdgeOpacity: 0.26,
+        opacity: 0.9,
+        seed: variant * 11 + 1,
+      }),
+      innerBoughs,
+      gouacheDabWash(midDabs, {
+        fill: c.foliageMid,
+        wetEdgeColor: c.foliageShadow,
+        wetEdgeOpacity: 0.22,
+        highlightFill: c.sageFoliage,
+        highlightOpacity: 0.2,
+        opacity: 0.88,
+        seed: variant * 17 + 3,
+      }),
       svgEl(
         'g',
         {
           transform: svgTransform({
-            rotate: upperBoughSway,
+            rotate: upperSway,
             pivotX: 0,
-            pivotY: -96,
+            pivotY: -100,
           }),
         },
         [
-          gouachePath(
-            'M -14 -112 C -12 -130, 14 -137, 29 -124 C 38 -116, 32 -102, 16 -100 C -2 -98, -16 -102, -14 -112 Z',
-            svgUrl(gradLitId),
-            { softEdge: true, opacity: 0.88 }
-          ),
-          gouachePath(
-            'M 22 -98 C 30 -108, 48 -105, 53 -92 C 56 -82, 44 -76, 32 -80 C 20 -84, 18 -92, 22 -98 Z',
-            svgUrl(gradLitId),
-            { softEdge: true, opacity: 0.82 }
-          ),
-          gouachePath(
-            'M -44 -94 C -42 -108, -24 -115, -12 -106 C -6 -100, -14 -90, -28 -88 C -39 -87, -46 -88, -44 -94 Z',
-            c.foliageLit,
-            { softEdge: true, opacity: 0.72 }
-          ),
-
-          // Layer 4: Cool silver-sage moonlight rim crests along top-right edges
-          gouachePath(
-            'M -6 -127 C 8 -136, 26 -131, 33 -118 C 24 -125, 8 -128, -6 -123 Z',
-            c.foliageRim,
-            { softEdge: false, opacity: 0.78 }
-          ),
-          gouachePath(
-            'M 30 -106 C 43 -108, 55 -98, 56 -86 C 49 -96, 39 -102, 28 -102 Z',
-            c.foliageRim,
-            { softEdge: false, opacity: 0.72 }
-          ),
-          gouachePath(
-            'M -39 -108 C -30 -116, -18 -116, -11 -110 C -20 -112, -31 -111, -39 -105 Z',
-            c.foliageRim,
-            { softEdge: false, opacity: 0.56 }
-          ),
+          gouacheDabWash(litDabs, {
+            fill: c.sageFoliage,
+            wetEdgeColor: c.oliveCanopy,
+            wetEdgeOpacity: 0.16,
+            opacity: 0.84,
+            seed: variant * 23 + 5,
+          }),
+          gouacheDabWash(skyPeekDabs, {
+            fill: c.nightSkyHorizon,
+            wetEdgeOpacity: 0,
+            opacity: 0.65,
+            seed: variant * 29 + 2,
+          }),
         ]
       ),
-
-      // Layer 5: Subtle sketchy sepia/charcoal ink leaf scallops & bough definition
-      svgEl('g', { 'data-part': 'foliage-ink-scallops', opacity: 0.54 }, [
-        svgEl('path', {
-          d: 'M -49 -76 C -57 -88, -51 -104, -38 -110 M -22 -118 C -10 -133, 14 -136, 28 -126 M 38 -114 C 54 -108, 61 -92, 54 -76',
-          fill: 'none',
-          ...celStrokeAttrs({
-            stroke: c.xeroxInkSoft,
-            strokeWidth: s.xeroxFine,
-          }),
-        }),
-        svgEl('path', {
-          d: 'M -34 -72 Q -22 -64, -8 -69 Q 6 -60, 22 -66 Q 38 -59, 48 -67',
-          fill: 'none',
-          ...celStrokeAttrs({
-            stroke: c.xeroxInk,
-            strokeWidth: s.sketchLine,
-          }),
-        }),
-        svgEl('path', {
-          d: 'M -18 -98 Q -6 -106, 6 -99 Q 18 -104, 28 -96',
-          fill: 'none',
-          ...celStrokeAttrs({
-            stroke: c.xeroxInkSoft,
-            strokeWidth: s.sketchLine,
-          }),
-        }),
-      ]),
+      foliageFlicks,
     ]
   );
 
@@ -233,10 +284,7 @@ export function renderClassicTree(options: PropRenderOptions): string {
       'data-art-style': 'classic_cel',
     },
     [
-      gradDefs,
-      // Grounded woodland shadow wash beneath roots
-      celContactShadow(0, 1, 25, 5.5, 0.3),
-      // Gnarled trunk with very subtle flex
+      groundWash,
       svgEl(
         'g',
         {
@@ -248,19 +296,10 @@ export function renderClassicTree(options: PropRenderOptions): string {
           }),
         },
         [
-          celShadedShape({
-            d: trunkD,
-            baseFill: c.woodMid,
-            shadowPaths: trunkShadowPaths,
-            shadowFill: c.woodDark,
-            highlightPaths: trunkHighlightPaths,
-            highlightFill: c.woodLit,
-            highlightOpacity: 0.72,
-            clipId: `cc-tree-trunk-clip-${uid}`,
-            stroke: c.xeroxInk,
-            strokeWidth: s.xeroxFine,
-          }),
-          barkInkLines,
+          gouachePath(trunkBaseD, c.woodMid, { softEdge: true }),
+          gouachePath(trunkShadowD, c.woodDark, { softEdge: true, opacity: 0.78 }),
+          gouachePath(trunkLitD, c.woodLit, { softEdge: true, opacity: 0.48 }),
+          trunkInk,
         ]
       ),
       canopyLayer,
