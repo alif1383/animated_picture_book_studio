@@ -1108,6 +1108,23 @@ export function mountStorybookStudio(
     `;
   };
 
+  const inspectorStackCopy = (style: AnimationStyleId) =>
+    style === 'classic_cel'
+      ? {
+          title: '🎞️ 1970s–80s Cel & 35mm Film Stack',
+          layer1: 'Layer 1A/1B: Painted Gouache Board & Flat Acetate Cels',
+          layer2: 'Layer 2: #xerox-ink Electrostatic Graphite Filter',
+          layer3: 'Layer 3: 35mm Celluloid Film Grain & Vignette',
+        }
+      : {
+          title: '🎨 Mandatory 3-Layer Stack & Vibrant Mode',
+          layer1: 'Layer 1: Base Cutouts & Warm Paper (#F4EFE6)',
+          layer2: 'Layer 2: #crayon-stroke Line-Boil Filter',
+          layer3: 'Layer 3: Cold-Press Paper Multiply & Flecks',
+        };
+
+  const initialStackCopy = inspectorStackCopy(studioConfig.artStyle);
+
   const renderOptions: RenderSceneOptions = {
     artStyle: studioConfig.artStyle,
     fps: activeFps,
@@ -1202,33 +1219,33 @@ export function mountStorybookStudio(
         <!-- Right Sidebar: 3-Layer Stack & Stop-Motion Fill Inspector -->
         <aside class="panel-card">
           <div class="inspector-section">
-            <h2>🎨 Mandatory 3-Layer Stack & Vibrant Mode</h2>
+            <h2 id="inspector-stack-title">${initialStackCopy.title}</h2>
             <div class="control-row">
               <label>
                 <input type="checkbox" checked disabled />
-                Layer 1: Base Cutouts & Warm Paper (#F4EFE6)
+                <span id="label-layer-1">${initialStackCopy.layer1}</span>
               </label>
             </div>
             <div class="control-row">
               <label>
                 <input type="checkbox" id="chk-crayon-filter" checked />
-                Layer 2: #crayon-stroke Line-Boil Filter
+                <span id="label-layer-2">${initialStackCopy.layer2}</span>
               </label>
             </div>
             <div class="control-row">
               <label>
                 <input type="checkbox" id="chk-paper-texture" checked />
-                Layer 3: Cold-Press Paper Multiply & Flecks
+                <span id="label-layer-3">${initialStackCopy.layer3}</span>
               </label>
             </div>
-            <div class="control-row" style="margin-top: 6px; padding-top: 6px; border-top: 1.5px dashed var(--paper-deep);">
-              <label style="font-weight: 700; color: var(--terracotta-roof);">
+            <div class="control-row control-row-divider">
+              <label class="control-label-accent">
                 <input type="checkbox" id="chk-vibrant-mode" ${renderOptions.vibrant ? 'checked' : ''} />
                 🌈 Vibrant Crayon Mode (#vibrant-grade)
               </label>
             </div>
             <div class="control-row">
-              <label style="font-weight: 700; color: var(--charcoal-outline);">
+              <label class="control-label-strong">
                 <input type="checkbox" id="chk-book-frame" ${renderOptions.enableBookFrame !== false ? 'checked' : ''} />
                 📖 Book Cover & Credits (Opening/Ending)
               </label>
@@ -1239,7 +1256,7 @@ export function mountStorybookStudio(
             <h2>🖌️ Stop-Motion Coloring Fill</h2>
             <div class="control-row">
               <label>
-                <input type="checkbox" id="chk-progressive-fill" checked />
+                <input type="checkbox" id="chk-progressive-fill" ${renderOptions.enableProgressiveFill !== false ? 'checked' : ''} />
                 Enable Stepped Stop-Motion Fill Masks
               </label>
             </div>
@@ -1338,6 +1355,12 @@ export function mountStorybookStudio(
     container.querySelector<HTMLElement>('#act-buttons-row')!;
   const chkCrayonFilter =
     container.querySelector<HTMLInputElement>('#chk-crayon-filter')!;
+  const inspectorStackTitleEl = container.querySelector<HTMLElement>(
+    '#inspector-stack-title'
+  )!;
+  const labelLayer1El = container.querySelector<HTMLElement>('#label-layer-1')!;
+  const labelLayer2El = container.querySelector<HTMLElement>('#label-layer-2')!;
+  const labelLayer3El = container.querySelector<HTMLElement>('#label-layer-3')!;
   const chkPaperTexture =
     container.querySelector<HTMLInputElement>('#chk-paper-texture')!;
   const chkVibrantMode =
@@ -1753,6 +1776,11 @@ export function mountStorybookStudio(
     headerSubtitleEl.textContent = activeScene.subtitle ?? '';
     studioShellEl.dataset.studioTheme = studioConfig.artStyle;
     stageEl.dataset.artStyle = studioConfig.artStyle;
+    const stackCopy = inspectorStackCopy(studioConfig.artStyle);
+    inspectorStackTitleEl.textContent = stackCopy.title;
+    labelLayer1El.textContent = stackCopy.layer1;
+    labelLayer2El.textContent = stackCopy.layer2;
+    labelLayer3El.textContent = stackCopy.layer3;
     renderSceneSwitcherLinks();
     renderActButtons();
     updateUrlSwitcherHighlight();

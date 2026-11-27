@@ -535,10 +535,25 @@ describe('Studio Scene Switcher & SFX Audition removal', () => {
       expect(controller.getState().routePath).toBe('/classic/mochi');
       expect(controller.getState().options.artStyle).toBe('classic_cel');
       expect(controller.getState().options.enableBookFrame).toBe(false);
+      expect(elements.get('#inspector-stack-title')?.textContent).toBe(
+        '🎞️ 1970s–80s Cel & 35mm Film Stack'
+      );
+      expect(elements.get('#label-layer-1')?.textContent).toBe(
+        'Layer 1A/1B: Painted Gouache Board & Flat Acetate Cels'
+      );
+      expect(elements.get('#label-layer-2')?.textContent).toBe(
+        'Layer 2: #xerox-ink Electrostatic Graphite Filter'
+      );
+      expect(elements.get('#label-layer-3')?.textContent).toBe(
+        'Layer 3: 35mm Celluloid Film Grain & Vignette'
+      );
 
       controller.applyRoute('/');
       expect(controller.getState().routePath).toBe('/');
       expect(controller.getState().options.artStyle).toBe('crayon');
+      expect(elements.get('#inspector-stack-title')?.textContent).toBe(
+        '🎨 Mandatory 3-Layer Stack & Vibrant Mode'
+      );
 
       controller.applyUrlQuery('?scene=knight-dragon-quest');
       expect(preloadCalls.length).toBeGreaterThanOrEqual(4);
