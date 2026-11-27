@@ -318,7 +318,16 @@ const MIME_TYPES = {
   '.mp4': 'video/mp4',
 };
 
-function createStudioHttpServer(callbacks = {}) {
+export function isStudioSpaRoute(pathname) {
+  return (
+    pathname === '/' ||
+    pathname === '/index.html' ||
+    pathname === '/classic' ||
+    pathname.startsWith('/classic/')
+  );
+}
+
+export function createStudioHttpServer(callbacks = {}) {
   const { onExportSaved, onExportError } = callbacks;
   return http.createServer((req, res) => {
     const parsedUrl = new URL(req.url || '/', 'http://localhost');
@@ -456,8 +465,8 @@ function createStudioHttpServer(callbacks = {}) {
       return;
     }
 
-    // 3. Serve index.html for root
-    if (pathname === '/' || pathname === '/index.html') {
+    // 3. Serve index.html for root and /classic/* SPA studio routes
+    if (isStudioSpaRoute(pathname)) {
       const html = fs.readFileSync(path.join(ENGINE_ROOT, 'index.html'), 'utf8');
       res.writeHead(200, {
         'Content-Type': 'text/html; charset=utf-8',
@@ -626,7 +635,15 @@ async function runHeadlessExport(args) {
   if (style) query.set('style', style);
   if (bookFrame) query.set('book_frame', bookFrame);
 
-  const exportUrl = `http://127.0.0.1:${port}/?${query.toString()}`;
+  const useClassicRoute =
+    style === 'classic_cel' ||
+    style === 'classic-cel' ||
+    sceneId === 'classic-moonlit-cat' ||
+    sceneId === 'mochi';
+  const exportPath = useClassicRoute
+    ? `/classic/${encodeURIComponent(sceneId)}`
+    : '/';
+  const exportUrl = `http://127.0.0.1:${port}${exportPath}?${query.toString()}`;
   const tempProfile = path.join(os.tmpdir(), `pb-cli-export-${Date.now()}`);
 
   console.log(`[export] Rendering scene="${sceneId}" (${resolution} 16:9) in headless mode...`);
@@ -712,7 +729,13 @@ async function main() {
   }
 }
 
-main().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+const isDirectCli =
+  Boolean(process.argv[1]) &&
+  path.resolve(process.argv[1]) === path.resolve(__filename);
+
+if (isDirectCli) {
+  main().catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
+}

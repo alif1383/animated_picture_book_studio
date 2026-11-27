@@ -315,24 +315,32 @@ describe('PictureBookSoundEngine live audioClips playback', () => {
 });
 
 describe('Studio Scene Switcher & SFX Audition removal', () => {
-  it('getSwitcherScenes returns the built-in starter & classic scenes (hiding older legacy scenes) and includes new registry scenes', () => {
-    const switcherScenes = getSwitcherScenes();
-    const ids = switcherScenes.map((s) => s.id);
-
-    expect(ids).toEqual([
+  it('getSwitcherScenes supports style-scoped crayon & classic_cel switchers and preserves all registered scenes', () => {
+    const allSwitcherIds = getSwitcherScenes().map((s) => s.id);
+    expect(allSwitcherIds).toEqual([
       'starter-moonlit-cat',
       'classic-moonlit-cat',
       'starter-bandana-dog',
       'starter-knight-dragon-hiccups',
     ]);
 
-    expect(ids).not.toContain('short_sample_1');
-    expect(ids).not.toContain('moonlight-lullaby-story');
-    expect(ids).not.toContain('meadow_party_3');
-    expect(ids).not.toContain('corner-store-day');
-    expect(ids).not.toContain('moonlit-garden');
-    expect(ids).not.toContain('strawberry-beach-birthday');
-    expect(ids).not.toContain('knight-dragon-quest');
+    expect(getSwitcherScenes('crayon').map((s) => s.id)).toEqual([
+      'starter-moonlit-cat',
+      'starter-bandana-dog',
+      'starter-knight-dragon-hiccups',
+    ]);
+
+    expect(getSwitcherScenes('classic_cel').map((s) => s.id)).toEqual([
+      'classic-moonlit-cat',
+    ]);
+
+    expect(allSwitcherIds).not.toContain('short_sample_1');
+    expect(allSwitcherIds).not.toContain('moonlight-lullaby-story');
+    expect(allSwitcherIds).not.toContain('meadow_party_3');
+    expect(allSwitcherIds).not.toContain('corner-store-day');
+    expect(allSwitcherIds).not.toContain('moonlit-garden');
+    expect(allSwitcherIds).not.toContain('strawberry-beach-birthday');
+    expect(allSwitcherIds).not.toContain('knight-dragon-quest');
 
     // All scenes (including legacy) remain accessible via getUniqueRegisteredScenes & SCENE_REGISTRY
     expect(getUniqueRegisteredScenes().length).toBeGreaterThanOrEqual(11);
@@ -340,13 +348,48 @@ describe('Studio Scene Switcher & SFX Audition removal', () => {
     expect(SCENE_REGISTRY['classic-moonlit-cat']).toBeDefined();
   });
 
-  it('defaults canonicalQuery to ?scene=<id> when no legacy short_sample parameter is given and parses ?style=classic_cel', () => {
-    const parsed = parseStudioUrlParams('', CORNER_STORE_DAY_SCENE);
+  it('parses / vs /classic, /classic/mochi, /classic/classic-moonlit-cat, and /classic/<sceneId> routes cleanly', () => {
+    const parsed = parseStudioUrlParams('', CORNER_STORE_DAY_SCENE, '/');
     expect(parsed.scene.id).toBe('corner-store-day');
     expect(parsed.artStyle).toBe('crayon');
     expect(parsed.bookFrame).toBe(true);
+    expect(parsed.isClassicRoute).toBe(false);
+    expect(parsed.canonicalPath).toBe('/');
     expect(parsed.canonicalQuery).toBe('?scene=corner-store-day');
 
+    // /classic and /classic/ and /classic/mochi -> classic-moonlit-cat in classic_cel mode
+    for (const p of ['/classic', '/classic/', '/classic/mochi']) {
+      const res = parseStudioUrlParams('', CORNER_STORE_DAY_SCENE, p);
+      expect(res.scene.id).toBe('classic-moonlit-cat');
+      expect(res.artStyle).toBe('classic_cel');
+      expect(res.bookFrame).toBe(false);
+      expect(res.isClassicRoute).toBe(true);
+      expect(res.canonicalPath).toBe('/classic/mochi');
+    }
+
+    const resById = parseStudioUrlParams(
+      '',
+      CORNER_STORE_DAY_SCENE,
+      '/classic/classic-moonlit-cat'
+    );
+    expect(resById.scene.id).toBe('classic-moonlit-cat');
+    expect(resById.artStyle).toBe('classic_cel');
+    expect(resById.bookFrame).toBe(false);
+    expect(resById.isClassicRoute).toBe(true);
+    expect(resById.canonicalPath).toBe('/classic/classic-moonlit-cat');
+
+    // Any registered scene at /classic/<id> renders in classic_cel mode by default
+    const resOtherClassic = parseStudioUrlParams(
+      '',
+      CORNER_STORE_DAY_SCENE,
+      '/classic/starter-bandana-dog'
+    );
+    expect(resOtherClassic.scene.id).toBe('starter-bandana-dog');
+    expect(resOtherClassic.artStyle).toBe('classic_cel');
+    expect(resOtherClassic.bookFrame).toBe(false);
+    expect(resOtherClassic.canonicalPath).toBe('/classic/starter-bandana-dog');
+
+    // Query-based overrides still work at /
     const parsedClassic = parseStudioUrlParams('?scene=classic-moonlit-cat');
     expect(parsedClassic.scene.id).toBe('classic-moonlit-cat');
     expect(parsedClassic.artStyle).toBe('classic_cel');
@@ -360,9 +403,30 @@ describe('Studio Scene Switcher & SFX Audition removal', () => {
     expect(parsedOverride.canonicalQuery).toContain('&style=classic_cel');
 
     const parsedOverrideWithBook = parseStudioUrlParams(
-      '?scene=classic-moonlit-cat&book_frame=1'
+      '?book_frame=1',
+      CORNER_STORE_DAY_SCENE,
+      '/classic/mochi'
     );
     expect(parsedOverrideWithBook.bookFrame).toBe(true);
+  });
+
+  it('studio-cli.mjs serves SPA HTML for / and /classic/* while keeping root asset paths untouched', async () => {
+    const cliUrl = new URL('../scripts/studio-cli.mjs', import.meta.url).href;
+    const cliMod = (await import(cliUrl)) as {
+      isStudioSpaRoute: (pathname: string) => boolean;
+    };
+    expect(cliMod.isStudioSpaRoute('/')).toBe(true);
+    expect(cliMod.isStudioSpaRoute('/index.html')).toBe(true);
+    expect(cliMod.isStudioSpaRoute('/classic')).toBe(true);
+    expect(cliMod.isStudioSpaRoute('/classic/')).toBe(true);
+    expect(cliMod.isStudioSpaRoute('/classic/mochi')).toBe(true);
+    expect(cliMod.isStudioSpaRoute('/classic/classic-moonlit-cat')).toBe(true);
+
+    expect(cliMod.isStudioSpaRoute('/src/main.ts')).toBe(false);
+    expect(cliMod.isStudioSpaRoute('/audio/moonlit-cat-lullaby-bgm.wav')).toBe(false);
+    expect(cliMod.isStudioSpaRoute('/__vendor/mp4-muxer.mjs')).toBe(false);
+    expect(cliMod.isStudioSpaRoute('/__studio/save-export')).toBe(false);
+    expect(cliMod.isStudioSpaRoute('/favicon.svg')).toBe(false);
   });
 
   it('mounts Studio UI without SFX Audition or short_sample clutter and wires audioClips lifecycle', () => {
@@ -437,11 +501,12 @@ describe('Studio Scene Switcher & SFX Audition removal', () => {
         KNIGHT_DRAGON_QUEST_SCENE
       );
 
-      // 1. Clean Scene Switcher: contains ?scene= links for starter & classic scenes, zero legacy/short_sample or footage sub-parts
+      // 1. Clean Scene Switcher at /: contains ?scene= links for the 3 crayon starter scenes + Style Studio switcher (/ & /classic/mochi)
       expect(renderedHtml).toContain('?scene=starter-moonlit-cat');
-      expect(renderedHtml).toContain('?scene=classic-moonlit-cat');
       expect(renderedHtml).toContain('?scene=starter-bandana-dog');
       expect(renderedHtml).toContain('?scene=starter-knight-dragon-hiccups');
+      expect(renderedHtml).toContain('data-route-href="/"');
+      expect(renderedHtml).toContain('data-route-href="/classic/mochi"');
       expect(renderedHtml).not.toContain('?scene=corner-store-day');
       expect(renderedHtml).not.toContain('?scene=moonlit-garden');
       expect(renderedHtml).not.toContain('?scene=strawberry-beach-birthday');
@@ -454,7 +519,7 @@ describe('Studio Scene Switcher & SFX Audition removal', () => {
       expect(renderedHtml).not.toContain('data-sfx-kind');
       expect(renderedHtml).not.toContain('SFX Audition');
 
-      // 3. audioClips lifecycle wired into mount, play, seek, pause, and scene switch
+      // 3. audioClips lifecycle wired into mount, play, seek, pause, and route/scene switch
       expect(preloadCalls.length).toBeGreaterThanOrEqual(1);
       expect(preloadCalls[0][0]).toBe(KNIGHT_DRAGON_QUEST_SCENE.audioClips);
 
@@ -465,13 +530,18 @@ describe('Studio Scene Switcher & SFX Audition removal', () => {
       expect(stopCalls.length).toBeGreaterThanOrEqual(1);
 
       controller.pause();
-      controller.applyUrlQuery('?scene=classic-moonlit-cat&autoplay=0');
+      controller.applyRoute('/classic/mochi');
       expect(controller.getState().fps).toBe(12);
+      expect(controller.getState().routePath).toBe('/classic/mochi');
       expect(controller.getState().options.artStyle).toBe('classic_cel');
       expect(controller.getState().options.enableBookFrame).toBe(false);
 
+      controller.applyRoute('/');
+      expect(controller.getState().routePath).toBe('/');
+      expect(controller.getState().options.artStyle).toBe('crayon');
+
       controller.applyUrlQuery('?scene=knight-dragon-quest');
-      expect(preloadCalls.length).toBeGreaterThanOrEqual(3);
+      expect(preloadCalls.length).toBeGreaterThanOrEqual(4);
 
       controller.destroy();
     } finally {

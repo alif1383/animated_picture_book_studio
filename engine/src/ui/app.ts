@@ -86,12 +86,26 @@ export function getUniqueRegisteredScenes(): SceneDefinition[] {
  * Returns the full storybook scenes displayed in the Studio Scene Switcher bar
  * (excluding legacy `?short_sample=1..3` prototype demos while automatically
  * including any custom scenes added to `SCENE_REGISTRY`).
+ *
+ * When `style` is provided:
+ * - `'crayon'` returns the Picture-Book Crayon starter scenes (for `/` root)
+ * - `'classic_cel'` returns Classic 1970s–80s Hand-Drawn Cel scenes (for `/classic/...`)
+ * When omitted, returns all non-legacy switcher scenes across both styles.
  */
-export function getSwitcherScenes(): SceneDefinition[] {
-  return getUniqueRegisteredScenes().filter(
+export function getSwitcherScenes(style?: AnimationStyleId): SceneDefinition[] {
+  const nonLegacy = getUniqueRegisteredScenes().filter(
     (scene) => !LEGACY_SHORT_SAMPLE_SCENE_IDS.has(scene.id)
   );
+  if (!style) return nonLegacy;
+  return nonLegacy.filter((scene) => (scene.artStyle ?? 'crayon') === style);
 }
+
+const CLASSIC_ROUTE_ALIASES: Record<string, SceneDefinition> = {
+  '': CLASSIC_MOONLIT_CAT_SCENE,
+  mochi: CLASSIC_MOONLIT_CAT_SCENE,
+  'moonlit-cat': CLASSIC_MOONLIT_CAT_SCENE,
+  'classic-moonlit-cat': CLASSIC_MOONLIT_CAT_SCENE,
+};
 
 function formatSceneSwitcherLabel(scene: SceneDefinition): string {
   const icon = SCENE_SWITCHER_ICONS[scene.id] ?? '🎬';
@@ -111,6 +125,8 @@ export interface ParsedStudioParams {
   vibrant: boolean;
   bookFrame: boolean;
   canonicalQuery: string;
+  canonicalPath: string;
+  isClassicRoute: boolean;
 }
 
 const FOOTAGE_ALIASES: Record<string, number> = {
@@ -136,11 +152,17 @@ const FOOTAGE_ALIASES: Record<string, number> = {
 };
 
 /**
- * Parses URL query parameters into a deterministic studio playback configuration.
+ * Parses URL query parameters and optional SPA pathname (`/` vs `/classic/...`) into a
+ * deterministic studio playback configuration.
+ *
+ * Supported routes:
+ *   `/` — Picture-Book Crayon Studio (default)
+ *   `/classic`, `/classic/mochi`, `/classic/<sceneId>` — Classic 1970s–80s Hand-Drawn Cel Studio
  *
  * Supported parameters:
  *   `?short_sample=1|2|3|birthday` — select built-in scene (legacy)
  *   `?scene=<id|key>` — select any scene from SCENE_REGISTRY by key or scene.id
+ *   `?style=crayon|classic_cel` — override animation rendering style
  *   `?footage=<act-id|alias>` — loop a single act
  *   `?vibrant=1|0` — enable/disable Vibrant Crayon Mode
  *   `?book_frame=1|0` — enable/disable Storybook Cover Opening & Ending/Credits Book-Frame
@@ -151,24 +173,46 @@ const FOOTAGE_ALIASES: Record<string, number> = {
  */
 export function parseStudioUrlParams(
   search: string,
-  fallbackScene?: SceneDefinition
+  fallbackScene?: SceneDefinition,
+  pathname = '/'
 ): ParsedStudioParams {
-  const params = new URLSearchParams(search.startsWith('?') ? search : `?${search}`);
+  const trimmedPath = pathname.trim();
+  const normalizedPathname =
+    trimmedPath.length > 0 ? trimmedPath.replace(/\/+$/, '') || '/' : '/';
+  const isClassicRoute =
+    normalizedPathname === '/classic' ||
+    normalizedPathname.startsWith('/classic/');
+  const rawClassicSlug = isClassicRoute
+    ? normalizedPathname === '/classic'
+      ? ''
+      : decodeURIComponent(normalizedPathname.slice('/classic/'.length)).trim()
+    : '';
+
+  const params = new URLSearchParams(
+    search.startsWith('?') ? search : `?${search}`
+  );
   const rawSample = params.get('short_sample')?.toLowerCase().trim() ?? null;
   const rawScene = params.get('scene')?.trim() ?? null;
   let shortSample: ShortSampleId = '1';
 
-  // ?scene=<id> takes priority over ?short_sample=
+  const lookupSceneByKeyOrId = (key: string): SceneDefinition | null => {
+    const byKey = SCENE_REGISTRY[key];
+    if (byKey) return byKey;
+    return getUniqueRegisteredScenes().find((s) => s.id === key) ?? null;
+  };
+
+  // ?scene=<id> takes priority over path slug & ?short_sample=
   let resolvedScene: SceneDefinition | null = null;
   if (rawScene) {
-    const byKey = SCENE_REGISTRY[rawScene];
-    if (byKey) {
-      resolvedScene = byKey;
-    } else {
-      // Also search by scene.id across all unique registry scenes
-      resolvedScene =
-        getUniqueRegisteredScenes().find((s) => s.id === rawScene) ?? null;
-    }
+    resolvedScene = lookupSceneByKeyOrId(rawScene);
+  }
+
+  if (!resolvedScene && isClassicRoute) {
+    const slugLower = rawClassicSlug.toLowerCase();
+    resolvedScene =
+      CLASSIC_ROUTE_ALIASES[slugLower] ??
+      (rawClassicSlug ? lookupSceneByKeyOrId(rawClassicSlug) : null) ??
+      CLASSIC_MOONLIT_CAT_SCENE;
   }
 
   if (!resolvedScene) {
@@ -192,22 +236,23 @@ export function parseStudioUrlParams(
       shortSample = '2';
     } else if (rawSample === '1') {
       shortSample = '1';
-    } else if (fallbackScene?.id === KNIGHT_DRAGON_QUEST_SCENE.id) {
-      shortSample = '6';
-    } else if (fallbackScene?.id === STRAWBERRY_BEACH_BIRTHDAY_SCENE.id) {
-      shortSample = '5';
-    } else if (fallbackScene?.id === CORNER_STORE_DAY_SCENE.id) {
-      shortSample = '4';
-    } else if (fallbackScene?.id === MEADOW_PARTY_SCENE.id) {
-      shortSample = '3';
-    } else if (fallbackScene?.id === MOONLIGHT_STORY_SCENE.id) {
-      shortSample = '2';
+    } else if (fallbackScene) {
+      if (fallbackScene.id === KNIGHT_DRAGON_QUEST_SCENE.id) shortSample = '6';
+      else if (fallbackScene.id === STRAWBERRY_BEACH_BIRTHDAY_SCENE.id)
+        shortSample = '5';
+      else if (fallbackScene.id === CORNER_STORE_DAY_SCENE.id) shortSample = '4';
+      else if (fallbackScene.id === MEADOW_PARTY_SCENE.id) shortSample = '3';
+      else if (fallbackScene.id === MOONLIGHT_STORY_SCENE.id) shortSample = '2';
+      resolvedScene = fallbackScene;
     }
-    resolvedScene = SCENE_REGISTRY[shortSample];
+    if (!resolvedScene) {
+      resolvedScene = SCENE_REGISTRY[shortSample];
+    }
   } else {
     // Map resolvedScene back to a shortSample id for canonical URL building
     if (resolvedScene.id === KNIGHT_DRAGON_QUEST_SCENE.id) shortSample = '6';
-    else if (resolvedScene.id === STRAWBERRY_BEACH_BIRTHDAY_SCENE.id) shortSample = '5';
+    else if (resolvedScene.id === STRAWBERRY_BEACH_BIRTHDAY_SCENE.id)
+      shortSample = '5';
     else if (resolvedScene.id === CORNER_STORE_DAY_SCENE.id) shortSample = '4';
     else if (resolvedScene.id === MEADOW_PARTY_SCENE.id) shortSample = '3';
     else if (resolvedScene.id === MOONLIGHT_STORY_SCENE.id) shortSample = '2';
@@ -249,7 +294,10 @@ export function parseStudioUrlParams(
     autoplay = true;
   } else if (rawAutoplay === '0' || rawAutoplay === 'false') {
     autoplay = false;
-  } else if (!hasExplicitT && (rawSample !== null || rawScene !== null || rawFootage !== null)) {
+  } else if (
+    !hasExplicitT &&
+    (rawSample !== null || rawScene !== null || rawFootage !== null)
+  ) {
     autoplay = true;
   }
 
@@ -263,7 +311,10 @@ export function parseStudioUrlParams(
     rawResolution === '720p' ? '720p' : '1080p';
 
   const rawStyle = params.get('style')?.toLowerCase().trim() ?? null;
-  let artStyle: AnimationStyleId = scene.artStyle ?? 'crayon';
+  const defaultStyleForRoute: AnimationStyleId = isClassicRoute
+    ? 'classic_cel'
+    : scene.artStyle ?? 'crayon';
+  let artStyle: AnimationStyleId = defaultStyleForRoute;
   if (
     rawStyle === 'classic_cel' ||
     rawStyle === 'classic-cel' ||
@@ -305,7 +356,18 @@ export function parseStudioUrlParams(
     bookFrame = false;
   }
 
-  const baseQuery = rawScene
+  const canonicalPath = isClassicRoute
+    ? scene.id === CLASSIC_MOONLIT_CAT_SCENE.id &&
+      (rawClassicSlug === '' || rawClassicSlug.toLowerCase() === 'mochi')
+      ? '/classic/mochi'
+      : `/classic/${encodeURIComponent(scene.id)}`
+    : '/';
+
+  const baseQuery = isClassicRoute
+    ? footageId
+      ? `${canonicalPath}?footage=${footageId}`
+      : canonicalPath
+    : rawScene
     ? `?scene=${encodeURIComponent(rawScene)}`
     : rawSample
     ? footageId
@@ -315,11 +377,12 @@ export function parseStudioUrlParams(
     ? `?scene=${encodeURIComponent(scene.id)}&footage=${footageId}`
     : `?scene=${encodeURIComponent(scene.id)}`;
   let canonicalQuery =
-    rawVibrant !== null && !scene.vibrantMode
+    rawVibrant !== null && !scene.vibrantMode && !isClassicRoute
       ? `${baseQuery}&vibrant=${vibrant ? '1' : '0'}`
       : baseQuery;
-  if (rawStyle !== null && artStyle !== (scene.artStyle ?? 'crayon')) {
-    canonicalQuery = `${canonicalQuery}&style=${artStyle}`;
+  if (rawStyle !== null && artStyle !== defaultStyleForRoute) {
+    const sep = canonicalQuery.includes('?') ? '&' : '?';
+    canonicalQuery = `${canonicalQuery}${sep}style=${artStyle}`;
   }
 
   return {
@@ -335,6 +398,8 @@ export function parseStudioUrlParams(
     vibrant,
     bookFrame,
     canonicalQuery,
+    canonicalPath,
+    isClassicRoute,
   };
 }
 
@@ -969,6 +1034,7 @@ export interface StorybookStudioController {
   pause: () => void;
   seek: (timeSec: number) => void;
   applyUrlQuery: (query: string) => void;
+  applyRoute: (href: string, pushHistory?: boolean) => void;
   setOptions: (opts: Partial<RenderSceneOptions>) => void;
   getState: () => {
     shortSample: ShortSampleId;
@@ -976,13 +1042,14 @@ export interface StorybookStudioController {
     currentTimeSec: number;
     isPlaying: boolean;
     fps: number;
+    routePath: string;
     options: RenderSceneOptions;
   };
   destroy: () => void;
 }
 
 /**
- * Mounts the interactive Picture-Book Crayon Video Engine Studio into `container`.
+ * Mounts the interactive Picture-Book Crayon & Classic Cel Video Engine Studio into `container`.
  */
 export function mountStorybookStudio(
   container: HTMLElement,
@@ -990,7 +1057,13 @@ export function mountStorybookStudio(
 ): StorybookStudioController {
   const initialSearch =
     typeof window !== 'undefined' ? window.location.search : '';
-  let studioConfig = parseStudioUrlParams(initialSearch, initialScene);
+  const initialPathname =
+    typeof window !== 'undefined' ? window.location.pathname : '/';
+  let studioConfig = parseStudioUrlParams(
+    initialSearch,
+    initialScene,
+    initialPathname
+  );
 
   let activeScene: SceneDefinition = studioConfig.scene;
   let currentTimeSec = studioConfig.initialTimeSec;
@@ -1009,6 +1082,32 @@ export function mountStorybookStudio(
   const headerIconForStyle = (style: AnimationStyleId): string =>
     style === 'classic_cel' ? '🎞️' : '🖍️';
 
+  const sceneRouteHref = (
+    scene: SceneDefinition,
+    isClassicMode: boolean
+  ): string => {
+    if (isClassicMode) {
+      return scene.id === CLASSIC_MOONLIT_CAT_SCENE.id
+        ? '/classic/mochi'
+        : `/classic/${encodeURIComponent(scene.id)}`;
+    }
+    return `?scene=${encodeURIComponent(scene.id)}`;
+  };
+
+  const buildSceneSwitcherInnerHtml = (isClassicMode: boolean): string => {
+    const styleKey: AnimationStyleId = isClassicMode ? 'classic_cel' : 'crayon';
+    const label = isClassicMode ? '🎞️ Classic Scenes:' : '🎬 Scenes:';
+    return `
+          <span class="preset-label">${label}</span>
+          ${getSwitcherScenes(styleKey)
+            .map((scene) => {
+              const href = sceneRouteHref(scene, isClassicMode);
+              return `<a href="${href}" class="btn btn-sm" data-url-query="${href}" data-scene-id="${scene.id}" title="${href}">${formatSceneSwitcherLabel(scene)}</a>`;
+            })
+            .join('\n          ')}
+    `;
+  };
+
   const renderOptions: RenderSceneOptions = {
     artStyle: studioConfig.artStyle,
     fps: activeFps,
@@ -1026,7 +1125,7 @@ export function mountStorybookStudio(
   const soundEngine = new PictureBookSoundEngine({ muted: false });
 
   container.innerHTML = `
-    <div class="studio-shell">
+    <div class="studio-shell" id="studio-shell" data-studio-theme="${studioConfig.artStyle}">
       <header class="studio-header">
         <div class="studio-title-group">
           <h1 id="header-scene-title">${headerIconForStyle(studioConfig.artStyle)} ${activeScene.title}</h1>
@@ -1042,16 +1141,15 @@ export function mountStorybookStudio(
         </div>
       </header>
 
-      <!-- Scene Switcher Bar -->
-      <nav class="panel-card" style="margin-bottom: 16px; padding: 10px 14px;" aria-label="Scene Switcher">
+      <!-- Style Studio & Scene Switcher Bar -->
+      <nav class="panel-card studio-nav-bar" style="margin-bottom: 16px; padding: 10px 14px;" aria-label="Scene Switcher">
         <div class="preset-row" id="url-switcher-row">
-          <span class="preset-label">🎬 Scenes:</span>
-          ${getSwitcherScenes()
-            .map((scene) => {
-              const query = `?scene=${encodeURIComponent(scene.id)}`;
-              return `<a href="${query}" class="btn btn-sm" data-url-query="${query}" data-scene-id="${scene.id}" title="${query}">${formatSceneSwitcherLabel(scene)}</a>`;
-            })
-            .join('\n          ')}
+          ${buildSceneSwitcherInnerHtml(studioConfig.isClassicRoute)}
+        </div>
+        <div class="style-switcher-group" id="style-switcher-row" aria-label="Studio Style Switcher">
+          <span class="preset-label">Studio:</span>
+          <a href="/" class="btn btn-sm style-switch-btn" data-route-href="/" data-style-route="crayon" title="Picture-Book Crayon Studio (/)">🖍️ Picture Book (/)</a>
+          <a href="/classic/mochi" class="btn btn-sm style-switch-btn" data-route-href="/classic/mochi" data-style-route="classic_cel" title="Classic 1970s–80s Hand-Drawn Cel Studio (/classic/mochi)">🎞️ Classic Cel (/classic/mochi)</a>
         </div>
       </nav>
 
@@ -1196,6 +1294,9 @@ export function mountStorybookStudio(
     </div>
   `;
 
+  const studioShellEl = container.querySelector<HTMLElement>('#studio-shell')!;
+  const urlSwitcherRowEl =
+    container.querySelector<HTMLElement>('#url-switcher-row')!;
   const headerTitleEl =
     container.querySelector<HTMLElement>('#header-scene-title')!;
   const headerSubtitleEl = container.querySelector<HTMLElement>(
@@ -1281,6 +1382,10 @@ export function mountStorybookStudio(
   }
 
   function updateUrlSwitcherHighlight(): void {
+    const activeStyleRoute: AnimationStyleId =
+      studioConfig.isClassicRoute || studioConfig.artStyle === 'classic_cel'
+        ? 'classic_cel'
+        : 'crayon';
     container
       .querySelectorAll<HTMLAnchorElement>('[data-url-query]')
       .forEach((link) => {
@@ -1288,6 +1393,31 @@ export function mountStorybookStudio(
           'btn-active',
           link.dataset.sceneId === activeScene.id
         );
+      });
+    container
+      .querySelectorAll<HTMLAnchorElement>('[data-style-route]')
+      .forEach((link) => {
+        link.classList.toggle(
+          'btn-active',
+          link.dataset.styleRoute === activeStyleRoute
+        );
+      });
+  }
+
+  function renderSceneSwitcherLinks(): void {
+    urlSwitcherRowEl.innerHTML = buildSceneSwitcherInnerHtml(
+      studioConfig.isClassicRoute
+    );
+    urlSwitcherRowEl
+      .querySelectorAll<HTMLAnchorElement>('[data-url-query]')
+      .forEach((link) => {
+        link.addEventListener('click', (e) => {
+          e.preventDefault();
+          const href =
+            link.dataset.urlQuery ??
+            sceneRouteHref(activeScene, studioConfig.isClassicRoute);
+          applyRoute(href, studioConfig.isClassicRoute);
+        });
       });
   }
 
@@ -1578,9 +1708,27 @@ export function mountStorybookStudio(
     }
   }
 
-  function applyUrlQuery(query: string): void {
+  function applyRoute(href: string, pushHistory = true): void {
     pause();
-    studioConfig = parseStudioUrlParams(query, initialScene);
+    const trimmed = href.trim();
+    let nextPathname = '/';
+    let nextSearch = '';
+    if (trimmed.startsWith('?')) {
+      nextPathname = '/';
+      nextSearch = trimmed;
+    } else if (trimmed.length > 0) {
+      const qIdx = trimmed.indexOf('?');
+      if (qIdx >= 0) {
+        nextPathname = trimmed.slice(0, qIdx) || '/';
+        nextSearch = trimmed.slice(qIdx);
+      } else {
+        nextPathname = trimmed;
+        nextSearch = '';
+      }
+    }
+
+    const prevPath = studioConfig.canonicalPath;
+    studioConfig = parseStudioUrlParams(nextSearch, initialScene, nextPathname);
     activeScene = studioConfig.scene;
     loopBounds = studioConfig.loopBounds;
     currentTimeSec = studioConfig.initialTimeSec;
@@ -1603,13 +1751,27 @@ export function mountStorybookStudio(
 
     headerTitleEl.textContent = `${headerIconForStyle(studioConfig.artStyle)} ${activeScene.title}`;
     headerSubtitleEl.textContent = activeScene.subtitle ?? '';
+    studioShellEl.dataset.studioTheme = studioConfig.artStyle;
     stageEl.dataset.artStyle = studioConfig.artStyle;
+    renderSceneSwitcherLinks();
     renderActButtons();
     updateUrlSwitcherHighlight();
     void soundEngine.preloadClips(activeScene.audioClips);
 
-    if (typeof window !== 'undefined' && window.history?.replaceState) {
-      window.history.replaceState(null, '', query);
+    if (typeof window !== 'undefined' && window.history) {
+      const targetUrl =
+        nextPathname === '/' && nextSearch
+          ? `/${nextSearch}`
+          : `${nextPathname}${nextSearch}`;
+      if (
+        pushHistory &&
+        nextPathname !== prevPath &&
+        typeof window.history.pushState === 'function'
+      ) {
+        window.history.pushState(null, '', targetUrl);
+      } else if (typeof window.history.replaceState === 'function') {
+        window.history.replaceState(null, '', targetUrl);
+      }
     }
 
     updateStage(true);
@@ -1622,6 +1784,16 @@ export function mountStorybookStudio(
       }, 500);
     }
   }
+
+  function applyUrlQuery(query: string): void {
+    applyRoute(query, false);
+  }
+
+  const handlePopState = () => {
+    if (typeof window === 'undefined') return;
+    const href = `${window.location.pathname || '/'}${window.location.search || ''}`;
+    applyRoute(href, false);
+  };
 
   const handleAudioUnlockGesture = () => {
     if (!soundEngine.isContextSuspended()) return;
@@ -1641,18 +1813,20 @@ export function mountStorybookStudio(
     window.addEventListener('keydown', handleAudioUnlockGesture, {
       passive: true,
     });
+    window.addEventListener('popstate', handlePopState);
   }
 
   container
-    .querySelectorAll<HTMLAnchorElement>('[data-url-query]')
+    .querySelectorAll<HTMLAnchorElement>('[data-route-href]')
     .forEach((link) => {
       link.addEventListener('click', (e) => {
         e.preventDefault();
-        const q =
-          link.dataset.urlQuery ?? `?scene=${encodeURIComponent(activeScene.id)}`;
-        applyUrlQuery(q);
+        const href = link.dataset.routeHref ?? '/';
+        applyRoute(href, true);
       });
     });
+
+  renderSceneSwitcherLinks();
 
   btnPlayPause.addEventListener('click', () => {
     if (isPlaying) pause();
@@ -1927,6 +2101,7 @@ export function mountStorybookStudio(
     pause,
     seek,
     applyUrlQuery,
+    applyRoute,
     setOptions: (opts) => {
       Object.assign(renderOptions, opts);
       updateStage(true);
@@ -1937,6 +2112,7 @@ export function mountStorybookStudio(
       currentTimeSec,
       isPlaying,
       fps: activeFps,
+      routePath: studioConfig.canonicalPath,
       options: { ...renderOptions },
     }),
     destroy: () => {
@@ -1946,6 +2122,7 @@ export function mountStorybookStudio(
       ) {
         window.removeEventListener('pointerdown', handleAudioUnlockGesture);
         window.removeEventListener('keydown', handleAudioUnlockGesture);
+        window.removeEventListener('popstate', handlePopState);
       }
       pause();
       soundEngine.dispose();
