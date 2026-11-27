@@ -25,35 +25,42 @@ Look closely at 1973 *Robin Hood*: characters look unmistakably vintage because 
 - **Expressive Classic Disney Faces**: Warm parchment cream sclera (`TOKENS.classicCel.colors.celCream`), warm colored irises, dark pupils with tiny crisp specular catchlights, expressive hand-drawn eyelashes/eyelids, and floating sketchy Xerox eyebrows.
 - **Grounded Contact Shadow**: Place a soft painted `celContactShadow()` at ground contact `(0, 0)`.
 
-### 1b. Background Props & Buildings (`src/assets/classicCel/{props,buildings}/`) — Painted Watercolor/Gouache Board
-Background architecture, trees, bushes, grass, stone fountains, and clouds are painted on **illustration board** — NEVER inked like crisp cartoon foreground cels:
-- **Dappled, Impressionistic Gouache Washes**: Build foliage, clouds, stone, timber, and garden beds with overlapping translucent blotchy washes using `gouacheDabWash()` and `gouachePath()` (`#gouache-wash` brush-mottle displacement + gentle rostrum softness).
-- **Sparse Loose Hand-Inked Accents**: Instead of heavy closed cartoon outlines around every bush or plank, layer **sparse, loose sepia/charcoal ink ticks** (`xeroxSketchStroke` in `xeroxInkSoft`) for grass blades, bark cracks, shingle lines, and leaf clusters — just like *Robin Hood*'s Sherwood Forest!
-- **Restrained Physical Practical Lighting**: Lantern flames, glowing windows, moon, and fireflies use gentle, warm 35mm optical halation (`#cel-soft-glow` at subtle opacity) — NEVER loud neon glow rings.
+### 1b. Background Props & Buildings (`src/assets/classicCel/{props,buildings}/`) — Wet-on-Wet Watercolor Washes + Loose Hand-Drawn Pencil Scribbles
+Background architecture, trees, bushes, grass, stone fountains, and clouds are painted on **illustration board** using **blotchy wet-on-wet watercolor washes** topped with **crisp, loose hand-drawn pencil/ink scribbles** — NEVER smooth uniform computer fills, NEVER wax crayon, and NEVER heavy closed cartoon borders:
+- **Blotchy Wet-on-Wet Watercolor Washes (`watercolorWashBlotches` + `#watercolor-wash-soft`)**: Paint foliage canopies, bushes, clouds, mossy stonework, and ground shadows as overlapping irregular soft-feathered watercolor puddles that melt organically together with tonal mottling (`#bg-board-texture`) — NEVER flat solid vector polygons!
+- **Crisp Loose Hand-Drawn Pencil/Ink Scribbles on Top (`#pencil-bg-sketch`, zero blur)**:
+  - **Trees & Bushes (`pencilFoliageScribbles`)**: Layer loose, squiggly, broken hand-drawn graphite/ink leaf-cluster loops (`w`/`m`/`c` curly foliage scribbles), ragged branch twigs, and scattered dark pencil stipple dots right over the soft blurry watercolor foliage puddles (just like *Robin Hood*'s Sherwood Forest!).
+  - **Grass & Ground (`pencilGrassStrokes`)**: Draw clusters of slanted diagonal graphite pencil hatch ticks, crooked short grass blades, horizontal ground-shadow dashes, and scattered tiny pebble dots across the mottled watercolor meadow — drawn like **graphite pencil over watercolor**, NOT wax crayon and NOT clean computer vectors!
+  - **Architecture & Timber (`xeroxSketchStroke`)**: Add sparse loose sepia/charcoal ink ticks for wood grain, stone seams, and roof shingles over soft watercolor washes.
+- **Restrained Warm Luminosity**: Practical lights (lanterns, glowing windows, moon, fireflies) use gentle 35mm optical halation (`#cel-soft-glow` at subtle opacity) — NEVER loud neon glow rings. Remember: classic cel look is **NOT** about heavy noisy film grain (35mm grain stays ultra-subtle `~0.025`, warm and luminous).
 
 > [!CAUTION]
 > **STRICTLY FORBIDDEN in `classic_cel` assets**:
+> - **NO** smooth uniform computer fills for sky, hills, bushes, foliage, or grass!
 > - **NO** digital gradients (`linearGradient` / `radialGradient`) on foreground character skin/fur/clothing!
 > - **NO** glowing neon halos, Photoshop outer-glow rings, or slick airbrushed specular shading!
-> - **NO** razor-sharp clean Adobe Illustrator vectors (always keep `#xerox-ink` toner texture + `xeroxSketchStroke` hand-drawn pencil accents)!
+> - **NO** razor-sharp clean Adobe Illustrator vectors (always keep `#xerox-ink` toner texture + `xeroxSketchStroke` / `pencilFoliageScribbles` / `pencilGrassStrokes` hand-drawn pencil character)!
 > - **NO** `#crayon-stroke`, `TOKENS.patterns.*` wax-crayon hatches, `crayonPath`, or `crayonStrokeAttrs`!
 > - **NO** pure `#000000` or pure `#FFFFFF`!
 
 ---
 
-## Step 2: Classic Cel & Gouache SVG Primitives (`src/engine/svgUtils.ts`)
+## Step 2: Classic Cel, Watercolor & Pencil SVG Primitives (`src/engine/svgUtils.ts`)
 
 Always import colors, strokes, and filters from `TOKENS.classicCel` (`src/theme/tokens.ts`) and build shapes using the dedicated helpers in `src/engine/svgUtils.ts`:
 
 | Helper | Import | Purpose |
 | :--- | :--- | :--- |
 | `celPath(d, fill, opts?)` | `svgUtils.ts` | **Primary flat analog cel shape**: solid matte opaque paint fill + raw electrostatic `#xerox-ink` charcoal outline (`useXeroxFilter: true` by default). |
-| `xeroxSketchStroke(d, opts?)` | `svgUtils.ts` | **Raw animator pencil line**: broken, feathery, variable-pressure internal graphite strokes for fur tufts, cheek/neck bristles, cloth creases, bark scratches, and grass ink flicks. |
+| `xeroxSketchStroke(d, opts?)` | `svgUtils.ts` | **Raw animator pencil line**: broken, feathery, variable-pressure internal graphite strokes for fur tufts, cheek/neck bristles, cloth creases, bark scratches, and timber ink ticks. |
 | `celShadedShape(opts)` | `svgUtils.ts` | Optional hard-edged 2-tone cel shadow shape (flat base + crisp clipped shadow plane + Xerox outline on top — use sparingly for dramatic night shadows; never airbrushed gradients). |
 | `celStrokeAttrs(opts?)` | `svgUtils.ts` | Standard Xerox charcoal outline attributes (`xeroxInk`, `xeroxMedium`, round caps/joins). |
 | `celContactShadow(cx, cy, rx, ry, opacity?)` | `svgUtils.ts` | Soft painted ground contact shadow (`data-part="cel-contact-shadow"`, fill `TOKENS.classicCel.colors.contactShadow`). |
+| `watercolorWashBlotches(blotches, opts?)` | `svgUtils.ts` | **Wet-on-wet watercolor puddles (`#watercolor-wash-soft`)**: overlapping irregular soft-feathered paint blotches for mottled skies, foliage canopies, bushes, shadows, and dappled ground washes. |
+| `pencilFoliageScribbles(clusters, opts?)` | `svgUtils.ts` | **Crisp hand-drawn pencil foliage (`#pencil-bg-sketch`)**: loose squiggly `w`/`m`/`c` leaf-cluster loops, ragged branch twigs, and scattered dark pencil stipple dots layered crisp over blurry watercolor foliage! |
+| `pencilGrassStrokes(tufts, opts?)` | `svgUtils.ts` | **Crisp hand-drawn pencil grass (`#pencil-bg-sketch`)**: slanted diagonal graphite hatch ticks, crooked short grass blades, horizontal ground-shadow dashes, and scattered tiny pebble dots over watercolor ground! |
 | `gouachePath(d, fill, opts?)` | `svgUtils.ts` | Painterly watercolor/gouache background shape softened by `#gouache-wash`. |
-| `gouacheDabWash(...)` | `svgUtils.ts` | Dappled, blotchy, translucent watercolor/gouache brushwork wash clusters for impressionistic trees, foliage, sky clouds, and mossy stonework. |
+| `gouacheDabWash(...)` | `svgUtils.ts` | Dappled translucent watercolor/gouache brushwork dab clusters for stone, clouds, and washes. |
 | `svgEl`, `svgTransform`, `round2` | `svgUtils.ts` | Pure SVG element builder, transform formatter, and coordinate rounding. |
 | `steppedOscillate`, `isSteppedBlinkFrame` | `clock.ts` | Organic periodic cycles and natural blinking tuned for 12 FPS. |
 
@@ -155,7 +162,7 @@ agy-node scripts/studio-cli.mjs build
 | File | Purpose |
 | :--- | :--- |
 | `src/theme/tokens.ts` | `TOKENS.classicCel` earthy 1970s Eastmancolor pigments, Xerox strokes, 12 FPS timing, filter IDs |
-| `src/engine/svgUtils.ts` | `celPath`, `xeroxSketchStroke`, `celShadedShape`, `celContactShadow`, `gouachePath`, `gouacheDabWash` |
+| `src/engine/svgUtils.ts` | `celPath`, `xeroxSketchStroke`, `celShadedShape`, `celContactShadow`, `watercolorWashBlotches`, `pencilFoliageScribbles`, `pencilGrassStrokes`, `gouachePath`, `gouacheDabWash` |
 | `src/assets/classicCel/characters/moonlitCat.ts` | Reference flat-cel Xerox character (raw toner lines, fur ticks, 12 FPS stride, 4-stage lip-sync) |
 | `src/assets/classicCel/characters/moon.ts` | Reference painted gouache celestial character |
 | `src/assets/classicCel/buildings/ochreCottage.ts` | Reference painted watercolor/gouache storybook cottage with loose sepia ink |

@@ -25,13 +25,18 @@ True 1970s–80s theatrical cel animation looks unmistakably analog and alive �
 - Foreground outlines MUST use `#xerox-ink` (dual-pass organic graphite wobble + fine toner paper-grit, applied by default in `celPath()`) in warm dark charcoal (`TOKENS.classicCel.colors.xeroxInk`, never pure `#000000`) plus `xeroxSketchStroke()` for sketchy, broken, variable-pressure internal pencil lines (fur tufts, cheek/whisker ticks, cloth creases, collar folds).
 - Let the Xerox seed cycle subtly with the stepped 12 FPS clock for genuine living hand-drawn line boil.
 
-### Pillar 2 — Flat Opaque Analog Cel Paint on Characters vs. Dappled Watercolor/Gouache Illustration-Board Backgrounds
+### Pillar 2 — Flat Opaque Analog Cel Paint on Characters vs. Wet-on-Wet Watercolor Washes + Loose Hand-Drawn Pencil Scribbles on Backgrounds
 - **Characters (Layer 1B — Transparent Acetate Cel)**: Painted on the back of clear acetate using **flat, opaque, matte physical cel paint** mixed in paint jars — earthy, slightly muted 1970s Eastmancolor pigments (olive greens, russet browns, dusty pinks/lilacs, slate blues, warm parchment creams). Keep characters graphic and readable with **flat matte fills** (optional crisp hard-edged 2-tone shadow plane ONLY where strong directional drama demands it — NEVER airbrushed gradients, NEVER glossy specular shading, NEVER glowing neon outlines!).
-- **Backgrounds (Layer 1A — Painted Watercolor/Gouache Illustration Board)**: Painted separately on heavy illustration board with **dappled, loose, impressionistic watercolor/gouache brushwork washes** (`#gouache-wash`, `gouacheDabWash`, `#bg-board-texture`) topped with **sparse, loose hand-inked foliage/grass/wood ticks** (`xeroxSketchStroke`). This stark physical separation — crisp graphic Xerox cels floating over soft, blotchy, hand-painted watercolor worlds — is the single biggest signature of *Robin Hood* (1973) and *Mickey's Christmas Carol* (1983)!
+- **Backgrounds (Layer 1A — Wet-on-Wet Blotchy Watercolor Washes + Crisp Loose Pencil/Ink Scribbles on Top)**:
+  - **NEVER** use smooth uniform computer fills for sky, hills, bushes, or grass! Paint overlapping, soft-feathered, **blotchy wet-on-wet watercolor puddles** (`watercolorWashBlotches` + `#watercolor-wash-soft`) with large-scale organic pigment pooling/tonal mottling (`#bg-board-texture`) so light and dark washes melt softly into one another like physical watercolor on illustration board.
+  - **Layer crisp, loose, expressive hand-drawn pencil/ink scribbles right on top of those blurry watercolor washes** (`#pencil-bg-sketch`, zero blur):
+    - Over soft blurry watercolor bushes/trees: **loose, squiggly, broken hand-drawn graphite/ink foliage loops (`w`/`m`/`c` curly leaf-cluster scribbles), ragged branch ticks, and scattered dark pencil stipple dots** (`pencilFoliageScribbles`).
+    - Across the mottled watercolor ground: **slanted diagonal hand-drawn pencil grass strokes, crooked short grass blades, horizontal ground-shadow dashes, and scattered tiny pebble dots** (`pencilGrassStrokes`) — drawn like **graphite pencil over watercolor**, NOT wax crayon and NOT smooth computer vectors!
+  - This unmistakable contrast — crisp flat-painted Xerox characters floating over soft, blotchy wet-on-wet watercolor backgrounds accented with loose hand-drawn pencil scribbles — is the true visual signature of *Robin Hood* (1973) and *Mickey's Christmas Carol* (1983)!
 
-### Pillar 3 — Real Rostrum Camera, Hot Lights & 35mm Eastmancolor Celluloid Film
-- **Physical Cel-Over-Background Depth**: `renderer.ts` separates Layer 1A (painted illustration-board background + `#bg-board-texture` + slight `#gouache-wash` optical softness) from Layer 1B (transparent acetate foreground cels with tiny physical rostrum hover shadow `#cel-drop-shadow`).
-- **Tangible 35mm Celluloid Finish**: `#cel-grade` applies warm earthy Eastmancolor film response (muted analog saturation, warm lifted charcoal shadows, creamy paper-stock highlights, subtle 35mm optical softness) and Layer 3 (`renderFilmCompositeLayer` → `#layer-3-film-composite`) composites **perceptible, animated 35mm celluloid film grain** (`#film-grain`) + gentle warm film-gate vignette (`#film-vignette`).
+### Pillar 3 — Warm Luminous 35mm Film (Ultra-Subtle Grain — NOT Heavy Noisy Static!)
+- **Physical Cel-Over-Background Depth**: `renderer.ts` separates Layer 1A (wet-on-wet watercolor illustration-board background + `#bg-board-texture` pigment mottling + crisp `#pencil-bg-sketch` foliage/grass scribbles) from Layer 1B (transparent acetate foreground cels with tiny physical rostrum hover shadow `#cel-drop-shadow`).
+- **Warm, Luminous 35mm Finish (Ultra-Subtle Grain `~0.025`)**: The 1970s look is **NOT** about heavy, dusty TV-static noise or murky gray haze! Keep `#film-grain` **ultra-subtle (`~0.025` opacity)** so the frame stays warm, crisp, and luminous, paired with gentle Eastmancolor color response (`#cel-grade`, warm lifted shadows, creamy highlights) and a light optical vignette (`#film-vignette`).
 - **Subtle Physical Optical Halation Only**: Practical lamps, cottage windows, moon, and fireflies use restrained warm 35mm optical halation (`#cel-soft-glow`) — NEVER harsh modern Photoshop/neon bloom rings!
 
 ### Pillar 4 — Organic Frame-by-Frame Human Drawing (`12 FPS` on Twos / `24 FPS` Film Container)
@@ -39,6 +44,8 @@ True 1970s–80s theatrical cel animation looks unmistakably analog and alive �
 - Emphasize expressive pose variation, bold squash-and-stretch, overlapping secondary motion (ears, tail, whiskers, garments), and living Xerox line boil — NEVER sterile puppet-rig floatiness.
 
 ### STRICTLY FORBIDDEN in `classic_cel` Scenes
+- **NO** smooth uniform computer fills or sterile flat vector polygons for sky, hills, bushes, or grass!
+- **NO** heavy noisy film grain, dusty TV static, or murky gray fog! (Keep 35mm film grain ultra-subtle `~0.025`, warm and luminous.)
 - **NO** modern digital gradients (`linearGradient` / `radialGradient`) on foreground characters!
 - **NO** slick glossy/airbrushed shading or modern vector/Illustrator razor-sharp sterile strokes!
 - **NO** glowing neon halos, cyberpunk/Photoshop bloom rings, or hyper-saturated modern RGB colors!
@@ -64,7 +71,7 @@ import { TOKENS } from '../theme/tokens';
   - *Flat Analog Character Cel Pigments*: `mochiFurBase`, `mochiFurShadow`, `mochiFurRim`, `mochiStripe`, `mochiCream`, `mochiCreamShadow`, `mochiEarPink`, `mochiNose`, `mochiTongue`, `mochiMouthInner`, `mochiCollar`, `mochiCollarShadow`, `mochiGold`, `mochiGoldHighlight`, `mochiEyeIris`, `moonCream`, `moonAmber`, `moonShadow`, `moonCrater`, `nightcapBlue`, `nightcapShadow`, `nightcapStripe`, `starGlow`, `flowerCream`, `flowerBlue`, `flowerRose`
 - **`TOKENS.classicCel.strokes.*`**: `xeroxHeavy`, `xeroxMedium`, `xeroxFine`, `sketchLine`
 - **`TOKENS.classicCel.timing.*`**: `fps: 12` ("on twos"), `frameDurationMs: 83.33`, `containerFps: 24`
-- **`TOKENS.classicCel.filters.ids.*`**: `xeroxInk` (`#xerox-ink`), `gouacheWash` (`#gouache-wash`), `bgBoardTexture` (`#bg-board-texture`), `celDropShadow` (`#cel-drop-shadow`), `celSoftGlow` (`#cel-soft-glow`), `celGrade` (`#cel-grade`), `filmGrain` (`#film-grain`), `filmVignette` (`#film-vignette`)
+- **`TOKENS.classicCel.filters.ids.*`**: `xeroxInk` (`#xerox-ink`), `gouacheWash` (`#gouache-wash`), `bgBoardTexture` (`#bg-board-texture`), `celDropShadow` (`#cel-drop-shadow`), `celSoftGlow` (`#cel-soft-glow`), `celGrade` (`#cel-grade`), `filmGrain` (`#film-grain`), `filmVignette` (`#film-vignette`), plus `TOKENS.classicCel.filters.watercolorSoft` (`#watercolor-wash-soft`) and `TOKENS.classicCel.filters.pencilBgSketch` (`#pencil-bg-sketch`)
 - **`TOKENS.classicCel.typography.*`**: `fontFamilySerif`, `fontFamilyDialogue`
 
 > [!CAUTION]
@@ -76,28 +83,28 @@ import { TOKENS } from '../theme/tokens';
 
 When `scene.artStyle === 'classic_cel'` (or visited via `/classic/...` or `?style=classic_cel`), `evaluateAndRenderScene` (`src/engine/renderer.ts`) automatically switches the full render stack:
 
-1. **Layer 1A — Painted Watercolor/Gouache Illustration-Board Background**:
-   - Theatre backdrop `#cel-backdrop` (`TOKENS.classicCel.colors.backdropDark`) + multiplane `background_patch` layers rendered via `gouachePath()` (`#gouache-wash` brush-mottle displacement + gentle rostrum optical softness) and illustration-board paper tooth (`#bg-board-texture`), plus painted background architecture/foliage props with sparse loose hand-inked accents (`xeroxSketchStroke`).
+1. **Layer 1A — Wet-on-Wet Watercolor Illustration-Board Background + Loose Pencil Scribbles**:
+   - Theatre backdrop `#cel-backdrop` (`TOKENS.classicCel.colors.backdropDark`) + multiplane `background_patch` layers softened by `#gouache-wash` and unified with organic large-scale watercolor pigment pooling (`#bg-board-texture`) so NO sky, hill, lawn, or path ever looks like a smooth uniform computer fill, topped by painted background props/foliage built from soft wet-on-wet watercolor puddles (`watercolorWashBlotches` + `#watercolor-wash-soft`) and crisp, loose hand-drawn pencil/ink scribbles (`pencilFoliageScribbles`, `pencilGrassStrokes`, `xeroxSketchStroke` + `#pencil-bg-sketch`).
 2. **Layer 1B — Transparent Acetate Foreground Cels (`#cel-drop-shadow`)**:
-   - Foreground classic cel characters (`src/assets/classicCel/characters/`) and hero interactive props inked with raw electrostatic `#xerox-ink` toner lines and flat matte analog cel paint, hovering with subtle physical rostrum cel separation (`#cel-drop-shadow`) over the softer painted background.
-   - Entire Layer 1 is graded through `#cel-grade` (1970s Eastmancolor response, lifted warm shadows, micro-soft 35mm lens focus) and wrapped in `renderTheatricalFrameOverlay()`.
-3. **Layer 2 — Classic Cel, Gouache & Optical `<defs>` (`renderEngineDefs({ artStyle: 'classic_cel' })`)**:
-   - Emits `#xerox-ink`, `#gouache-wash`, `#bg-board-texture`, `#cel-drop-shadow`, `#cel-soft-glow`, `#cel-grade`, `#film-grain`, and `#film-vignette`.
-4. **Layer 3 — 35mm Celluloid Film Composite (`#layer-3-film-composite` via `renderFilmCompositeLayer`)**:
-   - Animated per-frame 35mm celluloid film grain (`#film-grain`) + gentle warm film-gate optical vignette (`#film-vignette`) — completely replacing cold-press crayon paper.
+   - Foreground classic cel characters (`src/assets/classicCel/characters/`) and hero interactive props inked with raw electrostatic `#xerox-ink` toner lines and flat matte analog cel paint, hovering with subtle physical rostrum cel separation (`#cel-drop-shadow`) over the softer watercolor background.
+   - Entire Layer 1 is graded through warm, luminous `#cel-grade` and wrapped in `renderTheatricalFrameOverlay()`.
+3. **Layer 2 — Classic Cel, Wet-on-Wet Watercolor & Pencil `<defs>` (`renderEngineDefs({ artStyle: 'classic_cel' })`)**:
+   - Emits `#xerox-ink`, `#gouache-wash`, `#watercolor-wash-soft`, `#pencil-bg-sketch`, `#bg-board-texture`, `#cel-drop-shadow`, `#cel-soft-glow`, `#cel-grade`, `#film-grain`, and `#film-vignette`.
+4. **Layer 3 — Ultra-Subtle 35mm Celluloid Finish (`#layer-3-film-composite` via `renderFilmCompositeLayer`)**:
+   - Ultra-subtle, warm, luminous 35mm film grain (`~0.025` opacity — NEVER dusty TV static!) + gentle film-gate optical vignette (`#film-vignette`), completely replacing cold-press crayon paper.
 
-### Multiplane Painted Gouache Illustration-Board Architecture
+### Multiplane Wet-on-Wet Watercolor + Loose Pencil Background Architecture
 
-Build **loose, dappled, impressionistic painted backdrops** with outer overbleed (`x: -80..1360`, `y: -60..780`) so camera pans/zooms never expose dark margins:
+Build **blotchy, soft-feathered wet-on-wet watercolor backdrops** with **crisp loose pencil/ink foliage & grass scribbles layered on top** and outer overbleed (`x: -80..1360`, `y: -60..780`) so camera pans/zooms never expose dark margins:
 
 | Multiplane Depth Plane | Typical `zIndex` | Technique (`BackgroundPatchNode` / Props) |
 | :--- | :--- | :--- |
-| **Far Sky & Horizon Wash** | `1–2` | Soft muted vertical watercolor wash (`gradient` from `TOKENS.classicCel.colors` + `softEdge: true`) + faint atmospheric mist dab. |
-| **Distant Impressionistic Trees / Hills** | `3–4` | Soft blotchy silhouetted ridges (`fill` / `gradient`, `softEdge: true`) receding into cool aerial mist. |
-| **Midground Dappled Foliage / Hedgerow** | `5–6` | Layered scalloped watercolor/gouache foliage washes (`gouacheDabWash` inside props or layered `background_patch` shapes) with sparse loose sepia ink accents. |
-| **Painted Meadow / Forest Floor** | `7–8` | Warm/earthy dappled ground wash extending past `y = 760`. |
-| **Earthen Path & Soft Practical Pools** | `9–10` | Curved dirt/stone lane + restrained warm golden ground wash under lanterns or soft moonlight clearing pool. |
-| **Painted Set Architecture & Foliage** | `11–20` | Painted illustration-board props & buildings (`src/assets/classicCel/{buildings,props}/`) with loose hand-inked wood/grass/leaf ticks. |
+| **Far Sky & Horizon Wash** | `1–2` | Mottled vertical watercolor wash (`gradient` + `softEdge: true`) unified by `#bg-board-texture` organic pigment pooling + soft overlapping cloud/mist puddles (`watercolorWashBlotches`). |
+| **Distant Impressionistic Trees / Hills** | `3–4` | Soft-feathered wet-on-wet watercolor puddle clusters (`watercolorWashBlotches` + `#watercolor-wash-soft`) melting gently into atmospheric mist — NEVER sharp smooth vector hills. |
+| **Midground Bushes & Woodland Canopy** | `5–6` | Overlapping blurry watercolor foliage puddles (`watercolorWashBlotches`) topped with **crisp, loose, squiggly hand-drawn pencil/ink leaf-cluster loops (`w`/`m`/`c` scribbles) & scattered dark pencil stipple dots** (`pencilFoliageScribbles` + `#pencil-bg-sketch`). |
+| **Mottled Watercolor Meadow / Forest Floor** | `7–8` | Warm/earthy dappled watercolor ground puddles extending past `y = 760` (NEVER a smooth uniform computer fill). |
+| **Earthen Path & Hand-Drawn Pencil Grass** | `9–10` | Curved watercolor dirt/stone lane + restrained warm lantern wash + **slanted diagonal hand-drawn pencil grass strokes, crooked short grass blades, horizontal ground-shadow dashes, and scattered tiny pebble dots** (`pencilGrassStrokes` + `#pencil-bg-sketch`). |
+| **Painted Set Architecture & Foliage** | `11–20` | Watercolor/gouache illustration-board props & buildings (`src/assets/classicCel/{buildings,props}/`) with loose hand-inked wood/bark/shingle ticks. |
 | **Foreground Xerox Cel Characters** | `21–34` | Flat matte cel-painted character rigs (`src/assets/classicCel/characters/`) with raw `#xerox-ink` outlines, `xeroxSketchStroke` fur/cloth ticks, and `celContactShadow`. |
 | **Dialogue Bubbles & Annotations** | `35–40` | Clean parchment-cream cel bubbles (`#FBF7EE`) with Xerox charcoal borders (`speechText` / `speechStyle`). |
 
@@ -182,6 +189,6 @@ agy-node scripts/studio-cli.mjs dev
 - **Classic Cel Asset Pipeline**: `skills/classic-cel-asset/SKILL.md`
 - **Classic Cel Design Tokens**: `<workspace>/src/theme/tokens.ts` (`TOKENS.classicCel`)
 - **Theatrical Framing Engine**: `<workspace>/src/engine/theatricalFrame.ts`
-- **Xerox & Gouache Primitives**: `<workspace>/src/engine/svgUtils.ts` (`celPath`, `celShadedShape`, `xeroxSketchStroke`, `gouachePath`, `gouacheDabWash`, `celContactShadow`)
+- **Xerox, Watercolor & Pencil Background Primitives**: `<workspace>/src/engine/svgUtils.ts` (`celPath`, `celShadedShape`, `xeroxSketchStroke`, `gouachePath`, `gouacheDabWash`, `watercolorWashBlotches`, `pencilFoliageScribbles`, `pencilGrassStrokes`, `celContactShadow`)
 - **Classic Cel Filters, Board Tooth & 35mm Film Grain**: `<workspace>/src/engine/filters.ts` (`renderEngineDefs`, `renderFilmCompositeLayer`)
 - **Architecture & Dual-Style Guide**: `<workspace>/docs/ARCHITECTURE.md` & `<workspace>/docs/STYLE_GUIDE.md`
