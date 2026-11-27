@@ -173,6 +173,8 @@ export const TOKENS = {
       xeroxInk: '#221D1A',
       xeroxInkSoft: '#463C34',
       xeroxGraphite: '#2C2520',
+      pencilOliveCharcoal: '#2E3628',
+      pencilSlateCharcoal: '#2B3238',
       celCream: '#EAE0CA',
       parchmentCream: '#EAE0CA',
       celBubbleFill: '#EFE7D4',
@@ -294,10 +296,23 @@ export const TOKENS = {
       },
       boardTexture: {
         id: 'bg-board-texture',
-        baseFrequency: '0.14 0.16',
+        baseFrequency: '0.012 0.018',
         numOctaves: 4,
         seed: 19,
-        overlayOpacity: 0.18,
+        overlayOpacity: 0.22,
+      },
+      watercolorSoft: {
+        id: 'watercolor-wash-soft',
+        baseFrequency: '0.018 0.024',
+        numOctaves: 3,
+        displacementScale: 14,
+        blurStdDev: 4.5,
+      },
+      pencilBgSketch: {
+        id: 'pencil-bg-sketch',
+        baseFrequency: 0.09,
+        numOctaves: 2,
+        displacementScale: 1.15,
       },
       xerox: {
         baseFrequency: '0.055 0.065',
@@ -320,14 +335,14 @@ export const TOKENS = {
         floodOpacity: 0.22,
       },
       celGrade: {
-        saturation: 0.93,
-        lensBlurStdDev: 0.22,
+        saturation: 1.05,
+        lensBlurStdDev: 0,
       },
       filmGrain: {
         baseFrequency: 0.72,
         numOctaves: 2,
-        overlayOpacity: 0.16,
-        vignetteEdgeOpacity: 0.38,
+        overlayOpacity: 0.025,
+        vignetteEdgeOpacity: 0.22,
       },
     },
 

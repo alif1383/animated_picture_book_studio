@@ -7,6 +7,9 @@ import {
   celStrokeAttrs,
   gouacheDabWash,
   gouachePath,
+  pencilFoliageScribbles,
+  pencilGrassStrokes,
+  watercolorWashBlotches,
   xeroxSketchStroke,
 } from '../src/engine/svgUtils';
 import {
@@ -348,6 +351,38 @@ describe('Classic 1970s–80s Hand-Drawn Cel Animation Pipeline', () => {
       expect(dabs).toContain(`stroke="${TOKENS.classicCel.colors.foliageShadow}"`);
       expect(dabs).toContain(`fill="${TOKENS.classicCel.colors.foliageRim}"`);
     });
+
+    it('renders wet-on-wet watercolorWashBlotches, pencilFoliageScribbles, and pencilGrassStrokes', () => {
+      const blotches = watercolorWashBlotches(
+        [
+          { cx: 120, cy: 90, rx: 56, ry: 34, fill: TOKENS.classicCel.colors.sageFoliage },
+          { cx: 170, cy: 105, rx: 48, ry: 30, fill: TOKENS.classicCel.colors.oliveCanopy, opacity: 0.64 },
+        ],
+        { id: 'wc-bush', seed: 4 }
+      );
+      expect(blotches).toContain('id="wc-bush"');
+      expect(blotches).toContain('filter="url(#watercolor-wash-soft)"');
+      expect(blotches).toContain(`fill="${TOKENS.classicCel.colors.sageFoliage}"`);
+      expect(blotches).toContain(`fill="${TOKENS.classicCel.colors.oliveCanopy}"`);
+
+      const foliage = pencilFoliageScribbles(
+        [{ cx: 140, cy: 95, rx: 48, ry: 28, density: 1.2 }],
+        { id: 'pencil-bush', seed: 5 }
+      );
+      expect(foliage).toContain('id="pencil-bush"');
+      expect(foliage).toContain('filter="url(#pencil-bg-sketch)"');
+      expect(foliage).toContain(`stroke="${TOKENS.classicCel.colors.pencilOliveCharcoal}"`);
+      expect(foliage).toContain('<circle');
+
+      const grass = pencilGrassStrokes(
+        [{ x: 200, y: 540, width: 32, height: 11, blades: 5 }],
+        { id: 'pencil-grass', seed: 7 }
+      );
+      expect(grass).toContain('id="pencil-grass"');
+      expect(grass).toContain('filter="url(#pencil-bg-sketch)"');
+      expect(grass).toContain(`stroke="${TOKENS.classicCel.colors.xeroxInk}"`);
+      expect(grass).toContain('<path');
+    });
   });
 
   describe('Theatrical framing (evaluateTheatricalFrameState & renderTheatricalFrameOverlay)', () => {
@@ -549,6 +584,9 @@ describe('Classic 1970s–80s Hand-Drawn Cel Animation Pipeline', () => {
       expect(defs).toContain(`id="${celIds.filmGrain}"`);
       expect(defs).toContain(`id="${celIds.filmVignette}"`);
       expect(defs).toContain(`id="${TOKENS.classicCel.filters.boardTexture.id}"`);
+      expect(defs).toContain(`id="${TOKENS.classicCel.filters.watercolorSoft.id}"`);
+      expect(defs).toContain(`id="${TOKENS.classicCel.filters.pencilBgSketch.id}"`);
+      expect(TOKENS.classicCel.filters.filmGrain.overlayOpacity).toBeLessThanOrEqual(0.05);
       expect(defs).toContain('<radialGradient id="film-vignette"');
       expect(defs).toContain('id="extra-sky-grad"');
 

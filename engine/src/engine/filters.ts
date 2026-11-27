@@ -648,7 +648,9 @@ export function renderEngineDefs(options: FilterRenderOptions): string {
       ]
     );
 
-    // Heavy cold-press illustration-board watercolor paper tooth for Layer 1A painted backgrounds (#bg-board-texture)
+    // Large-scale organic wet-on-wet watercolor pigment pooling & mottled brush-wash variation
+    // across Layer 1A (#layer-1a-painted-background) so no sky, hill, lawn, or path polygon ever
+    // looks like a smooth computer fill (zero high-frequency sandpaper/TV-static noise).
     const bgBoardTextureFilter = svgEl(
       'filter',
       {
@@ -665,25 +667,94 @@ export function renderEngineDefs(options: FilterRenderOptions): string {
           baseFrequency: celF.boardTexture.baseFrequency,
           numOctaves: celF.boardTexture.numOctaves,
           seed: celF.boardTexture.seed,
-          result: 'boardNoise',
+          result: 'washMottle',
         }),
         svgEl('feColorMatrix', {
-          in: 'boardNoise',
+          in: 'washMottle',
           type: 'matrix',
           values:
-            '0.22 0 0 0 0.83  0.21 0 0 0 0.82  0.19 0 0 0 0.78  0 0 0 0 1',
-          result: 'boardTooth',
+            '0.82 0 0 0 0.10  0.80 0 0 0 0.10  0.76 0 0 0 0.10  0 0 0 0 1',
+          result: 'pigmentCloud',
         }),
         svgEl('feBlend', {
           in: 'SourceGraphic',
-          in2: 'boardTooth',
-          mode: 'multiply',
-          result: 'boardBlended',
+          in2: 'pigmentCloud',
+          mode: 'soft-light',
+          result: 'mottledBg',
         }),
         svgEl('feComposite', {
-          in: 'boardBlended',
+          in: 'mottledBg',
           in2: 'SourceGraphic',
           operator: 'in',
+        }),
+      ]
+    );
+
+    // Wet-on-wet soft cloudy watercolor wash puddles (#watercolor-wash-soft):
+    // Melts overlapping irregular paint blotches into feathered hand-painted watercolor blooms.
+    const watercolorSoftScale = enableCrayon ? celF.watercolorSoft.displacementScale : 0;
+    const watercolorSoftBlur = enableCrayon ? celF.watercolorSoft.blurStdDev : 0;
+    const watercolorWashSoftFilter = svgEl(
+      'filter',
+      {
+        id: celF.watercolorSoft.id,
+        x: '-18%',
+        y: '-18%',
+        width: '136%',
+        height: '136%',
+        'color-interpolation-filters': 'sRGB',
+      },
+      [
+        svgEl('feTurbulence', {
+          type: 'fractalNoise',
+          baseFrequency: celF.watercolorSoft.baseFrequency,
+          numOctaves: celF.watercolorSoft.numOctaves,
+          seed: 13,
+          result: 'wcFlow',
+        }),
+        svgEl('feDisplacementMap', {
+          in: 'SourceGraphic',
+          in2: 'wcFlow',
+          scale: round2(watercolorSoftScale),
+          xChannelSelector: 'R',
+          yChannelSelector: 'G',
+          result: 'wcDisplaced',
+        }),
+        svgEl('feGaussianBlur', {
+          in: 'wcDisplaced',
+          stdDeviation: round2(watercolorSoftBlur),
+          result: 'wcSoft',
+        }),
+      ]
+    );
+
+    // Crisp dry-graphite pencil tooth for loose background foliage scribbles & pencil grass
+    // layered sharply on top of soft blurry watercolor washes (#pencil-bg-sketch, zero blur).
+    const pencilBgScale = enableCrayon ? celF.pencilBgSketch.displacementScale : 0;
+    const pencilBgSketchFilter = svgEl(
+      'filter',
+      {
+        id: celF.pencilBgSketch.id,
+        x: '-6%',
+        y: '-6%',
+        width: '112%',
+        height: '112%',
+        'color-interpolation-filters': 'sRGB',
+      },
+      [
+        svgEl('feTurbulence', {
+          type: 'fractalNoise',
+          baseFrequency: celF.pencilBgSketch.baseFrequency,
+          numOctaves: celF.pencilBgSketch.numOctaves,
+          seed: 23,
+          result: 'pencilTooth',
+        }),
+        svgEl('feDisplacementMap', {
+          in: 'SourceGraphic',
+          in2: 'pencilTooth',
+          scale: round2(pencilBgScale),
+          xChannelSelector: 'R',
+          yChannelSelector: 'G',
         }),
       ]
     );
@@ -741,7 +812,8 @@ export function renderEngineDefs(options: FilterRenderOptions): string {
       ]
     );
 
-    // Authentic 1970s Eastmancolor 35mm theatrical film response + micro-soft lens focus (#cel-grade)
+    // Warm, luminous hand-painted 1970s theatrical storybook film grade (#cel-grade)
+    // Rich analog color depth with zero muddy grey veil and zero excessive global blur.
     const celGradeFilter = svgEl(
       'filter',
       {
@@ -763,23 +835,18 @@ export function renderEngineDefs(options: FilterRenderOptions): string {
           'feComponentTransfer',
           {
             in: 'eastmanSat',
-            result: 'eastmanTone',
+            result: 'celOut',
           },
           [
-            svgEl('feFuncR', { type: 'linear', slope: 0.97, intercept: 0.028 }),
-            svgEl('feFuncG', { type: 'linear', slope: 0.96, intercept: 0.024 }),
-            svgEl('feFuncB', { type: 'linear', slope: 0.92, intercept: 0.02 }),
+            svgEl('feFuncR', { type: 'linear', slope: 1.01, intercept: 0.004 }),
+            svgEl('feFuncG', { type: 'linear', slope: 1.0, intercept: 0.002 }),
+            svgEl('feFuncB', { type: 'linear', slope: 0.97, intercept: 0.001 }),
           ]
         ),
-        svgEl('feGaussianBlur', {
-          in: 'eastmanTone',
-          stdDeviation: celF.celGrade.lensBlurStdDev,
-          result: 'celOut',
-        }),
       ]
     );
 
-    // Perceptible, organic 35mm celluloid silver-halide film grain animated per frame (#film-grain)
+    // Ultra-subtle organic 35mm celluloid film grain (zero dusty TV static) (#film-grain)
     const filmGrainFilter = svgEl(
       'filter',
       {
@@ -802,7 +869,7 @@ export function renderEngineDefs(options: FilterRenderOptions): string {
           in: 'grain',
           type: 'matrix',
           values:
-            '1.65 0 0 0 -0.30  1.60 0 0 0 -0.29  1.50 0 0 0 -0.26  0 0 0 0 1',
+            '1.12 0 0 0 -0.05  1.10 0 0 0 -0.05  1.05 0 0 0 -0.04  0 0 0 0 1',
         }),
       ]
     );
@@ -814,13 +881,13 @@ export function renderEngineDefs(options: FilterRenderOptions): string {
         id: celIds.filmVignette,
         cx: '50%',
         cy: '50%',
-        r: '68%',
+        r: '72%',
         fx: '50%',
         fy: '50%',
       },
       [
-        svgEl('stop', { offset: '50%', 'stop-color': celColors.backdropDark, 'stop-opacity': 0 }),
-        svgEl('stop', { offset: '82%', 'stop-color': '#231B16', 'stop-opacity': 0.16 }),
+        svgEl('stop', { offset: '58%', 'stop-color': celColors.backdropDark, 'stop-opacity': 0 }),
+        svgEl('stop', { offset: '86%', 'stop-color': '#231B16', 'stop-opacity': 0.09 }),
         svgEl('stop', {
           offset: '100%',
           'stop-color': celColors.backdropDark,
@@ -879,6 +946,8 @@ export function renderEngineDefs(options: FilterRenderOptions): string {
       xeroxInkFilter,
       gouacheWashFilter,
       bgBoardTextureFilter,
+      watercolorWashSoftFilter,
+      pencilBgSketchFilter,
       celDropShadowFilter,
       celSoftGlowFilter,
       celGradeFilter,
