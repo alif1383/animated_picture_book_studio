@@ -50,8 +50,8 @@ describe('Modular One-File-Per-SFX Architecture & Master Audio + Voice Catalogs'
     }
   });
 
-  it('registers all 11 pre-rendered .wav clips in AUDIO_CLIP_CATALOG with existing files and modular generator scripts', () => {
-    expect(AUDIO_CLIP_CATALOG.length).toBe(11);
+  it('registers all 13 pre-rendered .wav clips in AUDIO_CLIP_CATALOG with existing files and modular generator scripts', () => {
+    expect(AUDIO_CLIP_CATALOG.length).toBe(13);
     const rootDir = process.cwd();
     for (const clip of AUDIO_CLIP_CATALOG) {
       expect(clip.id.length).toBeGreaterThan(3);

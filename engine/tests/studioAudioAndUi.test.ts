@@ -321,6 +321,9 @@ describe('Studio Scene Switcher & SFX Audition removal', () => {
       'starter-moonlit-cat',
       'classic-moonlit-cat',
       'classic-christmas-hearth',
+      'classic-starter-moonlit-cat',
+      'classic-starter-bandana-dog',
+      'classic-starter-knight-dragon-hiccups',
       'starter-bandana-dog',
       'starter-knight-dragon-hiccups',
     ]);
@@ -334,6 +337,9 @@ describe('Studio Scene Switcher & SFX Audition removal', () => {
     expect(getSwitcherScenes('classic_cel').map((s) => s.id)).toEqual([
       'classic-moonlit-cat',
       'classic-christmas-hearth',
+      'classic-starter-moonlit-cat',
+      'classic-starter-bandana-dog',
+      'classic-starter-knight-dragon-hiccups',
     ]);
 
     expect(allSwitcherIds).not.toContain('short_sample_1');
@@ -401,16 +407,37 @@ describe('Studio Scene Switcher & SFX Audition removal', () => {
     expect(resXmasFull.scene.id).toBe('classic-christmas-hearth');
     expect(resXmasFull.canonicalPath).toBe('/classic/classic-christmas-hearth');
 
-    // Any registered scene at /classic/<id> renders in classic_cel mode by default
+    // /classic/starter-moonlit-cat, /classic/starter-bandana-dog, /classic/starter-knight-dragon-hiccups
+    for (const [aliasPath, expectedId] of [
+      ['/classic/starter-moonlit-cat', 'classic-starter-moonlit-cat'],
+      ['/classic/starter-bandana-dog', 'classic-starter-bandana-dog'],
+      [
+        '/classic/starter-knight-dragon-hiccups',
+        'classic-starter-knight-dragon-hiccups',
+      ],
+    ] as const) {
+      const resStarter = parseStudioUrlParams(
+        '',
+        CORNER_STORE_DAY_SCENE,
+        aliasPath
+      );
+      expect(resStarter.scene.id).toBe(expectedId);
+      expect(resStarter.artStyle).toBe('classic_cel');
+      expect(resStarter.bookFrame).toBe(false);
+      expect(resStarter.isClassicRoute).toBe(true);
+      expect(resStarter.canonicalPath).toBe(aliasPath);
+    }
+
+    // Any other registered scene at /classic/<id> renders in classic_cel mode by default
     const resOtherClassic = parseStudioUrlParams(
       '',
       CORNER_STORE_DAY_SCENE,
-      '/classic/starter-bandana-dog'
+      '/classic/corner-store-day'
     );
-    expect(resOtherClassic.scene.id).toBe('starter-bandana-dog');
+    expect(resOtherClassic.scene.id).toBe('corner-store-day');
     expect(resOtherClassic.artStyle).toBe('classic_cel');
     expect(resOtherClassic.bookFrame).toBe(false);
-    expect(resOtherClassic.canonicalPath).toBe('/classic/starter-bandana-dog');
+    expect(resOtherClassic.canonicalPath).toBe('/classic/corner-store-day');
 
     // Query-based overrides still work at /
     const parsedClassic = parseStudioUrlParams('?scene=classic-moonlit-cat');
