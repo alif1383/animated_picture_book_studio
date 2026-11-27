@@ -1301,22 +1301,10 @@ const CLASSIC_CHRISTMAS_HEARTH_TIMELINE: TimelineTrack[] = [
         visible: true,
         hold: true,
       },
-      // Steps gently forward before persuasive Line 2
-      {
-        time: 23.25,
-        x: 385,
-        y: 672,
-        scale: 1.8,
-        state: 'walking',
-        flipX: false,
-        holdingSheep: true,
-        speaking: false,
-        visible: true,
-      },
-      // Pippin Line 2 (23.7..28.53s = 4.83s exact WAV)
+      // Pippin Line 2 (23.7..28.53s = 4.83s exact WAV) — trots to fireplace at 26.6s & lights kindling with match!
       {
         time: 23.7,
-        x: 425,
+        x: 385,
         y: 672,
         scale: 1.8,
         state: 'singing',
@@ -1327,8 +1315,56 @@ const CLASSIC_CHRISTMAS_HEARTH_TIMELINE: TimelineTrack[] = [
         hold: true,
       },
       {
+        time: 26.6,
+        x: 385,
+        y: 672,
+        scale: 1.8,
+        state: 'walking',
+        flipX: false,
+        holdingSheep: true,
+        speaking: true,
+        visible: true,
+      },
+      // Reaches glowing wooden match right into hearth logs (match tip x ≈ 498 + 44.8*1.8 ≈ 579) while pie rests by feet!
+      {
+        time: 27.6,
+        x: 498,
+        y: 640,
+        scale: 1.8,
+        state: 'reaching',
+        flipX: false,
+        holdingSheep: true,
+        speaking: true,
+        visible: true,
+        hold: true,
+      },
+      {
         time: 28.55,
-        x: 425,
+        x: 498,
+        y: 640,
+        scale: 1.8,
+        state: 'reaching',
+        flipX: false,
+        holdingSheep: true,
+        speaking: false,
+        visible: true,
+        hold: true,
+      },
+      // Trots happily back from the roaring fire, then turns right cheering as Barnaby chuckles!
+      {
+        time: 29.0,
+        x: 498,
+        y: 640,
+        scale: 1.8,
+        state: 'walking',
+        flipX: true,
+        holdingSheep: true,
+        speaking: false,
+        visible: true,
+      },
+      {
+        time: 29.9,
+        x: 390,
         y: 672,
         scale: 1.8,
         state: 'waving',
@@ -1628,7 +1664,8 @@ const CLASSIC_CHRISTMAS_HEARTH_AUDIO_CUES: AudioNoteCue[] = [
   // Shop-door jingle bell as Pippin bursts in
   { time: 11.35, freq: 1661.2, duration: 0.75, kind: 'sleigh_bell' },
 
-  // Hearth ignition magic shimmer & warm wood crackles
+  // Match-strike spark cue right before hearth ignites into roaring firelight
+  { time: 28.55, freq: 420.0, duration: 0.35, kind: 'fire_crackle' },
   { time: 28.8, freq: 320.0, duration: 0.85, kind: 'fire_crackle' },
   { time: 28.85, freq: 1046.5, duration: 0.65, kind: 'chime' },
   { time: 31.2, freq: 340.0, duration: 0.85, kind: 'fire_crackle' },

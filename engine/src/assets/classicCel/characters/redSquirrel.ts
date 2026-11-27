@@ -402,9 +402,11 @@ function renderSquirrelHead(cfg: SquirrelHeadConfig): string {
  * - Fluffy curved russet-red squirrel tail with sketchy fur notches, tufted ears, cream belly & muzzle,
  *   cozy crimson-and-cream knitted winter scarf trailing behind, earthy forest-green patched jacket & mittens
  * - Optional Christmas pie & holly wreath carried in mittens when `options.holdingSheep` (or `holdingPizza`) is true
+ *   (in `state === 'reaching'`, the pie rests safely beside Pippin's back foot for object permanence!)
  * - Full state support: `idle`, `walking` (`data-facing="right"`, `data-walk-profile="true"`, bouncy 12 FPS
- *   squirrel trot with tail bob), `waving` (cheerful raised mitten), `curious`, `singing` / `isSpeaking`
- *   (4-phase 12 FPS cel lip-sync mouth)
+ *   squirrel trot with tail bob), `waving` (cheerful raised mitten), `reaching` (eager forward crouch
+ *   extending a mittened paw with a flickering wooden fireplace match `data-part="hearth-match"`),
+ *   `curious`, `singing` / `isSpeaking` (4-phase 12 FPS cel lip-sync mouth)
  */
 export function renderClassicRedSquirrel(options: CharacterRenderOptions): string {
   const {
@@ -421,22 +423,24 @@ export function renderClassicRedSquirrel(options: CharacterRenderOptions): strin
   const s = TOKENS.classicCel.strokes;
 
   const isWalking = state === 'walking';
-  const isWaving = state === 'waving' || state === 'reaching';
+  const isWaving = state === 'waving';
+  const isReaching = state === 'reaching';
   const isCurious = state === 'curious' || state === 'looking_up';
   const isSinging = state === 'singing';
   const isBlinking = state === 'blinking' || state === 'sleeping' || state === 'sleepy';
   const speakingActive = isSinging || isSpeaking;
   const carryingPie = Boolean(holdingSheep || holdingPizza);
+  const carryingPieInHands = carryingPie && !isReaching;
 
   const drawStep = Math.floor(frameIndex / 2);
-  const autoBlink = !isCurious && isSteppedBlinkFrame(frameIndex, 34, 2, 11);
+  const autoBlink = !isCurious && !isReaching && isSteppedBlinkFrame(frameIndex, 34, 2, 11);
 
   const eyeMode: SquirrelEyeMode =
     isBlinking || autoBlink
       ? 'blink'
       : isCurious
       ? 'curious'
-      : isWaving || isSinging
+      : isWaving || isSinging || isReaching
       ? 'sparkle'
       : 'open';
 
@@ -448,26 +452,34 @@ export function renderClassicRedSquirrel(options: CharacterRenderOptions): strin
     : round2(
         speakingActive
           ? Math.abs(steppedOscillate(frameIndex, 10, 1.4))
+          : isReaching
+          ? steppedOscillate(frameIndex, 12, 0.7)
           : steppedOscillate(frameIndex, 20, 0.9)
       );
   const squashPulse = isWalking
     ? steppedOscillate(frameIndex, 4, 0.032)
     : isWaving
     ? steppedOscillate(frameIndex, 8, 0.025)
+    : isReaching
+    ? steppedOscillate(frameIndex, 10, 0.016)
     : 0;
   const scaleX = round2(1 + squashPulse);
   const scaleY = round2(1 - squashPulse);
 
   const tailSwing = isWalking
     ? steppedOscillate(frameIndex, 8, 7.5, -2)
-    : isWaving || isCurious
+    : isWaving || isCurious || isReaching
     ? steppedOscillate(frameIndex, 10, 6.0, -2)
     : steppedOscillate(frameIndex, 20, 3.8, -2);
   const tailJit = round2(deterministicJitter(drawStep, 47, 0.75));
   const scarfFlutter = isWalking
     ? steppedOscillate(frameIndex, 8, 5.5, -2)
+    : isReaching
+    ? steppedOscillate(frameIndex, 10, 3.4, -2)
     : steppedOscillate(frameIndex, 16, 2.4, -2);
-  const headTilt = isCurious
+  const headTilt = isReaching
+    ? round2(-10.0 + steppedOscillate(frameIndex, 10, 2.0))
+    : isCurious
     ? round2(-10.0 + steppedOscillate(frameIndex, 16, 1.8))
     : isWaving
     ? round2(4.0 + steppedOscillate(frameIndex, 8, 2.6))
@@ -478,8 +490,9 @@ export function renderClassicRedSquirrel(options: CharacterRenderOptions): strin
     : steppedOscillate(frameIndex, 24, 1.6);
   const earLag = round2(steppedOscillate(frameIndex, 10, 1.4, -2));
   const waveAngle = isWaving ? round2(-12 + steppedOscillate(frameIndex, 8, 16)) : 0;
+  const reachAngle = isReaching ? round2(steppedOscillate(frameIndex, 8, 4.2)) : 0;
 
-  const shadowRx = round2(isWalking ? 22 - trotBob * 0.6 : 21);
+  const shadowRx = round2(isWalking ? 22 - trotBob * 0.6 : isReaching ? 24 : 21);
 
   // Fluffy plumed question-mark S-curved russet-red squirrel tail (`data-part="squirrel-tail"`)
   const tailD = [
@@ -502,7 +515,7 @@ export function renderClassicRedSquirrel(options: CharacterRenderOptions): strin
   ].join(' ');
 
   // Far-side arm
-  const farArm = carryingPie
+  const farArm = carryingPieInHands
     ? svgEl('g', { 'data-part': 'far-arm' }, [
         celPath(
           'M 7.0 -45.5 C 14.5 -42.5, 20.5 -38.5, 25.0 -35.5 L 22.0 -30.5 C 17.0 -33.5, 11.5 -36.5, 5.5 -39.5 Z',
@@ -511,6 +524,25 @@ export function renderClassicRedSquirrel(options: CharacterRenderOptions): strin
         ),
         celPath(
           'M 21.6 -35.6 C 24.4 -36.8, 28.0 -34.2, 26.8 -31.2 C 25.4 -28.8, 22.0 -29.4, 21.0 -31.8 Z',
+          c.mochiCollarShadow,
+          { strokeWidth: s.xeroxFine }
+        ),
+      ])
+    : isReaching
+    ? svgEl('g', { 'data-part': 'far-arm' }, [
+        // Bracing left arm reaching down toward bent knee for balance while lighting hearth
+        celPath(
+          'M 6.0 -44.0 C 10.0 -37.5, 12.2 -30.0, 11.2 -23.0 L 5.8 -22.5 C 6.2 -28.5, 5.2 -34.5, 2.8 -39.5 Z',
+          c.foliageShadow,
+          { strokeWidth: s.xeroxMedium }
+        ),
+        celPath(
+          'M 5.8 -23.4 L 11.4 -23.8 L 11.8 -21.0 L 6.0 -20.6 Z',
+          c.mochiCreamShadow,
+          { strokeWidth: s.xeroxFine }
+        ),
+        celPath(
+          'M 6.2 -20.8 C 6.2 -17.2, 11.6 -17.2, 11.6 -21.0 Z',
           c.mochiCollarShadow,
           { strokeWidth: s.xeroxFine }
         ),
@@ -544,9 +576,11 @@ export function renderClassicRedSquirrel(options: CharacterRenderOptions): strin
         ]
       );
 
-  // Near-side arm: carrying pie, waving mitten, or swinging in trot
+  // Near-side arm: carrying pie, waving mitten, or swinging in trot (reaching arm rendered separately in local space)
   let nearArm: string;
-  if (carryingPie) {
+  if (isReaching) {
+    nearArm = '';
+  } else if (carryingPieInHands) {
     nearArm = svgEl('g', { 'data-part': 'near-arm' }, [
       celPath(
         'M -9.0 -45.5 C -9.5 -36.5, -2.5 -32.0, 8.0 -32.0 L 14.5 -32.5 L 14.0 -26.8 L 6.5 -26.2 C -6.0 -26.2, -14.8 -32.0, -14.5 -44.0 Z',
@@ -631,6 +665,294 @@ export function renderClassicRedSquirrel(options: CharacterRenderOptions): strin
     );
   }
 
+  // Dedicated reaching arm + mittened paw + glowing wooden fireplace match (`data-part="hearth-match"`)
+  const flameFlickerX = round2(
+    steppedOscillate(frameIndex, 6, 1.1) + deterministicJitter(drawStep, 71, 0.55)
+  );
+  const flameFlickerH = round2(steppedOscillate(frameIndex, 4, 1.4));
+  const sparkToggle = drawStep % 2 === 0;
+  const reachingArmAndMatch = isReaching
+    ? svgEl(
+        'g',
+        {
+          'data-part': 'reaching-arm',
+          transform: svgTransform({
+            rotate: reachAngle,
+            pivotX: 0,
+            pivotY: -40,
+          }),
+        },
+        [
+          // Extended forest-green jacket sleeve reaching far forward toward hearth logs (+X)
+          celPath(
+            'M -2.5 -43.5 C 8.0 -41.0, 20.5 -38.5, 31.8 -36.2 L 30.8 -30.2 C 18.8 -31.8, 6.2 -33.8, -4.8 -37.2 Z',
+            c.foliageMid,
+            { strokeWidth: s.xeroxMedium }
+          ),
+          // Stitched ochre elbow patch + sleeve crease
+          celPath('M 6.8 -39.4 L 12.2 -38.4 L 11.4 -34.2 L 6.0 -35.2 Z', c.ochreEarth, {
+            strokeWidth: 0.9,
+          }),
+          xeroxSketchStroke('M 15.8 -36.6 Q 21.5 -35.8, 27.0 -35.0', {
+            stroke: c.xeroxInkSoft,
+            strokeWidth: s.sketchLine,
+            broken: true,
+          }),
+          // Cream knitted mitten cuff
+          celPath(
+            'M 30.8 -36.6 L 33.8 -36.2 L 32.8 -29.8 L 29.8 -30.2 Z',
+            c.parchmentCream,
+            { strokeWidth: s.xeroxFine }
+          ),
+          // Extended crimson winter mitten gripping the wooden fireplace match at ~(36, -33)
+          celPath(
+            'M 33.2 -36.2 C 37.8 -36.8, 41.2 -34.4, 40.4 -31.2 C 39.6 -28.6, 35.6 -28.6, 32.6 -30.2 Z',
+            c.mochiCollar,
+            { strokeWidth: s.xeroxFine }
+          ),
+          // Wooden fireplace match / kindling taper (`data-part="hearth-match"`) reaching ~(44..46, -33..-31)
+          svgEl('g', { 'data-part': 'hearth-match' }, [
+            // Wooden matchstick / kindling taper shaft
+            celPath(
+              'M 34.4 -31.8 L 44.6 -33.6 L 44.8 -31.6 L 34.6 -29.8 Z',
+              c.woodLit,
+              { strokeWidth: 1.0 }
+            ),
+            // Charred wooden match head
+            svgEl('ellipse', {
+              cx: 44.8,
+              cy: -32.6,
+              rx: 1.6,
+              ry: 1.35,
+              fill: c.xeroxGraphite,
+              ...celStrokeAttrs({ strokeWidth: 0.85, useXeroxFilter: true }),
+            }),
+            // Crisp 12 FPS hand-drawn flat-cel flame tip (outer warm amber + inner bright cream core)
+            celPath(
+              `M 42.6 -33.2 C 41.8 -36.6, ${round2(43.6 + flameFlickerX * 0.5)} ${round2(-40.2 - flameFlickerH)}, ${round2(45.2 + flameFlickerX)} ${round2(-42.2 - flameFlickerH)} C ${round2(47.4 + flameFlickerX * 0.5)} ${round2(-39.6 - flameFlickerH * 0.6)}, 48.2 -35.8, 46.8 -33.0 C 45.8 -31.6, 43.4 -31.6, 42.6 -33.2 Z`,
+              c.warmAmberGlow,
+              { strokeWidth: s.xeroxFine }
+            ),
+            svgEl('path', {
+              d: `M 43.8 -33.6 C 43.4 -35.6, ${round2(44.4 + flameFlickerX * 0.4)} ${round2(-37.8 - flameFlickerH * 0.5)}, ${round2(45.1 + flameFlickerX * 0.7)} ${round2(-38.8 - flameFlickerH * 0.6)} C ${round2(46.2 + flameFlickerX * 0.3)} ${round2(-37.2 - flameFlickerH * 0.4)}, 46.6 -35.0, 45.8 -33.4 Z`,
+              fill: c.warmAmberCore,
+              stroke: 'none',
+            }),
+            // 2 tiny hand-inked striking sparks popping off the match tip at 12 FPS!
+            xeroxSketchStroke(
+              sparkToggle
+                ? 'M 48.6 -36.4 L 51.0 -38.0 M 47.6 -29.6 L 49.8 -28.0'
+                : 'M 48.0 -38.6 L 50.2 -40.8 M 48.8 -31.2 L 51.4 -30.6',
+              {
+                stroke: c.warmAmberCore,
+                strokeWidth: 1.05,
+                opacity: 0.94,
+              }
+            ),
+            svgEl('circle', {
+              cx: sparkToggle ? 51.8 : 50.8,
+              cy: sparkToggle ? -38.4 : -41.4,
+              r: 0.9,
+              fill: c.parchmentCream,
+            }),
+            svgEl('circle', {
+              cx: sparkToggle ? 50.4 : 52.0,
+              cy: sparkToggle ? -27.6 : -30.4,
+              r: 0.8,
+              fill: c.warmAmberGlow,
+            }),
+          ]),
+        ]
+      )
+    : '';
+
+  // Legs: bent crouch legs planted on floor in `reaching`, or stepping legs in `walking`/`idle`
+  const legsMarkup = isReaching
+    ? [
+        // Far bent forward-crouch leg planted toward +X
+        svgEl('g', { 'data-part': 'far-leg' }, [
+          celPath(
+            'M 1.0 -18.5 C 7.5 -16.5, 13.0 -13.5, 13.5 -9.5 L 12.2 -5.5 L 6.2 -5.5 L 7.2 -9.5 C 5.5 -11.5, 2.5 -13.0, -1.0 -14.5 Z',
+            c.warmAmberDeep,
+            { strokeWidth: s.xeroxMedium }
+          ),
+          celPath(
+            'M 5.4 -6.0 L 13.0 -6.0 C 17.6 -6.0, 19.4 -3.2, 19.0 -0.5 C 18.6 0.5, 12.2 0.5, 5.4 0.4 Z',
+            c.woodDark,
+            { strokeWidth: s.xeroxFine }
+          ),
+        ]),
+        // Near bent rear-brace leg grounded firmly behind
+        svgEl('g', { 'data-part': 'near-leg' }, [
+          celPath(
+            'M -8.5 -18.5 C -4.0 -16.5, -0.5 -13.5, -1.5 -9.5 L -3.0 -5.5 L -9.6 -5.5 L -7.8 -10.0 C -9.0 -12.0, -10.5 -14.5, -11.5 -16.5 Z',
+            c.russetEarth,
+            { strokeWidth: s.xeroxMedium }
+          ),
+          celPath(
+            'M -10.4 -6.0 L -2.4 -6.0 C 2.2 -6.0, 4.0 -3.2, 3.6 -0.5 C 3.2 0.5, -3.2 0.5, -10.4 0.4 Z',
+            c.woodDark,
+            { strokeWidth: s.xeroxFine }
+          ),
+        ]),
+      ]
+    : [
+        // Far-side nimble leg & cozy winter boot
+        svgEl(
+          'g',
+          {
+            'data-part': 'far-leg',
+            transform: svgTransform({
+              rotate: isWalking ? -strideAngle : 0,
+              pivotX: 4,
+              pivotY: -20,
+            }),
+          },
+          [
+            celPath(
+              'M 0.5 -21.0 L 7.8 -21.0 L 8.4 -6.0 L 1.8 -6.0 Z',
+              c.warmAmberDeep,
+              { strokeWidth: s.xeroxMedium }
+            ),
+            celPath(
+              'M 1.2 -6.5 L 8.8 -6.5 C 13.4 -6.5, 15.2 -3.4, 14.8 -0.6 C 14.4 0.5, 8.0 0.5, 1.2 0.4 Z',
+              c.woodDark,
+              { strokeWidth: s.xeroxFine }
+            ),
+          ]
+        ),
+        // Near-side nimble leg & cozy winter boot
+        svgEl(
+          'g',
+          {
+            'data-part': 'near-leg',
+            transform: svgTransform({
+              rotate: isWalking ? strideAngle : 0,
+              pivotX: -5,
+              pivotY: -20,
+            }),
+          },
+          [
+            celPath(
+              'M -9.2 -21.0 L -1.6 -21.0 L -1.2 -6.0 L -8.2 -6.0 Z',
+              c.russetEarth,
+              { strokeWidth: s.xeroxMedium }
+            ),
+            celPath(
+              'M -8.8 -6.5 L -0.8 -6.5 C 3.8 -6.5, 5.6 -3.4, 5.2 -0.6 C 4.8 0.5, -1.6 0.5, -8.8 0.4 Z',
+              c.woodDark,
+              { strokeWidth: s.xeroxFine }
+            ),
+          ]
+        ),
+      ];
+
+  // Upper body assembly (leans eagerly forward toward +X during `reaching`)
+  const upperBodyContent = [
+    // Lush plumed russet-red squirrel tail with overlapping swing (`data-part="squirrel-tail"`)
+    svgEl(
+      'g',
+      {
+        'data-part': 'squirrel-tail',
+        transform: svgTransform({
+          rotate: tailSwing,
+          pivotX: -12,
+          pivotY: -20,
+        }),
+      },
+      [
+        celPath(tailD, c.russetEarth, { strokeWidth: s.xeroxMedium }),
+        // Warm ochre inner plume stripe (flat matte cel paint)
+        svgEl('path', {
+          d: 'M -15.5 -22.5 C -26.0 -25.0, -34.0 -34.0, -34.6 -46.5 C -35.2 -56.5, -31.4 -65.5, -24.5 -68.0 C -26.5 -60.0, -29.2 -50.0, -27.4 -40.5 C -25.8 -33.0, -21.0 -26.8, -15.5 -22.5 Z',
+          fill: c.ochreEarth,
+        }),
+        // Feathery Xerox fur ticks along squirrel tail plume
+        xeroxSketchStroke(
+          'M -37.5 -39.5 L -33.0 -41.0 M -37.2 -55.0 L -32.2 -54.0 M -29.0 -68.5 L -26.0 -64.2 M -20.5 -58.0 L -23.8 -56.2',
+          { stroke: c.xeroxInkSoft, strokeWidth: s.sketchLine, broken: true, opacity: 0.82 }
+        ),
+      ]
+    ),
+
+    // Far arm behind torso
+    farArm,
+
+    // Trailing crimson-and-cream winter scarf tail behind jacket (`data-part="winter-scarf"`)
+    svgEl('g', { 'data-part': 'winter-scarf' }, [
+      celPath(scarfTailD, c.mochiCollar, { strokeWidth: s.xeroxFine }),
+      svgEl('path', {
+        d: `M ${round2(-21.2 + scarfFlutter * 0.38)} ${round2(-39.5 + scarfFlutter * 0.42)} L ${round2(-16.2 + scarfFlutter * 0.3)} ${round2(-35.2 + scarfFlutter * 0.36)} M ${round2(-27.2 + scarfFlutter * 0.5)} ${round2(-34.6 + scarfFlutter * 0.55)} L ${round2(-22.2 + scarfFlutter * 0.48)} ${round2(-30.8 + scarfFlutter * 0.52)}`,
+        fill: 'none',
+        ...celStrokeAttrs({ stroke: c.parchmentCream, strokeWidth: 2.2 }),
+      }),
+      // Knitted scarf fringe ticks
+      xeroxSketchStroke(
+        `M ${round2(-29.8 + scarfFlutter * 0.55)} ${round2(-32.2 + scarfFlutter * 0.6)} L ${round2(-32.2 + scarfFlutter * 0.6)} ${round2(-29.2 + scarfFlutter * 0.62)} M ${round2(-26.8 + scarfFlutter * 0.55)} ${round2(-30.4 + scarfFlutter * 0.6)} L ${round2(-28.8 + scarfFlutter * 0.6)} ${round2(-27.2 + scarfFlutter * 0.62)}`,
+        { stroke: c.mochiCollarShadow, strokeWidth: 1.1 }
+      ),
+    ]),
+
+    // Earthy forest-green patched winter apprentice jacket + warm cream belly peek
+    celPath(
+      'M -11.8 -48.0 C -14.8 -37.0, -14.8 -25.0, -11.5 -17.5 C -4.0 -15.5, 6.5 -15.5, 12.0 -18.5 C 14.5 -27.5, 13.8 -38.5, 10.2 -48.0 Z',
+      c.foliageMid,
+      { strokeWidth: s.xeroxHeavy }
+    ),
+    // Warm cream squirrel tummy peeking down jacket front
+    celPath(
+      'M 1.0 -45.5 C 5.8 -45.5, 10.4 -42.5, 11.4 -35.0 C 12.0 -28.0, 10.2 -20.5, 5.2 -18.0 C 1.2 -18.5, -0.4 -26.5, 1.0 -45.5 Z',
+      c.mochiCream,
+      { strokeWidth: s.xeroxFine }
+    ),
+    // Jacket pocket patch & wooden buttons + sketchy stitch lines
+    celPath('M -9.2 -28.5 L -2.6 -28.5 L -2.8 -22.2 L -9.4 -22.2 Z', c.ochreEarth, {
+      strokeWidth: 0.95,
+    }),
+    xeroxSketchStroke('M -8.6 -27.4 L -3.4 -27.4 M -11.0 -36.0 Q -7.2 -34.2, -3.5 -35.6', {
+      stroke: c.xeroxInkSoft,
+      strokeWidth: s.sketchLine,
+      broken: true,
+    }),
+    svgEl('circle', { cx: -0.6, cy: -38.0, r: 1.35, fill: c.woodLit, ...celStrokeAttrs({ strokeWidth: 0.75 }) }),
+    svgEl('circle', { cx: -0.8, cy: -31.5, r: 1.35, fill: c.woodLit, ...celStrokeAttrs({ strokeWidth: 0.75 }) }),
+
+    // Snug crimson-and-cream winter scarf wrapped around neck
+    celPath(
+      'M -12.0 -49.5 Q 0.0 -44.2, 12.2 -49.2 L 11.4 -43.2 Q 0.0 -38.0, -12.4 -43.5 Z',
+      c.mochiCollar,
+      { strokeWidth: s.xeroxFine }
+    ),
+    svgEl('path', {
+      d: 'M -6.2 -47.2 L -5.6 -41.4 M 1.4 -45.8 L 1.8 -40.2 M 7.8 -47.0 L 7.4 -41.4',
+      fill: 'none',
+      ...celStrokeAttrs({ stroke: c.parchmentCream, strokeWidth: 1.9 }),
+    }),
+    xeroxSketchStroke('M -9.6 -45.8 Q 0.0 -41.4, 9.8 -45.6', {
+      stroke: c.mochiCollarShadow,
+      strokeWidth: 0.95,
+      broken: true,
+    }),
+
+    // Plucky red squirrel head
+    renderSquirrelHead({
+      pfx,
+      cx: 1.2,
+      cy: -60.5,
+      headTilt,
+      eyeMode,
+      speaking: speakingActive,
+      earLag,
+      frameIndex,
+    }),
+
+    // Optional carried Christmas mince pie & holly sprig in hands (when not reaching)
+    carryingPieInHands ? renderChristmasPieAndHolly(24.5, -34.5, frameIndex) : '',
+
+    // Near arm drawn in front of jacket (non-reaching states)
+    nearArm,
+  ];
+
   return svgEl(
     'g',
     {
@@ -642,7 +964,11 @@ export function renderClassicRedSquirrel(options: CharacterRenderOptions): strin
     },
     [
       // Grounded soft contact shadow
-      celContactShadow(-1, 0.5, shadowRx, 3.2, 0.32),
+      celContactShadow(isReaching ? 2.5 : -1, 0.5, shadowRx, 3.2, 0.32),
+
+      // Object permanence: when reaching to light the hearth, rest the steaming pie safely beside Pippin's back foot!
+      carryingPie && isReaching ? celContactShadow(-19, 0.4, 11.5, 2.2, 0.28) : '',
+      carryingPie && isReaching ? renderChristmasPieAndHolly(-19, -8.8, frameIndex) : '',
 
       // Animated flat-cel Red Squirrel rig
       svgEl(
@@ -655,158 +981,24 @@ export function renderClassicRedSquirrel(options: CharacterRenderOptions): strin
           }),
         },
         [
-          // Lush plumed russet-red squirrel tail with overlapping swing (`data-part="squirrel-tail"`)
-          svgEl(
-            'g',
-            {
-              'data-part': 'squirrel-tail',
-              transform: svgTransform({
-                rotate: tailSwing,
-                pivotX: -12,
-                pivotY: -20,
-              }),
-            },
-            [
-              celPath(tailD, c.russetEarth, { strokeWidth: s.xeroxMedium }),
-              // Warm ochre inner plume stripe (flat matte cel paint)
-              svgEl('path', {
-                d: 'M -15.5 -22.5 C -26.0 -25.0, -34.0 -34.0, -34.6 -46.5 C -35.2 -56.5, -31.4 -65.5, -24.5 -68.0 C -26.5 -60.0, -29.2 -50.0, -27.4 -40.5 C -25.8 -33.0, -21.0 -26.8, -15.5 -22.5 Z',
-                fill: c.ochreEarth,
-              }),
-              // Feathery Xerox fur ticks along squirrel tail plume
-              xeroxSketchStroke(
-                'M -37.5 -39.5 L -33.0 -41.0 M -37.2 -55.0 L -32.2 -54.0 M -29.0 -68.5 L -26.0 -64.2 M -20.5 -58.0 L -23.8 -56.2',
-                { stroke: c.xeroxInkSoft, strokeWidth: s.sketchLine, broken: true, opacity: 0.82 }
-              ),
-            ]
-          ),
-
-          // Far-side nimble leg & cozy winter boot
-          svgEl(
-            'g',
-            {
-              'data-part': 'far-leg',
-              transform: svgTransform({
-                rotate: isWalking ? -strideAngle : 0,
-                pivotX: 4,
-                pivotY: -20,
-              }),
-            },
-            [
-              celPath(
-                'M 0.5 -21.0 L 7.8 -21.0 L 8.4 -6.0 L 1.8 -6.0 Z',
-                c.warmAmberDeep,
-                { strokeWidth: s.xeroxMedium }
-              ),
-              celPath(
-                'M 1.2 -6.5 L 8.8 -6.5 C 13.4 -6.5, 15.2 -3.4, 14.8 -0.6 C 14.4 0.5, 8.0 0.5, 1.2 0.4 Z',
-                c.woodDark,
-                { strokeWidth: s.xeroxFine }
-              ),
-            ]
-          ),
-
-          // Near-side nimble leg & cozy winter boot
-          svgEl(
-            'g',
-            {
-              'data-part': 'near-leg',
-              transform: svgTransform({
-                rotate: isWalking ? strideAngle : 0,
-                pivotX: -5,
-                pivotY: -20,
-              }),
-            },
-            [
-              celPath(
-                'M -9.2 -21.0 L -1.6 -21.0 L -1.2 -6.0 L -8.2 -6.0 Z',
-                c.russetEarth,
-                { strokeWidth: s.xeroxMedium }
-              ),
-              celPath(
-                'M -8.8 -6.5 L -0.8 -6.5 C 3.8 -6.5, 5.6 -3.4, 5.2 -0.6 C 4.8 0.5, -1.6 0.5, -8.8 0.4 Z',
-                c.woodDark,
-                { strokeWidth: s.xeroxFine }
-              ),
-            ]
-          ),
-
-          // Far arm behind torso
-          farArm,
-
-          // Trailing crimson-and-cream winter scarf tail behind jacket (`data-part="winter-scarf"`)
-          svgEl('g', { 'data-part': 'winter-scarf' }, [
-            celPath(scarfTailD, c.mochiCollar, { strokeWidth: s.xeroxFine }),
-            svgEl('path', {
-              d: `M ${round2(-21.2 + scarfFlutter * 0.38)} ${round2(-39.5 + scarfFlutter * 0.42)} L ${round2(-16.2 + scarfFlutter * 0.3)} ${round2(-35.2 + scarfFlutter * 0.36)} M ${round2(-27.2 + scarfFlutter * 0.5)} ${round2(-34.6 + scarfFlutter * 0.55)} L ${round2(-22.2 + scarfFlutter * 0.48)} ${round2(-30.8 + scarfFlutter * 0.52)}`,
-              fill: 'none',
-              ...celStrokeAttrs({ stroke: c.parchmentCream, strokeWidth: 2.2 }),
-            }),
-            // Knitted scarf fringe ticks
-            xeroxSketchStroke(
-              `M ${round2(-29.8 + scarfFlutter * 0.55)} ${round2(-32.2 + scarfFlutter * 0.6)} L ${round2(-32.2 + scarfFlutter * 0.6)} ${round2(-29.2 + scarfFlutter * 0.62)} M ${round2(-26.8 + scarfFlutter * 0.55)} ${round2(-30.4 + scarfFlutter * 0.6)} L ${round2(-28.8 + scarfFlutter * 0.6)} ${round2(-27.2 + scarfFlutter * 0.62)}`,
-              { stroke: c.mochiCollarShadow, strokeWidth: 1.1 }
-            ),
-          ]),
-
-          // Earthy forest-green patched winter apprentice jacket + warm cream belly peek
-          celPath(
-            'M -11.8 -48.0 C -14.8 -37.0, -14.8 -25.0, -11.5 -17.5 C -4.0 -15.5, 6.5 -15.5, 12.0 -18.5 C 14.5 -27.5, 13.8 -38.5, 10.2 -48.0 Z',
-            c.foliageMid,
-            { strokeWidth: s.xeroxHeavy }
-          ),
-          // Warm cream squirrel tummy peeking down jacket front
-          celPath(
-            'M 1.0 -45.5 C 5.8 -45.5, 10.4 -42.5, 11.4 -35.0 C 12.0 -28.0, 10.2 -20.5, 5.2 -18.0 C 1.2 -18.5, -0.4 -26.5, 1.0 -45.5 Z',
-            c.mochiCream,
-            { strokeWidth: s.xeroxFine }
-          ),
-          // Jacket pocket patch & wooden buttons + sketchy stitch lines
-          celPath('M -9.2 -28.5 L -2.6 -28.5 L -2.8 -22.2 L -9.4 -22.2 Z', c.ochreEarth, {
-            strokeWidth: 0.95,
-          }),
-          xeroxSketchStroke('M -8.6 -27.4 L -3.4 -27.4 M -11.0 -36.0 Q -7.2 -34.2, -3.5 -35.6', {
-            stroke: c.xeroxInkSoft,
-            strokeWidth: s.sketchLine,
-            broken: true,
-          }),
-          svgEl('circle', { cx: -0.6, cy: -38.0, r: 1.35, fill: c.woodLit, ...celStrokeAttrs({ strokeWidth: 0.75 }) }),
-          svgEl('circle', { cx: -0.8, cy: -31.5, r: 1.35, fill: c.woodLit, ...celStrokeAttrs({ strokeWidth: 0.75 }) }),
-
-          // Snug crimson-and-cream winter scarf wrapped around neck
-          celPath(
-            'M -12.0 -49.5 Q 0.0 -44.2, 12.2 -49.2 L 11.4 -43.2 Q 0.0 -38.0, -12.4 -43.5 Z',
-            c.mochiCollar,
-            { strokeWidth: s.xeroxFine }
-          ),
-          svgEl('path', {
-            d: 'M -6.2 -47.2 L -5.6 -41.4 M 1.4 -45.8 L 1.8 -40.2 M 7.8 -47.0 L 7.4 -41.4',
-            fill: 'none',
-            ...celStrokeAttrs({ stroke: c.parchmentCream, strokeWidth: 1.9 }),
-          }),
-          xeroxSketchStroke('M -9.6 -45.8 Q 0.0 -41.4, 9.8 -45.6', {
-            stroke: c.mochiCollarShadow,
-            strokeWidth: 0.95,
-            broken: true,
-          }),
-
-          // Plucky red squirrel head
-          renderSquirrelHead({
-            pfx,
-            cx: 1.2,
-            cy: -60.5,
-            headTilt,
-            eyeMode,
-            speaking: speakingActive,
-            earLag,
-            frameIndex,
-          }),
-
-          // Optional carried Christmas mince pie & holly sprig
-          carryingPie ? renderChristmasPieAndHolly(24.5, -34.5, frameIndex) : '',
-
-          // Near arm drawn in front of jacket
-          nearArm,
+          ...legsMarkup,
+          isReaching
+            ? svgEl(
+                'g',
+                {
+                  transform: svgTransform({
+                    x: 3,
+                    y: 4,
+                    rotate: 14,
+                    pivotX: 0,
+                    pivotY: -20,
+                  }),
+                },
+                upperBodyContent
+              )
+            : upperBodyContent.join(''),
+          // Extended reaching arm & flickering wooden fireplace match in unrotated local coordinates
+          reachingArmAndMatch,
         ]
       ),
     ]

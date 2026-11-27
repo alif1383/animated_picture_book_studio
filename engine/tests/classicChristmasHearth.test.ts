@@ -100,18 +100,23 @@ describe("Barnaby's Christmas Hearth — Classic Cel Winter Short (classic-chris
       'waving',
       'curious',
       'singing',
+      'reaching',
     ];
     for (const state of squirrelStates) {
       const svg = renderCharacter({
         kind: 'red_squirrel',
         state,
-        holdingSheep: state === 'walking',
+        holdingSheep: state === 'walking' || state === 'reaching',
         artStyle: 'classic_cel',
         frameIndex: 3,
       });
       expect(svg).toContain('data-character="red_squirrel"');
       expect(svg).toContain('data-art-style="classic_cel"');
       expect(svg).toContain('url(#xerox-ink)');
+      if (state === 'reaching') {
+        expect(svg).toContain('data-part="hearth-match"');
+        expect(svg).toContain('data-part="christmas-pie-wreath"');
+      }
       expect(svg).not.toContain('<linearGradient');
       expect(svg).not.toContain('<radialGradient');
       expect(svg).not.toContain('crayon-stroke');
@@ -332,6 +337,28 @@ describe("Barnaby's Christmas Hearth — Classic Cel Winter Short (classic-chris
     expect(zoneBCold.svg).toContain('data-prop="victorian_desk"');
     expect(zoneBCold.svg).not.toContain('data-building="snowy_cottage"');
     expect(zoneBCold.svg).not.toContain('data-prop="christmas_tree"');
+
+    // Pippin reaches into the cold fireplace with a glowing match at t=28.2s right before ignition at t=28.8s
+    const evalLighting = evaluateSceneAtTime(
+      CLASSIC_CHRISTMAS_HEARTH_SCENE,
+      28.2,
+      12
+    );
+    expect(evalLighting.nodes['pippin-squirrel']?.state).toBe('reaching');
+    expect(evalLighting.nodes['zb-fireplace']?.lit).toBe(false);
+    const lightingSvg = evaluateAndRenderScene(
+      CLASSIC_CHRISTMAS_HEARTH_SCENE,
+      28.2
+    ).svg;
+    expect(lightingSvg).toContain('data-part="hearth-match"');
+    expect(lightingSvg).not.toContain('data-character-speech');
+
+    const evalIgnited = evaluateSceneAtTime(
+      CLASSIC_CHRISTMAS_HEARTH_SCENE,
+      28.85,
+      12
+    );
+    expect(evalIgnited.nodes['zb-fireplace']?.lit).toBe(true);
 
     // Zone B lit hearth + Barnaby joyful speaking via speaking:true (t = 31.0s)
     const evalZoneBLit = evaluateSceneAtTime(
