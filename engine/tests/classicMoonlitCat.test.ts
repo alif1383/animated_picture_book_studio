@@ -233,6 +233,10 @@ describe("Mochi's Moonlit Garden — Classic 1970s–80s Hand-Drawn Cel (classic
       expect(out.svg).toContain('id="layer-1a-painted-background"');
       expect(out.svg).toContain('id="layer-1b-acetate-cels"');
       expect(out.svg).toContain('id="bg-board-texture"');
+      expect(out.svg).toContain('id="watercolor-wash-soft"');
+      expect(out.svg).toContain('id="pencil-bg-sketch"');
+      expect(out.svg).toContain('url(#watercolor-wash-soft)');
+      expect(out.svg).toContain('url(#pencil-bg-sketch)');
       expect(out.svg).toContain('id="layer-3-film-composite"');
       expect(out.svg).toContain('id="xerox-ink"');
       expect(out.svg).toContain('id="cel-grade"');
