@@ -1,5 +1,12 @@
 import { svgEl, svgTransform } from '../../engine/svgUtils';
-import { CLASSIC_CEL_PROP_RENDERERS } from '../classicCel/props';
+import {
+  CLASSIC_CEL_PROP_RENDERERS,
+  renderClassicChristmasTree,
+  renderClassicFallingSnow,
+  renderClassicHearthFireplace,
+  renderClassicSnowyWindow,
+  renderClassicVictorianDesk,
+} from '../classicCel/props';
 import type { PropRenderOptions } from './types';
 import { renderGrassPatch } from './grassPatch';
 import { renderTree } from './tree';
@@ -175,6 +182,21 @@ export function renderProp(options: PropRenderOptions): string {
       break;
       case 'celebration_banner':
         inner = renderCelebrationBanner(options);
+        break;
+      case 'hearth_fireplace':
+        inner = renderClassicHearthFireplace(options);
+        break;
+      case 'christmas_tree':
+        inner = renderClassicChristmasTree(options);
+        break;
+      case 'victorian_desk':
+        inner = renderClassicVictorianDesk(options);
+        break;
+      case 'snowy_window':
+        inner = renderClassicSnowyWindow(options);
+        break;
+      case 'falling_snow':
+        inner = renderClassicFallingSnow(options);
         break;
     }
   }

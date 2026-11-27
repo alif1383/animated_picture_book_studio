@@ -638,8 +638,9 @@ async function runHeadlessExport(args) {
   const useClassicRoute =
     style === 'classic_cel' ||
     style === 'classic-cel' ||
-    sceneId === 'classic-moonlit-cat' ||
-    sceneId === 'mochi';
+    sceneId.startsWith('classic-') ||
+    sceneId === 'mochi' ||
+    sceneId === 'christmas-hearth';
   const exportPath = useClassicRoute
     ? `/classic/${encodeURIComponent(sceneId)}`
     : '/';

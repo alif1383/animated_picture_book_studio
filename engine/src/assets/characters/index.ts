@@ -2,7 +2,12 @@ import { steppedOscillate } from '../../engine/clock';
 import { svgEl, svgTransform } from '../../engine/svgUtils';
 import type { CharacterKind, CharacterState } from '../../engine/schema';
 import { renderAnnotation } from '../annotations/pencilAnnotation';
-import { CLASSIC_CEL_CHARACTER_RENDERERS } from '../classicCel/characters';
+import {
+  CLASSIC_CEL_CHARACTER_RENDERERS,
+  renderClassicOldBadger,
+  renderClassicRedSquirrel,
+  renderClassicSnowRobin,
+} from '../classicCel/characters';
 import { renderSwimFloatieRing } from '../props/swimFloatie';
 import type { CharacterRenderOptions } from './types';
 import { renderLittleGirl } from './littleGirl';
@@ -251,6 +256,33 @@ const CHARACTER_FLOATIE_FITS: Record<CharacterKind, CharacterFloatieFit> = {
     skirtBottomY: 10,
     defaultVariant: 2,
   },
+  old_badger: {
+    cx: 0,
+    waistY: -36,
+    rx: 38,
+    ry: 9,
+    tubeR: 7,
+    skirtBottomY: 10,
+    defaultVariant: 1,
+  },
+  red_squirrel: {
+    cx: -2,
+    waistY: -24,
+    rx: 32,
+    ry: 8,
+    tubeR: 6,
+    skirtBottomY: 10,
+    defaultVariant: 3,
+  },
+  snow_robin: {
+    cx: 0,
+    waistY: -12,
+    rx: 20,
+    ry: 5,
+    tubeR: 4,
+    skirtBottomY: 6,
+    defaultVariant: 2,
+  },
 };
 
 /**
@@ -282,6 +314,9 @@ export const CHARACTER_SPEECH_ANCHORS: Record<
   villager: { x: 0, y: -104 },
   moonlit_cat: { x: 4, y: -92 },
   bandana_dog: { x: 10, y: -90 },
+  old_badger: { x: 4, y: -118 },
+  red_squirrel: { x: 4, y: -96 },
+  snow_robin: { x: 2, y: -48 },
 };
 
 /**
@@ -409,6 +444,15 @@ export function renderCharacter(options: CharacterRenderOptions): string {
         break;
       case 'bandana_dog':
         inner = renderBandanaDog(options);
+        break;
+      case 'old_badger':
+        inner = renderClassicOldBadger(options);
+        break;
+      case 'red_squirrel':
+        inner = renderClassicRedSquirrel(options);
+        break;
+      case 'snow_robin':
+        inner = renderClassicSnowRobin(options);
         break;
     }
   }

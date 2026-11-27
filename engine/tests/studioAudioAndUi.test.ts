@@ -320,6 +320,7 @@ describe('Studio Scene Switcher & SFX Audition removal', () => {
     expect(allSwitcherIds).toEqual([
       'starter-moonlit-cat',
       'classic-moonlit-cat',
+      'classic-christmas-hearth',
       'starter-bandana-dog',
       'starter-knight-dragon-hiccups',
     ]);
@@ -332,6 +333,7 @@ describe('Studio Scene Switcher & SFX Audition removal', () => {
 
     expect(getSwitcherScenes('classic_cel').map((s) => s.id)).toEqual([
       'classic-moonlit-cat',
+      'classic-christmas-hearth',
     ]);
 
     expect(allSwitcherIds).not.toContain('short_sample_1');
@@ -343,9 +345,10 @@ describe('Studio Scene Switcher & SFX Audition removal', () => {
     expect(allSwitcherIds).not.toContain('knight-dragon-quest');
 
     // All scenes (including legacy) remain accessible via getUniqueRegisteredScenes & SCENE_REGISTRY
-    expect(getUniqueRegisteredScenes().length).toBeGreaterThanOrEqual(11);
+    expect(getUniqueRegisteredScenes().length).toBeGreaterThanOrEqual(12);
     expect(SCENE_REGISTRY['1']).toBeDefined();
     expect(SCENE_REGISTRY['classic-moonlit-cat']).toBeDefined();
+    expect(SCENE_REGISTRY['classic-christmas-hearth']).toBeDefined();
   });
 
   it('parses / vs /classic, /classic/mochi, /classic/classic-moonlit-cat, and /classic/<sceneId> routes cleanly', () => {
@@ -377,6 +380,26 @@ describe('Studio Scene Switcher & SFX Audition removal', () => {
     expect(resById.bookFrame).toBe(false);
     expect(resById.isClassicRoute).toBe(true);
     expect(resById.canonicalPath).toBe('/classic/classic-moonlit-cat');
+
+    // /classic/christmas-hearth alias & /classic/classic-christmas-hearth
+    const resXmasAlias = parseStudioUrlParams(
+      '',
+      CORNER_STORE_DAY_SCENE,
+      '/classic/christmas-hearth'
+    );
+    expect(resXmasAlias.scene.id).toBe('classic-christmas-hearth');
+    expect(resXmasAlias.artStyle).toBe('classic_cel');
+    expect(resXmasAlias.bookFrame).toBe(false);
+    expect(resXmasAlias.isClassicRoute).toBe(true);
+    expect(resXmasAlias.canonicalPath).toBe('/classic/christmas-hearth');
+
+    const resXmasFull = parseStudioUrlParams(
+      '',
+      CORNER_STORE_DAY_SCENE,
+      '/classic/classic-christmas-hearth'
+    );
+    expect(resXmasFull.scene.id).toBe('classic-christmas-hearth');
+    expect(resXmasFull.canonicalPath).toBe('/classic/classic-christmas-hearth');
 
     // Any registered scene at /classic/<id> renders in classic_cel mode by default
     const resOtherClassic = parseStudioUrlParams(

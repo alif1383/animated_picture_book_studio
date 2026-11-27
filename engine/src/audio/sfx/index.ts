@@ -19,10 +19,12 @@ import { MEDIEVAL_LUTE_SFX } from './medievalLute';
 import { GARDEN_WIND_CHIME_SFX } from './gardenWindChime';
 import { PLAYFUL_BARK_SFX } from './playfulBark';
 import { DRAGON_HICCUP_SFX } from './dragonHiccup';
+import { sleighBellSfx } from './sleighBell';
 
 export * from './types';
 export * from './shared';
 export * from '../voices';
+export { sleighBellSfx, SLEIGH_BELL_SFX } from './sleighBell';
 
 export const PROCEDURAL_SFX_MODULES: readonly ProceduralSfxModule[] = [
   LULLABY_SFX,
@@ -44,6 +46,7 @@ export const PROCEDURAL_SFX_MODULES: readonly ProceduralSfxModule[] = [
   GARDEN_WIND_CHIME_SFX,
   PLAYFUL_BARK_SFX,
   DRAGON_HICCUP_SFX,
+  sleighBellSfx,
 ] as const;
 
 export const PROCEDURAL_SFX_REGISTRY: Record<AudioCueKind, ProceduralSfxModule> = {
@@ -66,6 +69,7 @@ export const PROCEDURAL_SFX_REGISTRY: Record<AudioCueKind, ProceduralSfxModule> 
   garden_wind_chime: GARDEN_WIND_CHIME_SFX,
   playful_bark: PLAYFUL_BARK_SFX,
   dragon_hiccup: DRAGON_HICCUP_SFX,
+  sleigh_bell: sleighBellSfx,
 };
 
 export const AUDIO_CLIP_CATALOG: readonly AudioClipCatalogEntry[] = [
@@ -198,5 +202,18 @@ export const AUDIO_CLIP_CATALOG: readonly AudioClipCatalogEntry[] = [
       '3-stage comic thorn extraction SFX: taut woody-vine tug & accelerating wood-friction creak (0.00–0.44s), resonant hollow cork/tooth upward pitch-snap POP (190 -> 920 Hz, 0.45–0.62s), and sparkling D-major relief harp/chime glissando (0.64–1.48s).',
     themes: ['medieval', 'knight', 'dragon', 'comedy_pop', 'thorn_pull', 'relief', 'storybook'],
     generatorModule: 'scripts/sfx/knightHiccupsThornPop.mjs',
+  },
+  {
+    id: 'christmas-hearth-bgm',
+    filename: 'christmas-hearth-bgm.wav',
+    src: '/audio/christmas-hearth-bgm.wav',
+    title: "Barnaby's Christmas Hearth — Dynamic Victorian Holiday Score",
+    category: 'bgm',
+    durationSec: 48.0,
+    defaultVolume: 0.25,
+    description:
+      'Dynamic 4-section 48.0s Dickensian Christmas score: Snowy Victorian dusk G-minor celesta & pizzicato waltz (0-16.5s), playful 120 BPM staccato bassoon/pizzicato comedy bounce (16.5-28.8s), warm shimmering concert harp & celesta hearth ignition swell (28.8-36.2s), and joyful G-major Christmas square waltz with sleigh-bell shimmer & resolving Gmaj9 theatrical finale chord (36.2-48.0s).',
+    themes: ['christmas', 'winter', 'cozy_village', 'hearth', 'celebration', 'classic'],
+    generatorModule: 'scripts/sfx/christmasHearthBgm.mjs',
   },
 ] as const;

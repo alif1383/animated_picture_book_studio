@@ -31,11 +31,12 @@ const ALL_AUDIO_CUE_KINDS: readonly AudioCueKind[] = [
   'garden_wind_chime',
   'playful_bark',
   'dragon_hiccup',
+  'sleigh_bell',
 ] as const;
 
 describe('Modular One-File-Per-SFX Architecture & Master Audio + Voice Catalogs', () => {
-  it('registers all 19 procedural AudioCueKind modules with complete metadata and themes', () => {
-    expect(PROCEDURAL_SFX_MODULES.length).toBe(19);
+  it('registers all 20 procedural AudioCueKind modules with complete metadata and themes', () => {
+    expect(PROCEDURAL_SFX_MODULES.length).toBe(20);
     for (const kind of ALL_AUDIO_CUE_KINDS) {
       const mod = PROCEDURAL_SFX_REGISTRY[kind];
       expect(mod).toBeDefined();
@@ -49,8 +50,8 @@ describe('Modular One-File-Per-SFX Architecture & Master Audio + Voice Catalogs'
     }
   });
 
-  it('registers all 10 pre-rendered .wav clips in AUDIO_CLIP_CATALOG with existing files and modular generator scripts', () => {
-    expect(AUDIO_CLIP_CATALOG.length).toBe(10);
+  it('registers all 11 pre-rendered .wav clips in AUDIO_CLIP_CATALOG with existing files and modular generator scripts', () => {
+    expect(AUDIO_CLIP_CATALOG.length).toBe(11);
     const rootDir = process.cwd();
     for (const clip of AUDIO_CLIP_CATALOG) {
       expect(clip.id.length).toBeGreaterThan(3);

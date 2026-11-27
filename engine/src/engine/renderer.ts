@@ -49,6 +49,7 @@ const CLASSIC_CEL_BACKGROUND_PROP_KINDS = new Set<PropKind>([
   'grass_patch',
   'bramble_thorn',
   'dragon_cave',
+  'snowy_window',
 ]);
 
 function isClassicCelBackgroundNode(node: SceneNode): boolean {
@@ -97,7 +98,9 @@ function defaultBoundsForNode(node: SceneNode): FillMaskBounds {
         node.bounds ??
         (node.kind === 'royal_castle'
           ? { x: -195, y: -335, width: 390, height: 345 }
-          : node.kind === 'ochre_cottage' || node.kind === 'scorched_cottage'
+          : node.kind === 'ochre_cottage' ||
+            node.kind === 'scorched_cottage' ||
+            node.kind === 'snowy_cottage'
           ? { x: -180, y: -260, width: 360, height: 265 }
           : { x: -145, y: -210, width: 315, height: 215 })
       );
@@ -106,6 +109,12 @@ function defaultBoundsForNode(node: SceneNode): FillMaskBounds {
         ? { x: -135, y: -180, width: 270, height: 315 }
         : node.kind === 'dragon' || node.kind === 'knight' || node.kind === 'soldier'
         ? { x: -115, y: -155, width: 230, height: 195 }
+        : node.kind === 'old_badger'
+        ? { x: -46, y: -116, width: 92, height: 122 }
+        : node.kind === 'red_squirrel'
+        ? { x: -48, y: -94, width: 88, height: 100 }
+        : node.kind === 'snow_robin'
+        ? { x: -26, y: -46, width: 52, height: 52 }
         : node.kind === 'moonlit_cat'
         ? { x: -50, y: -88, width: 92, height: 98 }
         : node.kind === 'bandana_dog'

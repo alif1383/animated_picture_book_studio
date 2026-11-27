@@ -27,6 +27,7 @@ import { STRAWBERRY_BEACH_BIRTHDAY_SCENE } from '../scenes/strawberryBeachBirthd
 import { KNIGHT_DRAGON_QUEST_SCENE } from '../scenes/knightDragonQuest';
 import { STARTER_MOONLIT_CAT_SCENE } from '../scenes/starterMoonlitCat';
 import { CLASSIC_MOONLIT_CAT_SCENE } from '../scenes/classicMoonlitCat';
+import { CLASSIC_CHRISTMAS_HEARTH_SCENE } from '../scenes/classicChristmasHearth';
 import { STARTER_BANDANA_DOG_SCENE } from '../scenes/starterBandanaDog';
 import { STARTER_KNIGHT_DRAGON_HICCUPS_SCENE } from '../scenes/starterKnightDragonHiccups';
 
@@ -50,6 +51,8 @@ export const SCENE_REGISTRY: Record<string, SceneDefinition> = {
   'dragon-quest': KNIGHT_DRAGON_QUEST_SCENE,
   [STARTER_MOONLIT_CAT_SCENE.id]: STARTER_MOONLIT_CAT_SCENE,
   [CLASSIC_MOONLIT_CAT_SCENE.id]: CLASSIC_MOONLIT_CAT_SCENE,
+  [CLASSIC_CHRISTMAS_HEARTH_SCENE.id]: CLASSIC_CHRISTMAS_HEARTH_SCENE,
+  'christmas-hearth': CLASSIC_CHRISTMAS_HEARTH_SCENE,
   [STARTER_BANDANA_DOG_SCENE.id]: STARTER_BANDANA_DOG_SCENE,
   [STARTER_KNIGHT_DRAGON_HICCUPS_SCENE.id]: STARTER_KNIGHT_DRAGON_HICCUPS_SCENE,
 };
@@ -71,6 +74,7 @@ const SCENE_SWITCHER_ICONS: Record<string, string> = {
   [KNIGHT_DRAGON_QUEST_SCENE.id]: '🐉',
   [STARTER_MOONLIT_CAT_SCENE.id]: '🌙',
   [CLASSIC_MOONLIT_CAT_SCENE.id]: '🎞️',
+  [CLASSIC_CHRISTMAS_HEARTH_SCENE.id]: '🎄',
   [STARTER_BANDANA_DOG_SCENE.id]: '🐕',
   [STARTER_KNIGHT_DRAGON_HICCUPS_SCENE.id]: '🔥',
 };
@@ -105,6 +109,9 @@ const CLASSIC_ROUTE_ALIASES: Record<string, SceneDefinition> = {
   mochi: CLASSIC_MOONLIT_CAT_SCENE,
   'moonlit-cat': CLASSIC_MOONLIT_CAT_SCENE,
   'classic-moonlit-cat': CLASSIC_MOONLIT_CAT_SCENE,
+  'christmas-hearth': CLASSIC_CHRISTMAS_HEARTH_SCENE,
+  'classic-christmas-hearth': CLASSIC_CHRISTMAS_HEARTH_SCENE,
+  barnaby: CLASSIC_CHRISTMAS_HEARTH_SCENE,
 };
 
 function formatSceneSwitcherLabel(scene: SceneDefinition): string {
@@ -360,6 +367,10 @@ export function parseStudioUrlParams(
     ? scene.id === CLASSIC_MOONLIT_CAT_SCENE.id &&
       (rawClassicSlug === '' || rawClassicSlug.toLowerCase() === 'mochi')
       ? '/classic/mochi'
+      : scene.id === CLASSIC_CHRISTMAS_HEARTH_SCENE.id &&
+        (rawClassicSlug.toLowerCase() === 'christmas-hearth' ||
+          rawClassicSlug.toLowerCase() === 'barnaby')
+      ? '/classic/christmas-hearth'
       : `/classic/${encodeURIComponent(scene.id)}`
     : '/';
 
@@ -1087,9 +1098,10 @@ export function mountStorybookStudio(
     isClassicMode: boolean
   ): string => {
     if (isClassicMode) {
-      return scene.id === CLASSIC_MOONLIT_CAT_SCENE.id
-        ? '/classic/mochi'
-        : `/classic/${encodeURIComponent(scene.id)}`;
+      if (scene.id === CLASSIC_MOONLIT_CAT_SCENE.id) return '/classic/mochi';
+      if (scene.id === CLASSIC_CHRISTMAS_HEARTH_SCENE.id)
+        return '/classic/christmas-hearth';
+      return `/classic/${encodeURIComponent(scene.id)}`;
     }
     return `?scene=${encodeURIComponent(scene.id)}`;
   };

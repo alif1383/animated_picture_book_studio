@@ -1,5 +1,8 @@
 import { svgEl, svgTransform } from '../../engine/svgUtils';
-import { CLASSIC_CEL_BUILDING_RENDERERS } from '../classicCel/buildings';
+import {
+  CLASSIC_CEL_BUILDING_RENDERERS,
+  renderClassicSnowyCottage,
+} from '../classicCel/buildings';
 import type { BuildingRenderOptions } from './types';
 import { renderOchreCottage } from './ochreCottage';
 import { renderCornerStore } from './cornerStore';
@@ -39,6 +42,9 @@ export function renderBuilding(options: BuildingRenderOptions): string {
         break;
       case 'scorched_cottage':
         inner = renderScorchedCottage(options);
+        break;
+      case 'snowy_cottage':
+        inner = renderClassicSnowyCottage(options);
         break;
     }
   }
