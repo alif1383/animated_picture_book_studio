@@ -160,6 +160,9 @@ describe("Mochi's Moonlit Garden — Classic 1970s–80s Hand-Drawn Cel (classic
       expect(svg).toContain(`data-state="${state}"`);
       expect(svg).toContain('data-part="cel-contact-shadow"');
       expect(svg).toContain('data-part="moon-charm"');
+      expect(svg).toContain('url(#xerox-ink)');
+      expect(svg).not.toContain('<linearGradient');
+      expect(svg).not.toContain('<radialGradient');
       expect(svg).not.toContain('crayon-stroke');
     }
 
@@ -227,6 +230,9 @@ describe("Mochi's Moonlit Garden — Classic 1970s–80s Hand-Drawn Cel (classic
       const out = evaluateAndRenderScene(CLASSIC_MOONLIT_CAT_SCENE, t);
       expect(out.svg).toContain('data-art-style="classic_cel"');
       expect(out.svg).toContain('id="cel-backdrop"');
+      expect(out.svg).toContain('id="layer-1a-painted-background"');
+      expect(out.svg).toContain('id="layer-1b-acetate-cels"');
+      expect(out.svg).toContain('id="bg-board-texture"');
       expect(out.svg).toContain('id="layer-3-film-composite"');
       expect(out.svg).toContain('id="xerox-ink"');
       expect(out.svg).toContain('id="cel-grade"');
