@@ -310,10 +310,23 @@ export function renderTheatricalFrameOverlay(options: {
     );
   }
 
-  // 3. Opening gold-serif theatrical title card
+  // 3. Authentic 1970s vintage theatrical parchment-gold serif title card
+  //    (painted cel lettering with inked drop-shadow directly over the painted scene — no synthetic geometric scrim)
   if (theatricalState.titleCardOpacity > 0.01) {
     const midX = round2(width / 2);
     const midY = round2(height * 0.34);
+    const xeroxFilter = svgUrl(TOKENS.classicCel.filters.ids.xeroxInk);
+    const flourishD = [
+      `M ${round2(midX - 184)} ${round2(midY + 28)}`,
+      `Q ${round2(midX - 96)} ${round2(midY + 24.5)}, ${round2(midX - 14)} ${round2(midY + 28)}`,
+      `Q ${midX} ${round2(midY + 21.5)}, ${round2(midX + 14)} ${round2(midY + 28)}`,
+      `Q ${round2(midX + 96)} ${round2(midY + 24.5)}, ${round2(midX + 184)} ${round2(midY + 28)}`,
+    ].join(' ');
+    const flourishReturnD = [
+      `M ${round2(midX - 14)} ${round2(midY + 28)}`,
+      `Q ${midX} ${round2(midY + 34.5)}, ${round2(midX + 14)} ${round2(midY + 28)}`,
+    ].join(' ');
+
     overlays.push(
       svgEl(
         'g',
@@ -322,16 +335,23 @@ export function renderTheatricalFrameOverlay(options: {
           opacity: theatricalState.titleCardOpacity,
         },
         [
-          // Subtle dark velvet scrim behind title for crisp legibility over painted night sky
-          svgEl('ellipse', {
-            cx: midX,
-            cy: round2(midY + 14),
-            rx: 430,
-            ry: 112,
-            fill: celColors.backdropDark,
-            opacity: 0.44,
-          }),
-          // Credit line above title
+          // Subtle warm inked drop-shadow for credit line
+          svgEl(
+            'text',
+            {
+              x: round2(midX + 1.6),
+              y: round2(midY - 44.2),
+              'text-anchor': 'middle',
+              'font-family': serifFont,
+              'font-size': 17,
+              'font-style': 'italic',
+              'letter-spacing': '2.4',
+              fill: celColors.xeroxInk,
+              opacity: 0.82,
+            },
+            escapeXml(theatricalState.creditText)
+          ),
+          // Credit line above title in warm dusty parchment cream
           svgEl(
             'text',
             {
@@ -343,27 +363,46 @@ export function renderTheatricalFrameOverlay(options: {
               'font-style': 'italic',
               'letter-spacing': '2.4',
               fill: celColors.celCream,
-              opacity: 0.88,
+              stroke: celColors.xeroxInk,
+              'stroke-width': 0.7,
+              'paint-order': 'stroke fill',
+              opacity: 0.94,
             },
             escapeXml(theatricalState.creditText)
           ),
-          // Drop-shadow title
+          // Classic inked cel drop-shadow beneath main title
           svgEl(
             'text',
             {
-              x: round2(midX + 2.5),
-              y: round2(midY + 8.5),
+              x: round2(midX + 3.4),
+              y: round2(midY + 10.2),
+              'text-anchor': 'middle',
+              'font-family': serifFont,
+              'font-size': 56,
+              'font-weight': 'bold',
+              'letter-spacing': '1.2',
+              fill: celColors.xeroxInk,
+              opacity: 0.86,
+            },
+            escapeXml(theatricalState.title)
+          ),
+          // Secondary warm umber edge-depth shadow
+          svgEl(
+            'text',
+            {
+              x: round2(midX + 1.8),
+              y: round2(midY + 8.4),
               'text-anchor': 'middle',
               'font-family': serifFont,
               'font-size': 56,
               'font-weight': 'bold',
               'letter-spacing': '1.2',
               fill: celColors.goldTitleShadow,
-              opacity: 0.85,
+              opacity: 0.9,
             },
             escapeXml(theatricalState.title)
           ),
-          // Main gold-serif title
+          // Main vintage parchment-gold serif title with hand-inked border
           svgEl(
             'text',
             {
@@ -376,51 +415,85 @@ export function renderTheatricalFrameOverlay(options: {
               'letter-spacing': '1.2',
               fill: celColors.goldTitle,
               stroke: celColors.goldTitleShadow,
-              'stroke-width': 1.2,
+              'stroke-width': 1.5,
+              'paint-order': 'stroke fill',
             },
             escapeXml(theatricalState.title)
           ),
-          // Classic ornamental hairline divider
-          svgEl('line', {
-            x1: round2(midX - 180),
-            y1: round2(midY + 28),
-            x2: round2(midX + 180),
-            y2: round2(midY + 28),
+          // Hand-inked storybook ornamental flourish divider (shadow + gold cel paint)
+          svgEl('path', {
+            d: flourishD,
+            transform: 'translate(1.6, 2.0)',
+            fill: 'none',
+            stroke: celColors.xeroxInk,
+            'stroke-width': 2.0,
+            'stroke-linecap': 'round',
+            opacity: 0.72,
+          }),
+          svgEl('path', {
+            d: flourishD,
+            fill: 'none',
             stroke: celColors.goldTitle,
-            'stroke-width': 1.4,
-            opacity: 0.78,
+            'stroke-width': 1.7,
+            'stroke-linecap': 'round',
+            filter: xeroxFilter,
+            opacity: 0.88,
           }),
-          svgEl('polygon', {
-            points: `${midX},${round2(midY + 22)} ${round2(midX + 6)},${round2(midY + 28)} ${midX},${round2(midY + 34)} ${round2(midX - 6)},${round2(midY + 28)}`,
-            fill: celColors.goldTitle,
-            opacity: 0.9,
+          svgEl('path', {
+            d: flourishReturnD,
+            fill: 'none',
+            stroke: celColors.goldTitle,
+            'stroke-width': 1.5,
+            'stroke-linecap': 'round',
+            filter: xeroxFilter,
+            opacity: 0.86,
           }),
-          // Optional subtitle
+          // Optional subtitle with vintage inked drop-shadow directly over the painted sky
           theatricalState.subtitle
-            ? svgEl(
-                'text',
-                {
-                  x: midX,
-                  y: round2(midY + 60),
-                  'text-anchor': 'middle',
-                  'font-family': serifFont,
-                  'font-size': 21,
-                  'font-style': 'italic',
-                  fill: celColors.celCream,
-                  opacity: 0.92,
-                },
-                escapeXml(theatricalState.subtitle)
-              )
+            ? svgEl('g', {}, [
+                svgEl(
+                  'text',
+                  {
+                    x: round2(midX + 1.8),
+                    y: round2(midY + 62),
+                    'text-anchor': 'middle',
+                    'font-family': serifFont,
+                    'font-size': 21,
+                    'font-style': 'italic',
+                    fill: celColors.xeroxInk,
+                    opacity: 0.84,
+                  },
+                  escapeXml(theatricalState.subtitle)
+                ),
+                svgEl(
+                  'text',
+                  {
+                    x: midX,
+                    y: round2(midY + 60),
+                    'text-anchor': 'middle',
+                    'font-family': serifFont,
+                    'font-size': 21,
+                    'font-style': 'italic',
+                    fill: celColors.celCream,
+                    stroke: celColors.xeroxInk,
+                    'stroke-width': 0.8,
+                    'paint-order': 'stroke fill',
+                    opacity: 0.95,
+                  },
+                  escapeXml(theatricalState.subtitle)
+                ),
+              ])
             : '',
         ]
       )
     );
   }
 
-  // 4. Closing gold-serif "The End" card
+  // 4. Closing vintage gold-serif "The End" card
   if (theatricalState.endingCardOpacity > 0.01) {
     const midX = round2(width / 2);
     const midY = round2(height * 0.48);
+    const xeroxFilter = svgUrl(TOKENS.classicCel.filters.ids.xeroxInk);
     overlays.push(
       svgEl(
         'g',
@@ -432,8 +505,24 @@ export function renderTheatricalFrameOverlay(options: {
           svgEl(
             'text',
             {
-              x: round2(midX + 2.5),
-              y: round2(midY + 2.5),
+              x: round2(midX + 3.2),
+              y: round2(midY + 3.4),
+              'text-anchor': 'middle',
+              'font-family': serifFont,
+              'font-size': 66,
+              'font-style': 'italic',
+              'font-weight': 'bold',
+              'letter-spacing': '2',
+              fill: celColors.xeroxInk,
+              opacity: 0.86,
+            },
+            escapeXml(theatricalState.endingTitle)
+          ),
+          svgEl(
+            'text',
+            {
+              x: round2(midX + 1.8),
+              y: round2(midY + 2.0),
               'text-anchor': 'middle',
               'font-family': serifFont,
               'font-size': 66,
@@ -456,18 +545,35 @@ export function renderTheatricalFrameOverlay(options: {
               'font-weight': 'bold',
               'letter-spacing': '2',
               fill: celColors.goldTitle,
+              stroke: celColors.goldTitleShadow,
+              'stroke-width': 1.4,
+              'paint-order': 'stroke fill',
             },
             escapeXml(theatricalState.endingTitle)
           ),
-          svgEl('line', {
-            x1: round2(midX - 130),
-            y1: round2(midY + 24),
-            x2: round2(midX + 130),
-            y2: round2(midY + 24),
+          svgEl('path', {
+            d: `M ${round2(midX - 134)} ${round2(midY + 24)} Q ${midX} ${round2(midY + 20)} ${round2(midX + 134)} ${round2(midY + 24)}`,
+            fill: 'none',
             stroke: celColors.goldTitle,
-            'stroke-width': 1.2,
-            opacity: 0.7,
+            'stroke-width': 1.5,
+            'stroke-linecap': 'round',
+            filter: xeroxFilter,
+            opacity: 0.78,
           }),
+          svgEl(
+            'text',
+            {
+              x: round2(midX + 1.5),
+              y: round2(midY + 59.8),
+              'text-anchor': 'middle',
+              'font-family': serifFont,
+              'font-size': 20,
+              'letter-spacing': '1.4',
+              fill: celColors.xeroxInk,
+              opacity: 0.8,
+            },
+            escapeXml(theatricalState.endingCredit)
+          ),
           svgEl(
             'text',
             {
@@ -478,7 +584,7 @@ export function renderTheatricalFrameOverlay(options: {
               'font-size': 20,
               'letter-spacing': '1.4',
               fill: celColors.celCream,
-              opacity: 0.85,
+              opacity: 0.9,
             },
             escapeXml(theatricalState.endingCredit)
           ),

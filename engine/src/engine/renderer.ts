@@ -25,6 +25,7 @@ import {
 import type {
   AnimationStyleId,
   BackgroundPatchGradient,
+  PropKind,
   SceneDefinition,
   SceneNode,
 } from './schema';
@@ -34,6 +35,30 @@ import {
   renderCharacter,
 } from '../assets/characters';
 import { renderAnnotation, renderProp } from '../assets/objects';
+
+/**
+ * Prop kinds that are painted directly onto the heavy watercolor illustration board
+ * (Layer 1A) in `classic_cel` mode rather than inked on floating foreground acetate cels.
+ */
+const CLASSIC_CEL_BACKGROUND_PROP_KINDS = new Set<PropKind>([
+  'star_cluster',
+  'fluffy_cloud',
+  'tree',
+  'spooky_tree',
+  'meadow_flowers',
+  'grass_patch',
+  'bramble_thorn',
+  'dragon_cave',
+]);
+
+function isClassicCelBackgroundNode(node: SceneNode): boolean {
+  if (node.type === 'background_patch') return true;
+  if (node.type === 'building') return true;
+  if (node.type === 'prop' && CLASSIC_CEL_BACKGROUND_PROP_KINDS.has(node.kind)) {
+    return true;
+  }
+  return false;
+}
 
 export interface RenderSceneOptions {
   /** Override animation rendering style ('crayon' | 'classic_cel') */
@@ -299,6 +324,8 @@ export function evaluateAndRenderScene(
 
   const extraMaskDefs: string[] = [];
   const renderedNodeGroups: string[] = [];
+  const renderedBackgroundBoardGroups: string[] = [];
+  const renderedForegroundCelGroups: string[] = [];
   const renderedSpeechBubbles: string[] = [];
 
   for (let idx = 0; idx < sortedNodes.length; idx++) {
@@ -358,18 +385,26 @@ export function evaluateAndRenderScene(
       gradientFillUrl
     );
 
-    renderedNodeGroups.push(
-      svgEl(
-        'g',
-        {
-          id: `node-${node.id}`,
-          'data-node-type': node.type,
-          transform: nodeState.transform || undefined,
-          opacity: nodeState.opacity < 1 ? nodeState.opacity : undefined,
-        },
-        innerMarkup
-      )
+    const nodeGroup = svgEl(
+      'g',
+      {
+        id: `node-${node.id}`,
+        'data-node-type': node.type,
+        transform: nodeState.transform || undefined,
+        opacity: nodeState.opacity < 1 ? nodeState.opacity : undefined,
+      },
+      innerMarkup
     );
+
+    if (isClassicCel) {
+      if (isClassicCelBackgroundNode(node)) {
+        renderedBackgroundBoardGroups.push(nodeGroup);
+      } else {
+        renderedForegroundCelGroups.push(nodeGroup);
+      }
+    } else {
+      renderedNodeGroups.push(nodeGroup);
+    }
 
     if (node.type === 'character') {
       const speechText = (nodeState.speechText ?? node.speechText ?? '').trim();
@@ -414,12 +449,42 @@ export function evaluateAndRenderScene(
   // Layer 2 Filter & Pattern Defs
   const defsMarkup = renderEngineDefs({
     seed: frame.clock.boilSeed,
+    frameIndex: frame.clock.frameIndex,
     enableCrayonFilter,
     enablePaperTexture,
     vibrant,
     artStyle,
     extraDefs: extraMaskDefs,
   });
+
+  // In classic_cel mode, physically separate Layer 1A (painted watercolor/gouache
+  // illustration board with #bg-board-texture paper tooth) from Layer 1B (transparent
+  // acetate foreground cel stack with tiny rostrum-camera hover shadow #cel-drop-shadow).
+  const cameraRigChildren = isClassicCel
+    ? [
+        svgEl(
+          'g',
+          {
+            id: 'layer-1a-painted-background',
+            'data-cel-layer': 'painted-background',
+            filter: enablePaperTexture
+              ? svgUrl(TOKENS.classicCel.filters.boardTexture.id)
+              : undefined,
+          },
+          renderedBackgroundBoardGroups
+        ),
+        svgEl(
+          'g',
+          {
+            id: 'layer-1b-acetate-cels',
+            'data-cel-layer': 'acetate-cels',
+            filter: svgUrl(TOKENS.classicCel.filters.ids.celDropShadow),
+          },
+          renderedForegroundCelGroups
+        ),
+        ...renderedSpeechBubbles,
+      ]
+    : [...renderedNodeGroups, ...renderedSpeechBubbles];
 
   const innerSceneMarkup = [
     svgEl('rect', {
@@ -438,7 +503,7 @@ export function evaluateAndRenderScene(
         id: 'camera-rig',
         transform: frame.camera.transform || undefined,
       },
-      [...renderedNodeGroups, ...renderedSpeechBubbles]
+      cameraRigChildren
     ),
   ].join('');
 
@@ -472,9 +537,14 @@ export function evaluateAndRenderScene(
     layer1Content
   );
 
-  // Layer 3 Composite: Paper tooth for crayon, 35mm film grain & vignette for classic_cel
+  // Layer 3 Composite: Paper tooth for crayon, animated 35mm film grain & vignette for classic_cel
   const layer3Composite = isClassicCel
-    ? renderFilmCompositeLayer(width, height, enablePaperTexture)
+    ? renderFilmCompositeLayer(
+        width,
+        height,
+        enablePaperTexture,
+        frame.clock.frameIndex + 1
+      )
     : renderPaperCompositeLayer(width, height, enablePaperTexture, vibrant);
 
   const svg = svgEl(

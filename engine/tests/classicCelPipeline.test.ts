@@ -5,7 +5,9 @@ import {
   celPath,
   celShadedShape,
   celStrokeAttrs,
+  gouacheDabWash,
   gouachePath,
+  xeroxSketchStroke,
 } from '../src/engine/svgUtils';
 import {
   evaluateTheatricalFrameState,
@@ -305,6 +307,47 @@ describe('Classic 1970s–80s Hand-Drawn Cel Animation Pipeline', () => {
       expect(shadow).toContain('opacity="0.36"');
       expect(shadow).toContain('data-part="cel-contact-shadow"');
     });
+
+    it('defaults celPath to #xerox-ink for stroked paths and supports xeroxSketchStroke & gouacheDabWash', () => {
+      const defaultCel = celPath('M 0 0 L 20 10 Z', TOKENS.classicCel.colors.mochiFurBase);
+      expect(defaultCel).toContain('filter="url(#xerox-ink)"');
+      expect(defaultCel).toContain(`stroke="${TOKENS.classicCel.colors.xeroxInk}"`);
+
+      const unstrokedCel = celPath('M 0 0 L 20 10 Z', TOKENS.classicCel.colors.mochiFurBase, {
+        stroke: 'none',
+      });
+      expect(unstrokedCel).not.toContain('url(#xerox-ink)');
+
+      const sketch = xeroxSketchStroke('M 2 4 Q 8 2, 14 5', {
+        id: 'cheek-tuft',
+        broken: true,
+        feather: true,
+      });
+      expect(sketch).toContain('id="cheek-tuft"');
+      expect(sketch).toContain('data-part="xerox-sketch"');
+      expect(sketch).toContain('stroke-dasharray="7 3 3 2.5"');
+      expect(sketch).toContain('filter="url(#xerox-ink)"');
+
+      const dabs = gouacheDabWash(
+        [
+          { cx: 100, cy: 80, rx: 40, ry: 26, rotate: -8 },
+          { cx: 145, cy: 92, rx: 34, ry: 22, fill: TOKENS.classicCel.colors.sageFoliage },
+        ],
+        {
+          id: 'canopy-wash',
+          fill: TOKENS.classicCel.colors.oliveCanopy,
+          wetEdgeColor: TOKENS.classicCel.colors.foliageShadow,
+          highlightFill: TOKENS.classicCel.colors.foliageRim,
+          seed: 3,
+        }
+      );
+      expect(dabs).toContain('id="canopy-wash"');
+      expect(dabs).toContain('filter="url(#gouache-wash)"');
+      expect(dabs).toContain(`fill="${TOKENS.classicCel.colors.oliveCanopy}"`);
+      expect(dabs).toContain(`fill="${TOKENS.classicCel.colors.sageFoliage}"`);
+      expect(dabs).toContain(`stroke="${TOKENS.classicCel.colors.foliageShadow}"`);
+      expect(dabs).toContain(`fill="${TOKENS.classicCel.colors.foliageRim}"`);
+    });
   });
 
   describe('Theatrical framing (evaluateTheatricalFrameState & renderTheatricalFrameOverlay)', () => {
@@ -459,6 +502,7 @@ describe('Classic 1970s–80s Hand-Drawn Cel Animation Pipeline', () => {
       expect(openSvg).toContain('Cats &amp; Moons');
       expect(openSvg).toContain('A &lt;Classic&gt; Short');
       expect(openSvg).toContain(`fill="${TOKENS.classicCel.colors.goldTitle}"`);
+      expect(openSvg).not.toContain('<ellipse');
       expect(openSvg).toContain(rawScene);
 
       // Closing iris-out + "The End" card focused on custom irisFocus
@@ -504,6 +548,7 @@ describe('Classic 1970s–80s Hand-Drawn Cel Animation Pipeline', () => {
       expect(defs).toContain(`id="${celIds.celGrade}"`);
       expect(defs).toContain(`id="${celIds.filmGrain}"`);
       expect(defs).toContain(`id="${celIds.filmVignette}"`);
+      expect(defs).toContain(`id="${TOKENS.classicCel.filters.boardTexture.id}"`);
       expect(defs).toContain('<radialGradient id="film-vignette"');
       expect(defs).toContain('id="extra-sky-grad"');
 
@@ -558,6 +603,9 @@ describe('Classic 1970s–80s Hand-Drawn Cel Animation Pipeline', () => {
       expect(story.svg).toContain('id="cel-backdrop"');
       expect(story.svg).not.toContain('id="paper-base"');
       expect(story.svg).toContain('id="layer-1-base-scene" filter="url(#cel-grade)"');
+      expect(story.svg).toContain('id="layer-1a-painted-background"');
+      expect(story.svg).toContain('filter="url(#bg-board-texture)"');
+      expect(story.svg).toContain('id="layer-1b-acetate-cels"');
       expect(story.svg).toContain('id="layer-3-film-composite"');
       expect(story.svg).not.toContain('id="layer-3-paper-composite"');
 

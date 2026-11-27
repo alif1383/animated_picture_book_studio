@@ -162,21 +162,99 @@ export function celStrokeAttrs(options: CelStrokeOptions = {}): SvgAttrMap {
 }
 
 /**
- * Renders a classic opaque cel-painted `<path>` with crisp Xerox charcoal ink outline.
+ * Renders a classic opaque matte cel-painted `<path>` with raw 1970s–80s
+ * electrostatic Xerox graphite-toner outline (`useXeroxFilter: true` by default
+ * whenever a visible stroke is drawn).
  */
 export function celPath(
   d: string,
   fill: string,
   options: CelStrokeOptions & { id?: string; clipPath?: string } = {}
 ): string {
-  const { id, clipPath, ...strokeOpts } = options;
+  const { id, clipPath, useXeroxFilter, ...strokeOpts } = options;
+  const effectiveStroke = strokeOpts.stroke ?? TOKENS.classicCel.colors.xeroxInk;
+  const effectiveStrokeWidth =
+    strokeOpts.strokeWidth ?? TOKENS.classicCel.strokes.xeroxMedium;
+  const applyXerox =
+    useXeroxFilter !== undefined
+      ? useXeroxFilter
+      : effectiveStroke !== 'none' && effectiveStrokeWidth > 0;
+
   return svgEl('path', {
     id,
     d,
     fill,
     'clip-path': clipPath,
-    ...celStrokeAttrs(strokeOpts),
+    ...celStrokeAttrs({ ...strokeOpts, useXeroxFilter: applyXerox }),
   });
+}
+
+export interface XeroxSketchStrokeOptions {
+  id?: string;
+  stroke?: string;
+  strokeWidth?: number;
+  /** Optional custom dasharray for broken/feathery graphite pencil strokes */
+  dasharray?: string;
+  /** When true, uses a broken/feathery graphite dash pattern if `dasharray` is omitted */
+  broken?: boolean;
+  opacity?: number;
+  /** Apply `#xerox-ink` toner grit filter (default: true) */
+  useXeroxFilter?: boolean;
+  /** Optional subtle double-pass pencil feathering for organic animator sketch pressure */
+  feather?: boolean;
+}
+
+/**
+ * Renders broken/feathery internal Xerox graphite pencil construction lines:
+ * fur tufts, cheek/whisker ticks, cloth creases, wood-grain scratches, and grass ink flicks.
+ */
+export function xeroxSketchStroke(
+  d: string,
+  options: XeroxSketchStrokeOptions = {}
+): string {
+  const {
+    id,
+    stroke = TOKENS.classicCel.colors.xeroxInk,
+    strokeWidth = TOKENS.classicCel.strokes.sketchLine,
+    dasharray,
+    broken = false,
+    opacity = 0.84,
+    useXeroxFilter = true,
+    feather = false,
+  } = options;
+
+  const effectiveDash = dasharray ?? (broken ? '7 3 3 2.5' : undefined);
+  const primary = svgEl('path', {
+    id: feather ? undefined : id,
+    d,
+    fill: 'none',
+    ...celStrokeAttrs({
+      stroke,
+      strokeWidth,
+      dasharray: effectiveDash,
+      useXeroxFilter,
+      opacity: round2(opacity),
+    }),
+  });
+
+  if (!feather) {
+    return primary;
+  }
+
+  const whisper = svgEl('path', {
+    d,
+    fill: 'none',
+    transform: 'translate(0.55, 0.35)',
+    ...celStrokeAttrs({
+      stroke: TOKENS.classicCel.colors.xeroxInkSoft,
+      strokeWidth: round2(Math.max(0.55, strokeWidth * 0.65)),
+      dasharray: effectiveDash ?? '9 4 4 3',
+      useXeroxFilter,
+      opacity: round2(opacity * 0.48),
+    }),
+  });
+
+  return svgEl('g', { id, 'data-part': 'xerox-sketch' }, [whisper, primary]);
 }
 
 export interface CelShadedShapeOptions {
@@ -191,14 +269,15 @@ export interface CelShadedShapeOptions {
   clipId: string;
   stroke?: string;
   strokeWidth?: number;
+  useXeroxFilter?: boolean;
   id?: string;
 }
 
 /**
- * Renders an authentic 2-tone cel-shaded shape:
- * 1) solid opaque matte cel paint base,
+ * Renders an authentic 2-tone matte cel-shaded shape:
+ * 1) solid opaque flat matte cel paint base,
  * 2) crisp clipped cel shadow band(s) and optional rim/specular highlight(s),
- * 3) clean Xerox charcoal ink outline drawn over top so internal paint seams stay crisp.
+ * 3) raw Xerox graphite-toner outline drawn over top so internal paint seams stay crisp.
  */
 export function celShadedShape(opts: CelShadedShapeOptions): string {
   const {
@@ -213,6 +292,7 @@ export function celShadedShape(opts: CelShadedShapeOptions): string {
     clipId,
     stroke = TOKENS.classicCel.colors.xeroxInk,
     strokeWidth = TOKENS.classicCel.strokes.xeroxMedium,
+    useXeroxFilter = true,
     id,
   } = opts;
 
@@ -221,7 +301,7 @@ export function celShadedShape(opts: CelShadedShapeOptions): string {
     (highlightPaths.length > 0 && highlightFill);
 
   if (!hasInterior) {
-    return celPath(d, baseFill, { id, stroke, strokeWidth });
+    return celPath(d, baseFill, { id, stroke, strokeWidth, useXeroxFilter });
   }
 
   const clipDef = svgEl('clipPath', { id: clipId }, svgEl('path', { d }));
@@ -263,7 +343,7 @@ export function celShadedShape(opts: CelShadedShapeOptions): string {
       ? svgEl('path', {
           d,
           fill: 'none',
-          ...celStrokeAttrs({ stroke, strokeWidth }),
+          ...celStrokeAttrs({ stroke, strokeWidth, useXeroxFilter }),
         })
       : '';
 
@@ -304,6 +384,166 @@ export function gouachePath(
       : undefined,
     opacity,
   });
+}
+
+export interface GouacheDab {
+  /** Center X of the brush blotch */
+  cx: number;
+  /** Center Y of the brush blotch */
+  cy: number;
+  /** Horizontal radius of the paint dab */
+  rx: number;
+  /** Vertical radius of the paint dab */
+  ry: number;
+  /** Optional rotation in degrees */
+  rotate?: number;
+  /** Optional pigment fill override for this individual dab */
+  fill?: string;
+  /** Optional translucency override for this individual dab */
+  opacity?: number;
+}
+
+export interface GouacheDabWashOptions {
+  id?: string;
+  /** Default pigment fill for dabs without an explicit `fill` */
+  fill: string;
+  /** Optional darker capillary wet-edge pigment ring color (defaults to each dab's fill) */
+  wetEdgeColor?: string;
+  /** Wet-edge ring opacity (0 disables wet-edge rim; default: 0.24) */
+  wetEdgeOpacity?: number;
+  /** Overall wash group opacity (default: 0.88) */
+  opacity?: number;
+  /** Apply `#gouache-wash` brush-mottle & optical softness filter (default: true) */
+  softEdge?: boolean;
+  /** Deterministic seed for irregular organic brush blotch silhouettes (default: 1) */
+  seed?: number;
+  /** Optional secondary dappled sunlit/moonlit highlight pigment layered inside dabs */
+  highlightFill?: string;
+  /** Opacity of the dappled inner highlight patches (default: 0.24) */
+  highlightOpacity?: number;
+}
+
+/**
+ * Generates an organic closed 8-point hand-brushed watercolor/gouache blotch path
+ * centered around `(0, 0)` with deterministic bristle irregularity.
+ */
+function buildOrganicGouacheBlotchPath(
+  rx: number,
+  ry: number,
+  dabIndex: number,
+  seed: number
+): string {
+  const count = 8;
+  const pts: Array<{ x: number; y: number }> = [];
+  for (let i = 0; i < count; i++) {
+    const angle = (i / count) * Math.PI * 2;
+    const mod = 1 + deterministicJitter(dabIndex * 19 + i, seed, 0.22);
+    pts.push({
+      x: round2(Math.cos(angle) * rx * mod),
+      y: round2(Math.sin(angle) * ry * mod),
+    });
+  }
+  const startMidX = round2((pts[count - 1].x + pts[0].x) / 2);
+  const startMidY = round2((pts[count - 1].y + pts[0].y) / 2);
+  const segs: string[] = [`M ${startMidX} ${startMidY}`];
+  for (let i = 0; i < count; i++) {
+    const curr = pts[i];
+    const next = pts[(i + 1) % count];
+    const midX = round2((curr.x + next.x) / 2);
+    const midY = round2((curr.y + next.y) / 2);
+    segs.push(`Q ${curr.x} ${curr.y} ${midX} ${midY}`);
+  }
+  segs.push('Z');
+  return segs.join(' ');
+}
+
+/**
+ * Composes dappled, blotchy, translucent watercolor/gouache foliage, cloud, or sky
+ * brushwork washes with capillary wet-edge mottling for authentic 1970s painted
+ * illustration-board backgrounds.
+ */
+export function gouacheDabWash(
+  dabs: readonly GouacheDab[],
+  options: GouacheDabWashOptions
+): string {
+  const {
+    id,
+    fill,
+    wetEdgeColor,
+    wetEdgeOpacity = 0.24,
+    opacity = 0.88,
+    softEdge = true,
+    seed = 1,
+    highlightFill,
+    highlightOpacity = 0.24,
+  } = options;
+
+  const children: string[] = [];
+
+  for (let idx = 0; idx < dabs.length; idx++) {
+    const dab = dabs[idx];
+    const dabFill = dab.fill ?? fill;
+    const dabOpacity = dab.opacity ?? 0.78;
+    const d = buildOrganicGouacheBlotchPath(dab.rx, dab.ry, idx + 1, seed);
+    const transform = svgTransform({
+      x: dab.cx,
+      y: dab.cy,
+      rotate: dab.rotate,
+    });
+    const edgeWidth =
+      wetEdgeOpacity > 0
+        ? round2(Math.max(1.2, Math.min(dab.rx, dab.ry) * 0.14))
+        : 0;
+
+    children.push(
+      svgEl('path', {
+        d,
+        transform: transform || undefined,
+        fill: dabFill,
+        'fill-opacity': round2(dabOpacity),
+        stroke: edgeWidth > 0 ? wetEdgeColor ?? dabFill : 'none',
+        'stroke-width': edgeWidth > 0 ? edgeWidth : undefined,
+        'stroke-opacity': edgeWidth > 0 ? round2(wetEdgeOpacity) : undefined,
+        'stroke-linejoin': edgeWidth > 0 ? 'round' : undefined,
+      })
+    );
+
+    if (highlightFill && idx % 2 === 0) {
+      const innerD = buildOrganicGouacheBlotchPath(
+        dab.rx * 0.56,
+        dab.ry * 0.52,
+        idx + 37,
+        seed + 5
+      );
+      const innerTransform = svgTransform({
+        x: dab.cx - dab.rx * 0.14,
+        y: dab.cy - dab.ry * 0.16,
+        rotate: dab.rotate,
+      });
+      children.push(
+        svgEl('path', {
+          d: innerD,
+          transform: innerTransform || undefined,
+          fill: highlightFill,
+          'fill-opacity': round2(highlightOpacity),
+          stroke: 'none',
+        })
+      );
+    }
+  }
+
+  return svgEl(
+    'g',
+    {
+      id,
+      'data-part': 'gouache-dab-wash',
+      opacity: opacity < 1 ? round2(opacity) : undefined,
+      filter: softEdge
+        ? svgUrl(TOKENS.classicCel.filters.ids.gouacheWash)
+        : undefined,
+    },
+    children
+  );
 }
 
 /**
