@@ -9,6 +9,8 @@ import { BANDANA_DOG_PLAYFUL_BARK_CLIP } from './bandanaDogPlayfulBark.mjs';
 import { KNIGHT_HICCUPS_BGM } from './knightHiccupsBgm.mjs';
 import { KNIGHT_HICCUPS_THORN_POP } from './knightHiccupsThornPop.mjs';
 import { CHRISTMAS_HEARTH_BGM_CLIP } from './christmasHearthBgm.mjs';
+import { CLASSIC_STARTER_CAT_LULLABY_BGM_CLIP } from './classicStarterCatLullabyBgm.mjs';
+import { CLASSIC_STARTER_DOG_BGM_CLIP } from './classicStarterDogBgm.mjs';
 
 export * from './shared.mjs';
 export * from './medievalFantasyBgm.mjs';
@@ -22,6 +24,8 @@ export * from './bandanaDogPlayfulBark.mjs';
 export * from './knightHiccupsBgm.mjs';
 export * from './knightHiccupsThornPop.mjs';
 export * from './christmasHearthBgm.mjs';
+export * from './classicStarterCatLullabyBgm.mjs';
+export * from './classicStarterDogBgm.mjs';
 
 export const WAV_SFX_MODULES = [
   MEDIEVAL_FANTASY_BGM_CLIP,
@@ -35,6 +39,8 @@ export const WAV_SFX_MODULES = [
   KNIGHT_HICCUPS_BGM,
   KNIGHT_HICCUPS_THORN_POP,
   CHRISTMAS_HEARTH_BGM_CLIP,
+  CLASSIC_STARTER_CAT_LULLABY_BGM_CLIP,
+  CLASSIC_STARTER_DOG_BGM_CLIP,
 ];
 
 export const WAV_SFX_REGISTRY = Object.fromEntries(

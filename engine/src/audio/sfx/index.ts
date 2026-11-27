@@ -216,4 +216,30 @@ export const AUDIO_CLIP_CATALOG: readonly AudioClipCatalogEntry[] = [
     themes: ['christmas', 'winter', 'cozy_village', 'hearth', 'celebration', 'classic'],
     generatorModule: 'scripts/sfx/christmasHearthBgm.mjs',
   },
+  {
+    id: 'classic-starter-cat-lullaby-bgm',
+    filename: 'classic-starter-cat-lullaby-bgm.wav',
+    src: '/audio/classic-starter-cat-lullaby-bgm.wav',
+    title: 'Classic Moonlit Garden Barcarolle — Pastoral Nocturnal Lullaby',
+    category: 'bgm',
+    durationSec: 30.0,
+    defaultVolume: 0.26,
+    description:
+      '5-section 30.0s 1970s animated-film G-major / E-minor 6/8 barcarolle nocturnal lullaby featuring pastoral solo wooden flute, curious tiptoeing pizzicato strings, lush muted orchestral string pads (Gmaj9, Em9, Cmaj7, D6), silver glockenspiel/wind-chime harp sparkles, and whisper-quiet night breeze: (1) Theatrical Iris Opening (0.0-3.2s), (2) Act I Lantern Terrace & Firefly Jar with 8.2s firefly swirl sparkle bloom (3.2-11.8s), (3) Act II Singing Wind-Chime Arbor lively 6/8 flute & bell-harp cascades (11.8-18.4s), (4) Act III Secret Moonlit Bench Glade romantic string pad & flowing barcarolle harp (18.4-27.0s), (5) Act IV Goodnight Under the Silver Moon ritardando Gmaj9 resolution fading cleanly 28.3-29.7s to silence (27.0-30.0s).',
+    themes: ['bedtime', 'lullaby', 'cat', 'garden', 'classic', 'moonlit', 'night', 'orchestral', 'dreamy'],
+    generatorModule: 'scripts/sfx/classicStarterCatLullabyBgm.mjs',
+  },
+  {
+    id: 'classic-starter-dog-bgm',
+    filename: 'classic-starter-dog-bgm.wav',
+    src: '/audio/classic-starter-dog-bgm.wav',
+    title: "Biscuit's Classic Storybook Adventure — 1970s Folk-Orchestral Score",
+    category: 'bgm',
+    durationSec: 44.0,
+    defaultVolume: 0.25,
+    description:
+      'Dynamic 3-section 44.0s 1970s folk-orchestral score: Sunny Backyard Morning 102 BPM G-major lute/flute/pizzicato (0-20.4s), Park Fetch Chase 138 BPM D-major to G-major whistle/pizzicato/snare-brush with 24.3s catch fanfare (20.4-32.6s), and Golden Afternoon 88 BPM harp & clarinet ritardando resolving cleanly on Gmaj9 (32.6-44.0s).',
+    themes: ['dog', 'pet', 'classic', 'storybook', 'backyard', 'park', 'fetch', 'sunny', 'folk', 'pastoral', 'summer'],
+    generatorModule: 'scripts/sfx/classicStarterDogBgm.mjs',
+  },
 ] as const;

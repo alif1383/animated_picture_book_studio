@@ -47,7 +47,6 @@ const CLASSIC_CEL_BACKGROUND_PROP_KINDS = new Set<PropKind>([
   'spooky_tree',
   'meadow_flowers',
   'grass_patch',
-  'bramble_thorn',
   'dragon_cave',
   'snowy_window',
 ]);

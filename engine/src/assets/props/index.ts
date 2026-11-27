@@ -3,6 +3,8 @@ import {
   CLASSIC_CEL_PROP_RENDERERS,
   renderClassicChristmasTree,
   renderClassicFallingSnow,
+  renderClassicFireflyLanternJar,
+  renderClassicGardenBench,
   renderClassicHearthFireplace,
   renderClassicSnowyWindow,
   renderClassicVictorianDesk,
@@ -197,6 +199,12 @@ export function renderProp(options: PropRenderOptions): string {
         break;
       case 'falling_snow':
         inner = renderClassicFallingSnow(options);
+        break;
+      case 'garden_bench':
+        inner = renderClassicGardenBench(options);
+        break;
+      case 'firefly_lantern_jar':
+        inner = renderClassicFireflyLanternJar(options);
         break;
     }
   }

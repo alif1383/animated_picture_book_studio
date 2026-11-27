@@ -28,14 +28,76 @@ import type { PropRenderOptions } from '../../props/types';
  * Footprint: `~x: -82..82, y: -44..14`.
  */
 export function renderClassicFluffyCloud(options: PropRenderOptions): string {
-  const { frameIndex = 0, variant = 1 } = options;
+  const { frameIndex = 0, variant = 1, lit } = options;
+  const isSunlit = lit === true;
   const c = TOKENS.classicCel.colors;
 
-  // Smooth 12 FPS nocturnal breeze drift
+  // Smooth 12 FPS breeze drift
   const drift = steppedOscillate(frameIndex, 48, 4.5, variant * 7);
   const mirror = variant % 2 === 0 ? -1 : 1;
   const j = (idx: number, amp: number): number =>
     round2(deterministicJitter(idx, variant, amp));
+
+  if (isSunlit) {
+    // Sunlit wet-on-wet watercolor daylight clouds (parchment-cream puffs + warm board-tooth shadow undersides)
+    const sunlitCloudBlotches: WatercolorBlotch[] = [
+      // Gentle cool-warm cloud belly washes (ZERO night indigo/teal)
+      { cx: round2(-50 + j(1, 4)), cy: 4, rx: 28, ry: 9, fill: c.dayCloudShadow, opacity: 0.56, rotate: -5 },
+      { cx: round2(-8 + j(2, 4)), cy: 3, rx: 34, ry: 11, fill: c.boardToothWarm, opacity: 0.54, rotate: 3 },
+      { cx: round2(34 + j(3, 4)), cy: 4, rx: 30, ry: 9.5, fill: c.dayCloudShadow, opacity: 0.52, rotate: -4 },
+      // Airy mid-cloud sunlit parchment watercolor puffs
+      { cx: round2(-42 + j(4, 3)), cy: -8, rx: 24, ry: 13, fill: c.dayCloudLight, opacity: 0.74, rotate: -10 },
+      { cx: round2(-14 + j(5, 3)), cy: -22, rx: 28, ry: 17, fill: c.dayCloudLight, opacity: 0.8, rotate: 7 },
+      { cx: round2(20 + j(6, 3)), cy: -17, rx: 27, ry: 15, fill: c.dayCloudLight, opacity: 0.78, rotate: -8 },
+      { cx: round2(52 + j(7, 3)), cy: -3, rx: 22, ry: 10, fill: c.boardToothWarm, opacity: 0.58, rotate: 8 },
+      // Bright sunlit parchment-cream crown highlights
+      { cx: round2(-18 + j(8, 3)), cy: -28, rx: 19, ry: 9.5, fill: c.parchmentCream, opacity: 0.76, rotate: -6 },
+      { cx: round2(18 + j(9, 3)), cy: -24, rx: 18, ry: 9, fill: c.parchmentCream, opacity: 0.72, rotate: 9 },
+      { cx: round2(40 + j(10, 2)), cy: -10, rx: 14, ry: 6.5, fill: c.parchmentCream, opacity: 0.64, rotate: -5 },
+    ];
+
+    // Delicate hand-drawn pencil contour wisps suggesting storybook watercolor cloud puffs
+    const contourWisps = svgEl('g', { 'data-part': 'cloud-contour-wisps' }, [
+      xeroxSketchStroke(
+        `M ${round2(-62 + j(11, 2))} -2 Q ${round2(-48 + j(12, 2))} -20, ${round2(-32 + j(13, 2))} -19 Q ${round2(-16 + j(14, 2))} -39, ${round2(4 + j(15, 2))} -31 Q ${round2(24 + j(16, 2))} -36, ${round2(38 + j(17, 2))} -18 Q ${round2(56 + j(18, 2))} -16, ${round2(66 + j(19, 2))} -2`,
+        {
+          stroke: c.xeroxInkSoft,
+          strokeWidth: 0.85,
+          broken: true,
+          dasharray: '14 6 9 7 12 8',
+          feather: true,
+          opacity: 0.28,
+        }
+      ),
+      xeroxSketchStroke(
+        `M ${round2(-56 + j(20, 2))} 9 Q ${round2(-14 + j(21, 2))} 12, ${round2(24 + j(22, 2))} 10 Q ${round2(46 + j(23, 2))} 11, ${round2(62 + j(24, 2))} 6`,
+        {
+          stroke: c.dayCloudShadow,
+          strokeWidth: 0.9,
+          broken: true,
+          dasharray: '16 8 10 6',
+          opacity: 0.42,
+        }
+      ),
+    ]);
+
+    return svgEl(
+      'g',
+      {
+        'data-prop': 'fluffy_cloud',
+        'data-art-style': 'classic_cel',
+        transform: svgTransform({ x: drift, scaleX: mirror, scaleY: 1 }),
+      },
+      [
+        watercolorWashBlotches(sunlitCloudBlotches, {
+          seed: variant * 17 + 3,
+          opacity: 0.94,
+          softWash: true,
+        }),
+        contourWisps,
+      ]
+    );
+  }
 
   // Uneven, cloudy wet-on-wet watercolor puddles bleeding from indigo underside to pale moonlit silver tops
   const cloudBlotches: WatercolorBlotch[] = [
@@ -174,7 +236,8 @@ export function renderClassicStarCluster(options: PropRenderOptions): string {
  * Footprint: `~x: -585..590, y: 3..175`.
  */
 export function renderClassicMeadowFlowers(options: PropRenderOptions): string {
-  const { frameIndex = 0, variant = 1 } = options;
+  const { frameIndex = 0, variant = 1, lit } = options;
+  const isSunlit = lit === true;
   const c = TOKENS.classicCel.colors;
 
   const foliageTufts: ReadonlyArray<readonly [number, number]> = [
@@ -196,28 +259,56 @@ export function renderClassicMeadowFlowers(options: PropRenderOptions): string {
   ];
 
   // Soft wet-on-wet watercolor leafy clumps beneath tufts & wildflowers
-  const leafyClumpBlotches: WatercolorBlotch[] = [
-    ...foliageTufts
-      .filter((_, i) => i % 2 === 0)
-      .map(([tx, ty], i): WatercolorBlotch => ({
-        cx: tx,
-        cy: ty + 1,
-        rx: round2(18 + (i % 3) * 5),
-        ry: 6.5,
-        fill: i % 3 === 0 ? c.foliageShadow : i % 3 === 1 ? c.oliveCanopy : c.grassNightDeep,
-        opacity: 0.42,
-        rotate: round2(deterministicJitter(i, variant, 10)),
-      })),
-    ...blossoms.map(([dx, dy], i): WatercolorBlotch => ({
-      cx: dx,
-      cy: dy + 11,
-      rx: 15,
-      ry: 6.5,
-      fill: i % 2 === 0 ? c.foliageShadow : c.oliveCanopy,
-      opacity: 0.48,
-      rotate: round2(deterministicJitter(i + 20, variant, 12)),
-    })),
-  ];
+  const leafyClumpBlotches: WatercolorBlotch[] = isSunlit
+    ? [
+        ...foliageTufts
+          .filter((_, i) => i % 2 === 0)
+          .map(([tx, ty], i): WatercolorBlotch => ({
+            cx: tx,
+            cy: ty + 1,
+            rx: round2(18 + (i % 3) * 5),
+            ry: 6.5,
+            fill:
+              i % 3 === 0
+                ? c.dayFoliageMid
+                : i % 3 === 1
+                  ? c.dayMeadowMid
+                  : c.dayFoliageLit,
+            opacity: 0.54,
+            rotate: round2(deterministicJitter(i, variant, 10)),
+          })),
+        ...blossoms.map(([dx, dy], i): WatercolorBlotch => ({
+          cx: dx,
+          cy: dy + 11,
+          rx: 15,
+          ry: 6.5,
+          fill: i % 2 === 0 ? c.dayFoliageMid : c.dayMeadowMid,
+          opacity: 0.56,
+          rotate: round2(deterministicJitter(i + 20, variant, 12)),
+        })),
+      ]
+    : [
+        ...foliageTufts
+          .filter((_, i) => i % 2 === 0)
+          .map(([tx, ty], i): WatercolorBlotch => ({
+            cx: tx,
+            cy: ty + 1,
+            rx: round2(18 + (i % 3) * 5),
+            ry: 6.5,
+            fill: i % 3 === 0 ? c.foliageShadow : i % 3 === 1 ? c.oliveCanopy : c.grassNightDeep,
+            opacity: 0.42,
+            rotate: round2(deterministicJitter(i, variant, 10)),
+          })),
+        ...blossoms.map(([dx, dy], i): WatercolorBlotch => ({
+          cx: dx,
+          cy: dy + 11,
+          rx: 15,
+          ry: 6.5,
+          fill: i % 2 === 0 ? c.foliageShadow : c.oliveCanopy,
+          opacity: 0.48,
+          rotate: round2(deterministicJitter(i + 20, variant, 12)),
+        })),
+      ];
 
   // Expressive slanted hand-drawn pencil grass strokes scattered across foliage tufts
   const meadowGrassTufts: PencilGrassTuft[] = foliageTufts.map(([tx, ty], i) => {
@@ -232,7 +323,13 @@ export function renderClassicMeadowFlowers(options: PropRenderOptions): string {
       lean: round2(leanDir + breeze),
       groundDash: i % 2 === 0,
       pebbles: i % 3 === 0,
-      stroke: i % 2 === 0 ? c.xeroxInk : c.pencilOliveCharcoal,
+      stroke: isSunlit
+        ? i % 2 === 0
+          ? c.xeroxInkSoft
+          : c.pencilOliveCharcoal
+        : i % 2 === 0
+          ? c.xeroxInk
+          : c.pencilOliveCharcoal,
       opacity: 0.78,
       seed: variant * 17 + i * 5,
     };
@@ -363,22 +460,32 @@ export function renderClassicMeadowFlowers(options: PropRenderOptions): string {
  * Footprint: `~x: -180..190, y: -26..56`, respects `variant`.
  */
 export function renderClassicGrassPatch(options: PropRenderOptions): string {
-  const { frameIndex = 0, variant = 1 } = options;
+  const { frameIndex = 0, variant = 1, lit } = options;
+  const isSunlit = lit === true;
   const c = TOKENS.classicCel.colors;
 
   const mirror = variant % 2 === 0 ? -1 : 1;
   const j = (idx: number, amp: number): number =>
     round2(deterministicJitter(idx, variant, amp));
 
-  // 6 soft overlapping wet-on-wet watercolor ground washes (warm ochre-sage light + olive/teal shadow)
-  const groundBlotches: WatercolorBlotch[] = [
-    { cx: round2((-128 + j(1, 12)) * mirror), cy: 20, rx: 46, ry: 13, fill: c.foliageShadow, opacity: 0.36, rotate: -4 },
-    { cx: round2((-54 + j(2, 12)) * mirror), cy: 12, rx: 44, ry: 12, fill: c.ochreEarth, opacity: 0.24, rotate: 3 },
-    { cx: round2((12 + j(3, 12)) * mirror), cy: 32, rx: 52, ry: 13, fill: c.oliveCanopy, opacity: 0.34, rotate: -2 },
-    { cx: round2((78 + j(4, 12)) * mirror), cy: 16, rx: 44, ry: 12, fill: c.sageFoliage, opacity: 0.28, rotate: 4 },
-    { cx: round2((136 + j(5, 10)) * mirror), cy: 30, rx: 40, ry: 11, fill: c.grassNightDeep, opacity: 0.36, rotate: -5 },
-    { cx: round2((-16 + j(6, 14)) * mirror), cy: 22, rx: 38, ry: 10, fill: c.foliageRim, opacity: 0.22, rotate: 2 },
-  ];
+  // 6 soft overlapping wet-on-wet watercolor ground washes
+  const groundBlotches: WatercolorBlotch[] = isSunlit
+    ? [
+        { cx: round2((-128 + j(1, 12)) * mirror), cy: 20, rx: 46, ry: 13, fill: c.dayMeadowShadow, opacity: 0.42, rotate: -4 },
+        { cx: round2((-54 + j(2, 12)) * mirror), cy: 12, rx: 44, ry: 12, fill: c.ochreEarth, opacity: 0.34, rotate: 3 },
+        { cx: round2((12 + j(3, 12)) * mirror), cy: 32, rx: 52, ry: 13, fill: c.dayMeadowMid, opacity: 0.46, rotate: -2 },
+        { cx: round2((78 + j(4, 12)) * mirror), cy: 16, rx: 44, ry: 12, fill: c.dayMeadowLight, opacity: 0.48, rotate: 4 },
+        { cx: round2((136 + j(5, 10)) * mirror), cy: 30, rx: 40, ry: 11, fill: c.dayMeadowShadow, opacity: 0.4, rotate: -5 },
+        { cx: round2((-16 + j(6, 14)) * mirror), cy: 22, rx: 38, ry: 10, fill: c.dayMeadowLight, opacity: 0.42, rotate: 2 },
+      ]
+    : [
+        { cx: round2((-128 + j(1, 12)) * mirror), cy: 20, rx: 46, ry: 13, fill: c.foliageShadow, opacity: 0.36, rotate: -4 },
+        { cx: round2((-54 + j(2, 12)) * mirror), cy: 12, rx: 44, ry: 12, fill: c.ochreEarth, opacity: 0.24, rotate: 3 },
+        { cx: round2((12 + j(3, 12)) * mirror), cy: 32, rx: 52, ry: 13, fill: c.oliveCanopy, opacity: 0.34, rotate: -2 },
+        { cx: round2((78 + j(4, 12)) * mirror), cy: 16, rx: 44, ry: 12, fill: c.sageFoliage, opacity: 0.28, rotate: 4 },
+        { cx: round2((136 + j(5, 10)) * mirror), cy: 30, rx: 40, ry: 11, fill: c.grassNightDeep, opacity: 0.36, rotate: -5 },
+        { cx: round2((-16 + j(6, 14)) * mirror), cy: 22, rx: 38, ry: 10, fill: c.foliageRim, opacity: 0.22, rotate: 2 },
+      ];
 
   // 9 expressive, irregularly spaced Robin Hood pencil grass tuft clusters across the footprint
   const basePositions: ReadonlyArray<readonly [number, number, number, number]> = [
@@ -417,8 +524,16 @@ export function renderClassicGrassPatch(options: PropRenderOptions): string {
         lean: round2(baseLean + breeze),
         groundDash: true,
         pebbles: true,
-        stroke: idx % 3 === 0 ? c.xeroxInk : c.pencilOliveCharcoal,
-        opacity: round2(0.84 + (idx % 2) * 0.08),
+        stroke: isSunlit
+          ? idx % 3 === 0
+            ? c.xeroxInkSoft
+            : c.pencilOliveCharcoal
+          : idx % 3 === 0
+            ? c.xeroxInk
+            : c.pencilOliveCharcoal,
+        opacity: isSunlit
+          ? round2(0.78 + (idx % 2) * 0.08)
+          : round2(0.84 + (idx % 2) * 0.08),
         seed: variant * 19 + idx * 7,
       };
     }
@@ -435,8 +550,8 @@ export function renderClassicGrassPatch(options: PropRenderOptions): string {
       lean: round2(0.5 * mirror),
       groundDash: true,
       pebbles: true,
-      stroke: c.xeroxInk,
-      opacity: 0.78,
+      stroke: isSunlit ? c.pencilOliveCharcoal : c.xeroxInk,
+      opacity: isSunlit ? 0.74 : 0.78,
       seed: variant * 29 + 3,
     },
     {
@@ -448,8 +563,8 @@ export function renderClassicGrassPatch(options: PropRenderOptions): string {
       lean: round2(-0.42 * mirror),
       groundDash: true,
       pebbles: true,
-      stroke: c.xeroxInk,
-      opacity: 0.8,
+      stroke: isSunlit ? c.xeroxInkSoft : c.xeroxInk,
+      opacity: isSunlit ? 0.76 : 0.8,
       seed: variant * 29 + 7,
     },
     {
@@ -462,7 +577,7 @@ export function renderClassicGrassPatch(options: PropRenderOptions): string {
       groundDash: true,
       pebbles: true,
       stroke: c.xeroxInkSoft,
-      opacity: 0.74,
+      opacity: isSunlit ? 0.7 : 0.74,
       seed: variant * 29 + 11,
     },
   ];
@@ -477,20 +592,21 @@ export function renderClassicGrassPatch(options: PropRenderOptions): string {
       svgEl('g', { 'data-part': 'grass-ground-washes' }, [
         watercolorWashBlotches(groundBlotches, {
           seed: variant * 17 + 4,
-          opacity: 0.86,
+          opacity: isSunlit ? 0.9 : 0.86,
+          softWash: true,
         }),
       ]),
       svgEl('g', { 'data-part': 'grass-blades' }, [
         pencilGrassStrokes(primaryTufts, {
-          stroke: c.xeroxInk,
+          stroke: isSunlit ? c.pencilOliveCharcoal : c.xeroxInk,
           strokeWidth: 1.3,
-          opacity: 0.88,
+          opacity: isSunlit ? 0.84 : 0.88,
           seed: variant * 23 + 1,
         }),
         pencilGrassStrokes(accentTufts, {
-          stroke: c.pencilOliveCharcoal,
+          stroke: isSunlit ? c.xeroxInkSoft : c.pencilOliveCharcoal,
           strokeWidth: 1.1,
-          opacity: 0.8,
+          opacity: isSunlit ? 0.76 : 0.8,
           seed: variant * 31 + 5,
         }),
       ]),

@@ -111,7 +111,9 @@ export type PropKind =
   | 'christmas_tree'
   | 'victorian_desk'
   | 'snowy_window'
-  | 'falling_snow';
+  | 'falling_snow'
+  | 'garden_bench'
+  | 'firefly_lantern_jar';
 
 export type BubbleStyle = 'none' | 'speech' | 'thought';
 
