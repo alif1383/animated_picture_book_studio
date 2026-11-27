@@ -128,6 +128,205 @@ export function crayonPath(
   });
 }
 
+export interface CelStrokeOptions {
+  stroke?: string;
+  strokeWidth?: number;
+  dasharray?: string;
+  useXeroxFilter?: boolean;
+  opacity?: number;
+}
+
+/**
+ * Returns crisp 1970s–80s Xerox charcoal pencil-ink outline attributes from `TOKENS.classicCel`.
+ */
+export function celStrokeAttrs(options: CelStrokeOptions = {}): SvgAttrMap {
+  const {
+    stroke = TOKENS.classicCel.colors.xeroxInk,
+    strokeWidth = TOKENS.classicCel.strokes.xeroxMedium,
+    dasharray,
+    useXeroxFilter = false,
+    opacity,
+  } = options;
+
+  return {
+    stroke,
+    'stroke-width': strokeWidth,
+    'stroke-linecap': TOKENS.strokes.linecap,
+    'stroke-linejoin': TOKENS.strokes.linejoin,
+    'stroke-dasharray': dasharray,
+    filter: useXeroxFilter
+      ? svgUrl(TOKENS.classicCel.filters.ids.xeroxInk)
+      : undefined,
+    opacity,
+  };
+}
+
+/**
+ * Renders a classic opaque cel-painted `<path>` with crisp Xerox charcoal ink outline.
+ */
+export function celPath(
+  d: string,
+  fill: string,
+  options: CelStrokeOptions & { id?: string; clipPath?: string } = {}
+): string {
+  const { id, clipPath, ...strokeOpts } = options;
+  return svgEl('path', {
+    id,
+    d,
+    fill,
+    'clip-path': clipPath,
+    ...celStrokeAttrs(strokeOpts),
+  });
+}
+
+export interface CelShadedShapeOptions {
+  d: string;
+  baseFill: string;
+  shadowPaths?: string[];
+  shadowFill?: string;
+  shadowOpacity?: number;
+  highlightPaths?: string[];
+  highlightFill?: string;
+  highlightOpacity?: number;
+  clipId: string;
+  stroke?: string;
+  strokeWidth?: number;
+  id?: string;
+}
+
+/**
+ * Renders an authentic 2-tone cel-shaded shape:
+ * 1) solid opaque matte cel paint base,
+ * 2) crisp clipped cel shadow band(s) and optional rim/specular highlight(s),
+ * 3) clean Xerox charcoal ink outline drawn over top so internal paint seams stay crisp.
+ */
+export function celShadedShape(opts: CelShadedShapeOptions): string {
+  const {
+    d,
+    baseFill,
+    shadowPaths = [],
+    shadowFill,
+    shadowOpacity = 1,
+    highlightPaths = [],
+    highlightFill,
+    highlightOpacity = 0.85,
+    clipId,
+    stroke = TOKENS.classicCel.colors.xeroxInk,
+    strokeWidth = TOKENS.classicCel.strokes.xeroxMedium,
+    id,
+  } = opts;
+
+  const hasInterior =
+    (shadowPaths.length > 0 && shadowFill) ||
+    (highlightPaths.length > 0 && highlightFill);
+
+  if (!hasInterior) {
+    return celPath(d, baseFill, { id, stroke, strokeWidth });
+  }
+
+  const clipDef = svgEl('clipPath', { id: clipId }, svgEl('path', { d }));
+  const baseEl = svgEl('path', { d, fill: baseFill, stroke: 'none' });
+  const interiorEls: string[] = [];
+
+  if (shadowFill) {
+    for (const sp of shadowPaths) {
+      interiorEls.push(
+        svgEl('path', {
+          d: sp,
+          fill: shadowFill,
+          opacity: shadowOpacity < 1 ? shadowOpacity : undefined,
+          stroke: 'none',
+        })
+      );
+    }
+  }
+  if (highlightFill) {
+    for (const hp of highlightPaths) {
+      interiorEls.push(
+        svgEl('path', {
+          d: hp,
+          fill: highlightFill,
+          opacity: highlightOpacity < 1 ? highlightOpacity : undefined,
+          stroke: 'none',
+        })
+      );
+    }
+  }
+
+  const clippedInterior = svgEl(
+    'g',
+    { 'clip-path': svgUrl(clipId) },
+    interiorEls
+  );
+  const outlineEl =
+    stroke !== 'none' && strokeWidth > 0
+      ? svgEl('path', {
+          d,
+          fill: 'none',
+          ...celStrokeAttrs({ stroke, strokeWidth }),
+        })
+      : '';
+
+  return svgEl('g', { id }, [clipDef, baseEl, clippedInterior, outlineEl]);
+}
+
+/**
+ * Renders a painterly watercolor/gouache background wash path for `classic_cel` scenes.
+ */
+export function gouachePath(
+  d: string,
+  fill: string,
+  options: {
+    id?: string;
+    softEdge?: boolean;
+    stroke?: string;
+    strokeWidth?: number;
+    opacity?: number;
+  } = {}
+): string {
+  const {
+    id,
+    softEdge = true,
+    stroke = 'none',
+    strokeWidth = 0,
+    opacity,
+  } = options;
+  return svgEl('path', {
+    id,
+    d,
+    fill,
+    stroke,
+    'stroke-width': strokeWidth > 0 ? strokeWidth : undefined,
+    'stroke-linecap': strokeWidth > 0 ? TOKENS.strokes.linecap : undefined,
+    'stroke-linejoin': strokeWidth > 0 ? TOKENS.strokes.linejoin : undefined,
+    filter: softEdge
+      ? svgUrl(TOKENS.classicCel.filters.ids.gouacheWash)
+      : undefined,
+    opacity,
+  });
+}
+
+/**
+ * Renders a soft painted ground contact shadow beneath a foreground cel character or prop.
+ */
+export function celContactShadow(
+  cx: number,
+  cy: number,
+  rx: number,
+  ry: number,
+  opacity = 0.32
+): string {
+  return svgEl('ellipse', {
+    cx: round2(cx),
+    cy: round2(cy),
+    rx: round2(rx),
+    ry: round2(ry),
+    fill: TOKENS.classicCel.colors.contactShadow,
+    opacity: round2(opacity),
+    'data-part': 'cel-contact-shadow',
+  });
+}
+
 export interface TransformOptions {
   x?: number;
   y?: number;

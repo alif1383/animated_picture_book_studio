@@ -1,5 +1,6 @@
 import { TOKENS, svgUrl } from '../../theme/tokens';
 import {
+  celPath,
   crayonPath,
   crayonStrokeAttrs,
   round2,
@@ -9,19 +10,31 @@ import {
 import type { AnnotationNode } from '../../engine/schema';
 
 /**
- * Renders hand-drawn picture-book annotations:
- * - dashed pencil motion paths (`dashedPath`)
- * - plain hand-lettered text (`bubbleStyle: 'none'`)
- * - rounded hand-drawn speech bubbles with directional tail (`bubbleStyle: 'speech'`)
+ * Renders hand-drawn annotations in either Picture-Book Crayon or Classic Hand-Drawn Cel style:
+ * - dashed pencil/ink motion paths (`dashedPath`)
+ * - plain text (`bubbleStyle: 'none'`)
+ * - rounded speech bubbles with directional tail (`bubbleStyle: 'speech'`)
  * - scalloped cloud thought bubbles with trailing thought puffs (`bubbleStyle: 'thought'`)
  */
 export function renderAnnotation(node: Partial<AnnotationNode>): string {
-  const color = node.color ?? TOKENS.colors.charcoalOutline;
+  const isClassicCel = node.artStyle === 'classic_cel';
+  const color =
+    node.color ??
+    (isClassicCel
+      ? TOKENS.classicCel.colors.xeroxInk
+      : TOKENS.colors.charcoalOutline);
   const fontSize = node.fontSize ?? TOKENS.typography.sizeAnnotation;
   const bubbleStyle = node.bubbleStyle ?? 'none';
   const tailDirection = node.tailDirection ?? 'bottom-left';
-  const bubbleFill = node.bubbleFill ?? TOKENS.colors.paperWarm;
+  const bubbleFill =
+    node.bubbleFill ??
+    (isClassicCel
+      ? TOKENS.classicCel.colors.celBubbleFill
+      : TOKENS.colors.paperWarm);
   const anchorAtTailTip = node.anchorAtTailTip ?? false;
+  const fontFamily = isClassicCel
+    ? TOKENS.classicCel.typography.fontFamilyDialogue
+    : TOKENS.typography.fontFamilyHand;
   const parts: string[] = [];
 
   if (node.dashedPath) {
@@ -33,7 +46,9 @@ export function renderAnnotation(node: Partial<AnnotationNode>): string {
         'stroke-width': TOKENS.strokes.annotationPencil,
         'stroke-dasharray': TOKENS.strokes.dasharrayDashed,
         'stroke-linecap': 'round',
-        filter: svgUrl(TOKENS.filters.ids.crayonOutline),
+        filter: isClassicCel
+          ? undefined
+          : svgUrl(TOKENS.filters.ids.crayonOutline),
       })
     );
   }
@@ -172,14 +187,22 @@ export function renderAnnotation(node: Partial<AnnotationNode>): string {
               'data-bubble': 'speech',
               'data-tail-direction': tailDirection,
               'data-anchor-tail-tip': anchorAtTailTip ? 'true' : undefined,
+              filter: isClassicCel
+                ? svgUrl(TOKENS.classicCel.filters.ids.celDropShadow)
+                : undefined,
             },
             [
-              crayonPath(speechPath, bubbleFill, {
-                stroke: TOKENS.colors.charcoalOutline,
-                strokeWidth: TOKENS.strokes.outlineMedium,
-                useCrayonFilter: true,
-                paperUnderlay: true,
-              }),
+              isClassicCel
+                ? celPath(speechPath, bubbleFill, {
+                    stroke: TOKENS.classicCel.colors.xeroxInk,
+                    strokeWidth: TOKENS.classicCel.strokes.xeroxMedium,
+                  })
+                : crayonPath(speechPath, bubbleFill, {
+                    stroke: TOKENS.colors.charcoalOutline,
+                    strokeWidth: TOKENS.strokes.outlineMedium,
+                    useCrayonFilter: true,
+                    paperUnderlay: true,
+                  }),
             ]
           )
         );
@@ -286,15 +309,29 @@ export function renderAnnotation(node: Partial<AnnotationNode>): string {
               'data-bubble': 'thought',
               'data-tail-direction': tailDirection,
               'data-anchor-tail-tip': anchorAtTailTip ? 'true' : undefined,
-              filter: svgUrl(TOKENS.filters.ids.crayonStroke),
+              filter: isClassicCel
+                ? svgUrl(TOKENS.classicCel.filters.ids.celDropShadow)
+                : svgUrl(TOKENS.filters.ids.crayonStroke),
             },
             [
-              crayonPath(cloudPath, bubbleFill, {
-                stroke: TOKENS.colors.charcoalOutline,
-                strokeWidth: TOKENS.strokes.outlineMedium,
-                paperUnderlay: true,
-              }),
-              ...puffs,
+              isClassicCel
+                ? celPath(cloudPath, bubbleFill, {
+                    stroke: TOKENS.classicCel.colors.xeroxInk,
+                    strokeWidth: TOKENS.classicCel.strokes.xeroxMedium,
+                  })
+                : crayonPath(cloudPath, bubbleFill, {
+                    stroke: TOKENS.colors.charcoalOutline,
+                    strokeWidth: TOKENS.strokes.outlineMedium,
+                    paperUnderlay: true,
+                  }),
+              ...puffs.map((p) =>
+                isClassicCel
+                  ? p.replace(
+                      new RegExp(TOKENS.colors.charcoalOutline, 'g'),
+                      TOKENS.classicCel.colors.xeroxInk
+                    )
+                  : p
+              ),
             ]
           )
         );
@@ -311,11 +348,13 @@ export function renderAnnotation(node: Partial<AnnotationNode>): string {
               x: boxShiftX,
               y: round2(startY + i * lineHeight),
               'text-anchor': 'middle',
-              'font-family': TOKENS.typography.fontFamilyHand,
+              'font-family': fontFamily,
               'font-size': fontSize,
               'font-weight': 'bold',
               fill: color,
-              filter: svgUrl(TOKENS.filters.ids.crayonOutline),
+              filter: isClassicCel
+                ? undefined
+                : svgUrl(TOKENS.filters.ids.crayonOutline),
             },
             lines[i]
           )
@@ -330,11 +369,13 @@ export function renderAnnotation(node: Partial<AnnotationNode>): string {
             {
               x: 0,
               y: round2(i * lineHeight),
-              'font-family': TOKENS.typography.fontFamilyHand,
+              'font-family': fontFamily,
               'font-size': fontSize,
               'font-weight': 'bold',
               fill: color,
-              filter: svgUrl(TOKENS.filters.ids.crayonOutline),
+              filter: isClassicCel
+                ? undefined
+                : svgUrl(TOKENS.filters.ids.crayonOutline),
             },
             lines[i]
           )

@@ -173,7 +173,9 @@ export async function rasterizeSvgToCanvas(
     await new Promise<void>((resolve, reject) => {
       const img = new Image();
       img.onload = () => {
-        ctx.fillStyle = TOKENS.colors.paperWarm;
+        ctx.fillStyle = svgMarkup.includes('data-art-style="classic_cel"')
+          ? TOKENS.classicCel.colors.backdropDark
+          : TOKENS.colors.paperWarm;
         ctx.fillRect(0, 0, width, height);
         ctx.drawImage(img, 0, 0, width, height);
         resolve();
@@ -345,7 +347,7 @@ async function exportWithWebCodecsMp4Muxer(
 
   const mimeType = 'video/mp4';
   const avcCodec = preset.width >= 1920 ? 'avc1.420028' : 'avc1.42001f';
-  const containerFps = 30;
+  const containerFps = fps === 6 ? 30 : 24 % fps === 0 ? 24 : 30;
   const audioSampleRate = 48000;
 
   // Check if AudioEncoder + AudioData are supported and we have a soundEngine
@@ -506,11 +508,10 @@ async function exportWithWebCodecsMp4Muxer(
         lastQuantizedFrameIndex = clock.frameIndex;
         renderedSteppedFrames += 1;
 
-        const { svg } = evaluateAndRenderScene(
-          scene,
-          sceneTimeSec,
-          renderOptions
-        );
+        const { svg } = evaluateAndRenderScene(scene, sceneTimeSec, {
+          ...renderOptions,
+          fps,
+        });
         await rasterizeSvgToCanvas(svg, ctx, preset.width, preset.height);
 
         const progress = Math.max(
@@ -913,11 +914,10 @@ export async function exportSceneTo16x9Video(
         prevQuantizedTime = clock.quantizedTimeSec;
 
         isDrawingFrame = true;
-        const { svg } = evaluateAndRenderScene(
-          scene,
-          sceneTimeSec,
-          renderOptions
-        );
+        const { svg } = evaluateAndRenderScene(scene, sceneTimeSec, {
+          ...renderOptions,
+          fps,
+        });
         void rasterizeSvgToCanvas(
           svg,
           ctx,

@@ -5,17 +5,20 @@ import {
   svgUrl,
 } from '../theme/tokens';
 import { svgEl, round2 } from './svgUtils';
+import type { AnimationStyleId } from './schema';
 
 export interface FilterRenderOptions {
-  /** Quantized line-boil seed (1..6, updated at 6 FPS via clock.ts) */
+  /** Quantized line-boil seed (1..6, updated at scene FPS via clock.ts) */
   seed: number;
-  /** Toggle Layer 2 (#crayon-stroke / #crayon-outline displacement) for pipeline inspector */
+  /** Toggle Layer 2 (#crayon-stroke / #crayon-outline or #xerox-ink) for pipeline inspector */
   enableCrayonFilter?: boolean;
-  /** Toggle Layer 3 (cold-press paper grain & fleck mask) for pipeline inspector */
+  /** Toggle Layer 3 (cold-press paper grain or 35mm film grain composite) for pipeline inspector */
   enablePaperTexture?: boolean;
   /** Enable Vibrant Crayon Mode (boosted saturation, contrast, and luminous paper tooth) */
   vibrant?: boolean;
-  /** Additional dynamic <mask> definitions (e.g., stop-motion progressive fill masks) */
+  /** Animation rendering style ('crayon' default, or 'classic_cel') */
+  artStyle?: AnimationStyleId;
+  /** Additional dynamic <mask> / <gradient> definitions */
   extraDefs?: string[];
 }
 
@@ -546,14 +549,271 @@ export function renderEngineDefs(options: FilterRenderOptions): string {
   );
 
   const vibrant = options.vibrant ?? false;
+  const artStyle: AnimationStyleId = options.artStyle ?? 'crayon';
+  const extra = options.extraDefs ?? [];
+
+  if (artStyle === 'classic_cel') {
+    const celF = TOKENS.classicCel.filters;
+    const celIds = celF.ids;
+    const celColors = TOKENS.classicCel.colors;
+    const xeroxScale = enableCrayon ? celF.xerox.displacementScale : 0;
+    const gouacheScale = enableCrayon ? celF.gouache.displacementScale : 0;
+    const xeroxSeed = Math.max(1, Math.floor((seed - 1) / 2) + 1);
+
+    // Subtle organic 1970s–80s Xerox graphite ink texture (#xerox-ink)
+    const xeroxInkFilter = svgEl(
+      'filter',
+      {
+        id: celIds.xeroxInk,
+        x: '-4%',
+        y: '-4%',
+        width: '108%',
+        height: '108%',
+        'color-interpolation-filters': 'sRGB',
+      },
+      [
+        svgEl('feTurbulence', {
+          type: 'fractalNoise',
+          baseFrequency: celF.xerox.baseFrequency,
+          numOctaves: celF.xerox.numOctaves,
+          seed: xeroxSeed,
+          result: 'xeroxNoise',
+        }),
+        svgEl('feDisplacementMap', {
+          in: 'SourceGraphic',
+          in2: 'xeroxNoise',
+          scale: round2(xeroxScale),
+          xChannelSelector: 'R',
+          yChannelSelector: 'G',
+        }),
+      ]
+    );
+
+    // Painterly watercolor / gouache edge & pigment wash (#gouache-wash)
+    const gouacheWashFilter = svgEl(
+      'filter',
+      {
+        id: celIds.gouacheWash,
+        x: '-4%',
+        y: '-4%',
+        width: '108%',
+        height: '108%',
+        'color-interpolation-filters': 'sRGB',
+      },
+      [
+        svgEl('feTurbulence', {
+          type: 'fractalNoise',
+          baseFrequency: celF.gouache.baseFrequency,
+          numOctaves: celF.gouache.numOctaves,
+          seed: 7,
+          result: 'washNoise',
+        }),
+        svgEl('feDisplacementMap', {
+          in: 'SourceGraphic',
+          in2: 'washNoise',
+          scale: round2(gouacheScale),
+          xChannelSelector: 'R',
+          yChannelSelector: 'G',
+        }),
+      ]
+    );
+
+    // Subtle multiplane acetate cel separation shadow (#cel-drop-shadow)
+    const celDropShadowFilter = svgEl(
+      'filter',
+      {
+        id: celIds.celDropShadow,
+        x: '-12%',
+        y: '-12%',
+        width: '124%',
+        height: '124%',
+        'color-interpolation-filters': 'sRGB',
+      },
+      [
+        svgEl('feDropShadow', {
+          dx: 1.5,
+          dy: 2.2,
+          stdDeviation: 1.8,
+          'flood-color': celColors.contactShadow,
+          'flood-opacity': 0.28,
+        }),
+      ]
+    );
+
+    // Soft optical halation glow for practical lights, fireflies, moon & sparkles (#cel-soft-glow)
+    const celSoftGlowFilter = svgEl(
+      'filter',
+      {
+        id: celIds.celSoftGlow,
+        x: '-35%',
+        y: '-35%',
+        width: '170%',
+        height: '170%',
+        'color-interpolation-filters': 'sRGB',
+      },
+      [
+        svgEl('feGaussianBlur', {
+          in: 'SourceGraphic',
+          stdDeviation: 4.5,
+          result: 'blurred',
+        }),
+        svgEl('feMerge', {}, [
+          svgEl('feMergeNode', { in: 'blurred' }),
+          svgEl('feMergeNode', { in: 'SourceGraphic' }),
+        ]),
+      ]
+    );
+
+    // Warm 1970s–80s Eastmancolor / Technicolor theatrical print grade (#cel-grade)
+    const celGradeFilter = svgEl(
+      'filter',
+      {
+        id: celIds.celGrade,
+        x: '0%',
+        y: '0%',
+        width: '100%',
+        height: '100%',
+        'color-interpolation-filters': 'sRGB',
+      },
+      [
+        svgEl('feColorMatrix', {
+          in: 'SourceGraphic',
+          type: 'saturate',
+          values: '1.12',
+          result: 'celSat',
+        }),
+        svgEl(
+          'feComponentTransfer',
+          {
+            in: 'celSat',
+            result: 'celOut',
+          },
+          [
+            svgEl('feFuncR', { type: 'linear', slope: 1.03, intercept: 0.008 }),
+            svgEl('feFuncG', { type: 'linear', slope: 1.01, intercept: 0.004 }),
+            svgEl('feFuncB', { type: 'linear', slope: 0.99, intercept: 0.006 }),
+          ]
+        ),
+      ]
+    );
+
+    // Fine 35mm celluloid film grain (#film-grain)
+    const filmGrainFilter = svgEl(
+      'filter',
+      {
+        id: celIds.filmGrain,
+        x: '0%',
+        y: '0%',
+        width: '100%',
+        height: '100%',
+        'color-interpolation-filters': 'sRGB',
+      },
+      [
+        svgEl('feTurbulence', {
+          type: 'fractalNoise',
+          baseFrequency: celF.filmGrain.baseFrequency,
+          numOctaves: celF.filmGrain.numOctaves,
+          seed: seed + 30,
+          result: 'grain',
+        }),
+        svgEl('feColorMatrix', {
+          in: 'grain',
+          type: 'saturate',
+          values: '0',
+        }),
+      ]
+    );
+
+    // Warm theatrical optical vignette (#film-vignette)
+    const filmVignetteGrad = svgEl(
+      'radialGradient',
+      {
+        id: celIds.filmVignette,
+        cx: '50%',
+        cy: '50%',
+        r: '68%',
+        fx: '50%',
+        fy: '50%',
+      },
+      [
+        svgEl('stop', { offset: '52%', 'stop-color': celColors.backdropDark, 'stop-opacity': 0 }),
+        svgEl('stop', { offset: '84%', 'stop-color': celColors.backdropDark, 'stop-opacity': 0.16 }),
+        svgEl('stop', {
+          offset: '100%',
+          'stop-color': celColors.backdropDark,
+          'stop-opacity': celF.filmGrain.vignetteEdgeOpacity,
+        }),
+      ]
+    );
+
+    // Fallback opaque flat cel patterns for any legacy crayon material referenced in a classic_cel scene
+    const fallbackCelPatterns = [
+      svgEl(
+        'pattern',
+        { id: TOKENS.patterns.markerIndigoNight, width: 16, height: 16, patternUnits: 'userSpaceOnUse' },
+        svgEl('rect', { width: 16, height: 16, fill: celColors.nightSkyMid })
+      ),
+      ...DRY_CRAYON_SPECS.map((spec) =>
+        svgEl(
+          'pattern',
+          { id: spec.id, width: 16, height: 16, patternUnits: 'userSpaceOnUse' },
+          svgEl('rect', { width: 16, height: 16, fill: spec.baseColor })
+        )
+      ),
+      renderPaperFleckPattern(),
+    ];
+
+    // Alias #crayon-stroke and #crayon-outline cleanly to subtle Xerox scale so fallback assets look harmonious
+    const fallbackCrayonStroke = svgEl(
+      'filter',
+      {
+        id: TOKENS.filters.ids.crayonStroke,
+        x: '-4%',
+        y: '-4%',
+        width: '108%',
+        height: '108%',
+        'color-interpolation-filters': 'sRGB',
+      },
+      [
+        svgEl('feTurbulence', {
+          type: 'fractalNoise',
+          baseFrequency: celF.xerox.baseFrequency,
+          numOctaves: celF.xerox.numOctaves,
+          seed: xeroxSeed,
+          result: 'xNoise',
+        }),
+        svgEl('feDisplacementMap', {
+          in: 'SourceGraphic',
+          in2: 'xNoise',
+          scale: round2(xeroxScale),
+          xChannelSelector: 'R',
+          yChannelSelector: 'G',
+        }),
+      ]
+    );
+
+    return svgEl('defs', {}, [
+      xeroxInkFilter,
+      gouacheWashFilter,
+      celDropShadowFilter,
+      celSoftGlowFilter,
+      celGradeFilter,
+      filmGrainFilter,
+      filmVignetteGrad,
+      fallbackCrayonStroke,
+      crayonOutlineFilter,
+      paperTextureFilter,
+      vibrantGradeFilter,
+      ...fallbackCelPatterns,
+      ...extra,
+    ]);
+  }
 
   const patterns = [
     renderMarkerIndigoPattern(),
     ...DRY_CRAYON_SPECS.map((spec) => renderDryCrayonPattern(spec, vibrant)),
     renderPaperFleckPattern(),
   ];
-
-  const extra = options.extraDefs ?? [];
 
   return svgEl('defs', {}, [
     crayonStrokeFilter,
@@ -629,6 +889,51 @@ export function renderPaperCompositeLayer(
         filter: svgUrl(TOKENS.filters.ids.crayonOutline),
         opacity: 0.65,
       }),
+    ]
+  );
+}
+
+/**
+ * Generates Layer 3 for `classic_cel` mode:
+ * Subtle 35mm celluloid film grain + soft optical cinema gate vignette.
+ * Replaces cold-press paper multiply and deckle borders with theatrical animation film finish.
+ */
+export function renderFilmCompositeLayer(
+  width: number = TOKENS.canvas.width,
+  height: number = TOKENS.canvas.height,
+  enableFilmGrain = true
+): string {
+  const celIds = TOKENS.classicCel.filters.ids;
+  const grainOpacity = TOKENS.classicCel.filters.filmGrain.overlayOpacity;
+
+  return svgEl(
+    'g',
+    {
+      id: 'layer-3-film-composite',
+      'data-enabled': enableFilmGrain ? 'true' : 'false',
+      style: 'pointer-events: none; isolation: isolate;',
+    },
+    [
+      // 1. Subtle 35mm optical vignette framing the painted cel canvas
+      svgEl('rect', {
+        x: 0,
+        y: 0,
+        width,
+        height,
+        fill: svgUrl(celIds.filmVignette),
+      }),
+      // 2. Fine celluloid film grain (optional toggle)
+      enableFilmGrain
+        ? svgEl('rect', {
+            x: 0,
+            y: 0,
+            width,
+            height,
+            filter: svgUrl(celIds.filmGrain),
+            style: 'mix-blend-mode: overlay;',
+            opacity: grainOpacity,
+          })
+        : '',
     ]
   );
 }

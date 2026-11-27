@@ -1,8 +1,13 @@
-import type { CharacterKind, CharacterState } from '../../engine/schema';
+import type {
+  AnimationStyleId,
+  CharacterKind,
+  CharacterState,
+} from '../../engine/schema';
 
 export interface CharacterRenderOptions {
   kind: CharacterKind;
   state: CharacterState;
+  artStyle?: AnimationStyleId;
   frameIndex?: number;
   wearingNightcap?: boolean;
   holdingSheep?: boolean;

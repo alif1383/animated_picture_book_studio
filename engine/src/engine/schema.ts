@@ -5,8 +5,26 @@ import type {
   BookFramePhase,
   EvaluatedBookFrameState,
 } from './bookFrame';
+import type {
+  TheatricalFrameConfig,
+  TheatricalFramePhase,
+  EvaluatedTheatricalFrameState,
+} from './theatricalFrame';
 
 export type { BookFrameConfig, BookFramePhase, EvaluatedBookFrameState };
+export type {
+  TheatricalFrameConfig,
+  TheatricalFramePhase,
+  EvaluatedTheatricalFrameState,
+};
+
+/**
+ * Supported animation rendering styles in the Studio engine:
+ * - `'crayon'`: Warm 6 FPS wax-crayon / oil-pastel children's picture-book stop-motion
+ * - `'classic_cel'`: 1970s–1980s classic hand-drawn cel animation (painted watercolor/gouache
+ *   backgrounds + Xerox charcoal ink outlines + 2-tone cel shading + 12 FPS on-twos motion)
+ */
+export type AnimationStyleId = 'crayon' | 'classic_cel';
 
 export type CharacterKind =
   | 'little_girl'
@@ -118,6 +136,25 @@ export interface BaseSceneNode extends ProgressiveFillOptions {
   visible?: boolean;
 }
 
+export interface BackgroundPatchGradientStop {
+  offset: string;
+  color: string;
+  opacity?: number;
+}
+
+export interface BackgroundPatchGradient {
+  id?: string;
+  type: 'linear' | 'radial';
+  x1?: string;
+  y1?: string;
+  x2?: string;
+  y2?: string;
+  cx?: string;
+  cy?: string;
+  r?: string;
+  stops: BackgroundPatchGradientStop[];
+}
+
 export interface BackgroundPatchNode extends BaseSceneNode {
   type: 'background_patch';
   /** SVG path `d` string defining the organic partial-bleed vignette patch */
@@ -126,7 +163,13 @@ export interface BackgroundPatchNode extends BaseSceneNode {
   bounds: FillMaskBounds;
   /** Centralized pattern fill key (e.g., 'markerIndigoNight', 'crayonGrassGreen') */
   material: CrayonMaterialId;
-  /** Optional charcoal outline toggle (default: false for soft marker/pastel vignette patches) */
+  /** Optional direct fill color override (used by classic_cel painted gouache washes) */
+  fill?: string;
+  /** Optional painterly linear/radial gradient for classic_cel watercolor/gouache backdrops */
+  gradient?: BackgroundPatchGradient;
+  /** Optional soft watercolor/gouache edge filter in classic_cel mode (default: true) */
+  softEdge?: boolean;
+  /** Optional charcoal/sepia outline toggle (default: false for soft marker/pastel/gouache patches) */
   outlined?: boolean;
 }
 
@@ -195,6 +238,8 @@ export interface AnnotationNode extends BaseSceneNode {
   bubbleFill?: ColorToken | string;
   /** When true, local (0, 0) is the tip of the bottom tail/puff directly above a character's head */
   anchorAtTailTip?: boolean;
+  /** Optional rendering style override ('crayon' | 'classic_cel') */
+  artStyle?: AnimationStyleId;
 }
 
 export type SceneNode =
@@ -315,14 +360,22 @@ export interface SceneDefinition {
   width?: number;
   height?: number;
   fps?: number;
+  /** Animation rendering style ('crayon' default, or 'classic_cel' for 1970s–80s hand-drawn cel animation) */
+  artStyle?: AnimationStyleId;
   /** Whether this scene defaults to Vibrant Crayon Mode */
   vibrantMode?: boolean;
   /**
    * Optional Storybook Cover Opening & Ending/Credits Book-Frame configuration.
    * Scenes can customize cover/ending titles, credits, cover color, and open/close
-   * durations, or set `false` to disable the book frame (enabled by default).
+   * durations, or set `false` to disable the book frame (enabled by default in `'crayon'` style;
+   * disabled by default in `'classic_cel'` style unless explicitly enabled).
    */
   bookFrame?: BookFrameConfig | boolean;
+  /**
+   * Optional Classic Theatrical Opening/Closing Framing (circular iris or fade with gold-serif
+   * title & "The End" cards). Enabled by default for `'classic_cel'` scenes.
+   */
+  theatricalFrame?: TheatricalFrameConfig | boolean;
   acts: StoryAct[];
   nodes: SceneNode[];
   timeline: TimelineTrack[];

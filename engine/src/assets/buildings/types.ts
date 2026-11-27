@@ -1,7 +1,8 @@
-import type { BuildingKind } from '../../engine/schema';
+import type { AnimationStyleId, BuildingKind } from '../../engine/schema';
 
 export interface BuildingRenderOptions {
   kind: BuildingKind;
+  artStyle?: AnimationStyleId;
   x?: number;
   y?: number;
   scale?: number;

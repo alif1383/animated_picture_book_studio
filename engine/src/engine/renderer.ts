@@ -1,8 +1,9 @@
 import { TOKENS, svgUrl } from '../theme/tokens';
-import { crayonPath, round2, svgEl } from './svgUtils';
+import { crayonPath, gouachePath, round2, svgEl } from './svgUtils';
 import {
   getPatternFill,
   renderEngineDefs,
+  renderFilmCompositeLayer,
   renderPaperCompositeLayer,
 } from './filters';
 import { FillMaskBounds, FillMaskStyle, renderFillMaskDef } from './fillMask';
@@ -16,7 +17,17 @@ import {
   evaluateBookFrameState,
   renderBookFrameOverlay,
 } from './bookFrame';
-import type { SceneDefinition, SceneNode } from './schema';
+import {
+  EvaluatedTheatricalFrameState,
+  evaluateTheatricalFrameState,
+  renderTheatricalFrameOverlay,
+} from './theatricalFrame';
+import type {
+  AnimationStyleId,
+  BackgroundPatchGradient,
+  SceneDefinition,
+  SceneNode,
+} from './schema';
 import { renderBuilding } from '../assets/buildings';
 import {
   getCharacterSpeechAnchor,
@@ -25,16 +36,22 @@ import {
 import { renderAnnotation, renderProp } from '../assets/objects';
 
 export interface RenderSceneOptions {
-  /** Toggle Layer 2 (#crayon-stroke / #crayon-outline displacement) */
+  /** Override animation rendering style ('crayon' | 'classic_cel') */
+  artStyle?: AnimationStyleId;
+  /** Optional FPS override for stepped clock evaluation */
+  fps?: number;
+  /** Toggle Layer 2 (#crayon-stroke / #crayon-outline or #xerox-ink displacement) */
   enableCrayonFilter?: boolean;
-  /** Toggle Layer 3 (cold-press watercolor paper grain & dry-brush fleck composite) */
+  /** Toggle Layer 3 (cold-press watercolor paper grain or 35mm film grain composite) */
   enablePaperTexture?: boolean;
   /** Toggle progressive stop-motion fill masks (when false, renders fills at 100%) */
   enableProgressiveFill?: boolean;
   /** Toggle Vibrant Crayon Mode (high-saturation pigments & luminous paper tooth) */
   vibrant?: boolean;
-  /** Toggle Storybook Cover Opening & Ending/Credits Book-Frame (default: true unless scene.bookFrame is false) */
+  /** Toggle Storybook Cover Opening & Ending/Credits Book-Frame (default: true in crayon, false in classic_cel) */
   enableBookFrame?: boolean;
+  /** Toggle Classic Theatrical Opening/Closing Iris & Title Card (default: true in classic_cel, false in crayon) */
+  enableTheatricalFrame?: boolean;
   /** Optional override for progressive fill progress across all nodes (for studio scrubber) */
   overrideFillProgress?: number;
 }
@@ -43,6 +60,7 @@ export interface RenderedSceneOutput {
   svg: string;
   frame: EvaluatedSceneFrame;
   bookFrame: EvaluatedBookFrameState;
+  theatricalFrame?: EvaluatedTheatricalFrameState;
 }
 
 function defaultBoundsForNode(node: SceneNode): FillMaskBounds {
@@ -88,14 +106,61 @@ function defaultFillStyleForNode(node: SceneNode): FillMaskStyle {
   return 'diagonal-strokes';
 }
 
+function renderBackgroundGradientDef(
+  id: string,
+  grad: BackgroundPatchGradient
+): string {
+  const stops = grad.stops.map((s) =>
+    svgEl('stop', {
+      offset: s.offset,
+      'stop-color': s.color,
+      'stop-opacity': s.opacity,
+    })
+  );
+  if (grad.type === 'radial') {
+    return svgEl(
+      'radialGradient',
+      {
+        id,
+        cx: grad.cx ?? '50%',
+        cy: grad.cy ?? '50%',
+        r: grad.r ?? '60%',
+      },
+      stops
+    );
+  }
+  return svgEl(
+    'linearGradient',
+    {
+      id,
+      x1: grad.x1 ?? '0%',
+      y1: grad.y1 ?? '0%',
+      x2: grad.x2 ?? '0%',
+      y2: grad.y2 ?? '100%',
+    },
+    stops
+  );
+}
+
 function renderSingleNode(
   node: SceneNode,
   state: EvaluatedNodeState,
   frameIndex: number,
-  fillMaskUrl?: string
+  artStyle: AnimationStyleId,
+  fillMaskUrl?: string,
+  gradientFillUrl?: string
 ): string {
   switch (node.type) {
     case 'background_patch': {
+      if (artStyle === 'classic_cel') {
+        const fill =
+          gradientFillUrl ?? node.fill ?? getPatternFill(node.material);
+        return gouachePath(node.d, fill, {
+          softEdge: node.softEdge ?? true,
+          stroke: node.outlined ? TOKENS.classicCel.colors.xeroxInkSoft : 'none',
+          strokeWidth: node.outlined ? TOKENS.classicCel.strokes.xeroxFine : 0,
+        });
+      }
       return crayonPath(node.d, getPatternFill(node.material), {
         stroke: node.outlined ? TOKENS.colors.charcoalOutline : 'none',
         strokeWidth: node.outlined ? TOKENS.strokes.outlineMedium : 0,
@@ -106,6 +171,7 @@ function renderSingleNode(
     case 'building': {
       return renderBuilding({
         kind: node.kind,
+        artStyle,
         windowLit: state.windowLit ?? node.windowLit,
         showLadder: node.showLadder,
         signText: node.signText,
@@ -118,6 +184,7 @@ function renderSingleNode(
       return renderCharacter({
         kind: node.kind,
         state: state.state ?? node.state,
+        artStyle,
         frameIndex,
         wearingNightcap: state.wearingNightcap ?? node.wearingNightcap,
         holdingSheep: state.holdingSheep ?? node.holdingSheep,
@@ -132,6 +199,7 @@ function renderSingleNode(
     case 'prop': {
       return renderProp({
         kind: node.kind,
+        artStyle,
         frameIndex,
         variant: node.variant,
         count: state.count ?? node.count,
@@ -148,35 +216,62 @@ function renderSingleNode(
         bubbleStyle: state.bubbleStyle ?? node.bubbleStyle,
         tailDirection: state.tailDirection ?? node.tailDirection,
         bubbleFill: node.bubbleFill,
+        artStyle: node.artStyle ?? artStyle,
       });
     }
   }
 }
 
 /**
- * Evaluates the declarative SceneDefinition at `timeSec` (quantized to the 6 FPS clock)
- * and renders the complete SVG string through the Mandatory 3-Layer Render Pipeline:
- * 1. Layer 1: Base Scene Layer (warm cold-press paper `#F4EFE6` + sorted 2D cutouts & patches)
- * 2. Layer 2: SVG Crayon & Line-Boil Filter (`#crayon-stroke` with stepped `boilSeed` + progressive fill masks)
- * 3. Layer 3: Physical Paper Composite Layer (`mix-blend-mode: multiply` cold-press grain + dry-brush flecks)
+ * Evaluates the declarative SceneDefinition at `timeSec` and renders the complete SVG string
+ * through either:
+ * - `'crayon'` (default): 3-Layer Picture-Book Crayon pipeline (6 FPS, `#crayon-stroke`, cold-press paper, `bookFrame`)
+ * - `'classic_cel'`: 1970s–80s Classic Hand-Drawn Cel pipeline (12 FPS on twos, painted gouache backgrounds,
+ *   Xerox charcoal ink & 2-tone cel characters, `theatricalFrame` iris/fade, 35mm film grain composite)
  */
 export function evaluateAndRenderScene(
   scene: SceneDefinition,
   timeSec: number,
   options: RenderSceneOptions = {}
 ): RenderedSceneOutput {
+  const artStyle: AnimationStyleId = options.artStyle ?? scene.artStyle ?? 'crayon';
+  const isClassicCel = artStyle === 'classic_cel';
+
   const enableCrayonFilter = options.enableCrayonFilter ?? true;
   const enablePaperTexture = options.enablePaperTexture ?? true;
-  const enableProgressiveFill = options.enableProgressiveFill ?? true;
+  const enableProgressiveFill =
+    options.enableProgressiveFill ?? (isClassicCel ? false : true);
   const vibrant = options.vibrant ?? scene.vibrantMode ?? false;
-  const defaultBookFrameEnabled =
-    scene.bookFrame === false
-      ? false
-      : typeof scene.bookFrame === 'object' && scene.bookFrame !== null
-      ? scene.bookFrame.enabled ?? true
-      : true;
+
+  const defaultBookFrameEnabled = isClassicCel
+    ? scene.bookFrame === true ||
+      (typeof scene.bookFrame === 'object' &&
+        scene.bookFrame !== null &&
+        scene.bookFrame.enabled === true)
+    : scene.bookFrame === false
+    ? false
+    : typeof scene.bookFrame === 'object' && scene.bookFrame !== null
+    ? scene.bookFrame.enabled ?? true
+    : true;
   const enableBookFrame = options.enableBookFrame ?? defaultBookFrameEnabled;
-  const fps = scene.fps ?? TOKENS.timing.fps;
+
+  const defaultTheatricalEnabled = isClassicCel
+    ? scene.theatricalFrame === false
+      ? false
+      : typeof scene.theatricalFrame === 'object' && scene.theatricalFrame !== null
+      ? scene.theatricalFrame.enabled ?? true
+      : true
+    : scene.theatricalFrame === true ||
+      (typeof scene.theatricalFrame === 'object' &&
+        scene.theatricalFrame !== null &&
+        scene.theatricalFrame.enabled === true);
+  const enableTheatricalFrame =
+    options.enableTheatricalFrame ?? defaultTheatricalEnabled;
+
+  const defaultFps = isClassicCel
+    ? TOKENS.classicCel.timing.fps
+    : TOKENS.timing.fps;
+  const fps = options.fps ?? scene.fps ?? defaultFps;
 
   const frame = evaluateSceneAtTime(scene, timeSec, fps);
   const bookState = evaluateBookFrameState({
@@ -187,6 +282,15 @@ export function evaluateAndRenderScene(
     sceneTitle: scene.title,
     sceneSubtitle: scene.subtitle,
   });
+  const theatricalState = evaluateTheatricalFrameState({
+    timeSec,
+    durationSec: scene.durationSec,
+    fps,
+    config: enableTheatricalFrame ? scene.theatricalFrame : false,
+    sceneTitle: scene.title,
+    sceneSubtitle: scene.subtitle,
+  });
+
   const width = scene.width ?? TOKENS.canvas.width;
   const height = scene.height ?? TOKENS.canvas.height;
 
@@ -233,11 +337,25 @@ export function evaluateAndRenderScene(
       fillMaskUrl = svgUrl(maskId);
     }
 
+    let gradientFillUrl: string | undefined;
+    if (
+      isClassicCel &&
+      node.type === 'background_patch' &&
+      node.gradient &&
+      node.gradient.stops.length > 0
+    ) {
+      const gradId = node.gradient.id ?? `bg-grad-${node.id}`;
+      extraMaskDefs.push(renderBackgroundGradientDef(gradId, node.gradient));
+      gradientFillUrl = svgUrl(gradId);
+    }
+
     const innerMarkup = renderSingleNode(
       node,
       nodeState,
       frame.clock.frameIndex,
-      fillMaskUrl
+      artStyle,
+      fillMaskUrl,
+      gradientFillUrl
     );
 
     renderedNodeGroups.push(
@@ -285,6 +403,7 @@ export function evaluateAndRenderScene(
               bubbleStyle: speechStyle,
               tailDirection: speechTail,
               anchorAtTailTip: true,
+              artStyle,
             })
           )
         );
@@ -292,23 +411,26 @@ export function evaluateAndRenderScene(
     }
   }
 
-  // Layer 2 Filter & Pattern Defs (with stepped line-boil seed)
+  // Layer 2 Filter & Pattern Defs
   const defsMarkup = renderEngineDefs({
     seed: frame.clock.boilSeed,
     enableCrayonFilter,
     enablePaperTexture,
     vibrant,
+    artStyle,
     extraDefs: extraMaskDefs,
   });
 
   const innerSceneMarkup = [
     svgEl('rect', {
-      id: 'paper-base',
+      id: isClassicCel ? 'cel-backdrop' : 'paper-base',
       x: 0,
       y: 0,
       width,
       height,
-      fill: TOKENS.colors.paperWarm,
+      fill: isClassicCel
+        ? TOKENS.classicCel.colors.backdropDark
+        : TOKENS.colors.paperWarm,
     }),
     svgEl(
       'g',
@@ -320,7 +442,7 @@ export function evaluateAndRenderScene(
     ),
   ].join('');
 
-  const layer1Content = renderBookFrameOverlay({
+  const bookWrapped = renderBookFrameOverlay({
     innerSceneMarkup,
     width,
     height,
@@ -328,23 +450,32 @@ export function evaluateAndRenderScene(
     frameIndex: frame.clock.frameIndex,
   });
 
-  // Layer 1 Base Scene Layer (warm cold-press watercolor paper + camera-rigged cutouts + optional book frame)
+  const layer1Content = renderTheatricalFrameOverlay({
+    innerSceneMarkup: bookWrapped,
+    width,
+    height,
+    theatricalState,
+  });
+
+  const layer1Filter = isClassicCel
+    ? svgUrl(TOKENS.classicCel.filters.ids.celGrade)
+    : vibrant
+    ? svgUrl(TOKENS.filters.ids.vibrantGrade)
+    : undefined;
+
   const layer1BaseScene = svgEl(
     'g',
     {
       id: 'layer-1-base-scene',
-      filter: vibrant ? svgUrl(TOKENS.filters.ids.vibrantGrade) : undefined,
+      filter: layer1Filter,
     },
     layer1Content
   );
 
-  // Layer 3 Physical Paper Composite Layer
-  const layer3Paper = renderPaperCompositeLayer(
-    width,
-    height,
-    enablePaperTexture,
-    vibrant
-  );
+  // Layer 3 Composite: Paper tooth for crayon, 35mm film grain & vignette for classic_cel
+  const layer3Composite = isClassicCel
+    ? renderFilmCompositeLayer(width, height, enablePaperTexture)
+    : renderPaperCompositeLayer(width, height, enablePaperTexture, vibrant);
 
   const svg = svgEl(
     'svg',
@@ -353,16 +484,20 @@ export function evaluateAndRenderScene(
       viewBox: `0 0 ${width} ${height}`,
       width: '100%',
       height: '100%',
+      'data-art-style': artStyle,
       'data-frame': frame.clock.frameIndex,
       'data-boil-seed': frame.clock.boilSeed,
       'data-quantized-time': frame.clock.quantizedTimeSec,
       'data-vibrant': vibrant ? 'true' : 'false',
       'data-book-phase': bookState.enabled ? bookState.phase : 'disabled',
+      'data-theatrical-phase': theatricalState.enabled
+        ? theatricalState.phase
+        : 'disabled',
     },
-    [defsMarkup, layer1BaseScene, layer3Paper]
+    [defsMarkup, layer1BaseScene, layer3Composite]
   );
 
-  return { svg, frame, bookFrame: bookState };
+  return { svg, frame, bookFrame: bookState, theatricalFrame: theatricalState };
 }
 
 /**

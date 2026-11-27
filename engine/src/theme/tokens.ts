@@ -159,6 +159,150 @@ export const TOKENS = {
     sizeSoundEffect: 22,
     sizeCaption: 24,
   },
+
+  /**
+   * Classic 1970s–1980s Hand-Drawn Cel Animation Design Tokens
+   * Inspired by theatrical Xerox ink-and-paint & painted watercolor/gouache backgrounds
+   * (e.g., Disney's Robin Hood 1973 & Mickey's Christmas Carol 1983).
+   */
+  classicCel: {
+    colors: {
+      // Theatre screen & Xerox pencil-ink outlines (warm dark charcoal, never pure #000000)
+      backdropDark: '#121014',
+      xeroxInk: '#1D1815',
+      xeroxInkSoft: '#3A312A',
+      celCream: '#FAF6EC',
+      celBubbleFill: '#FBF7EE',
+      goldTitle: '#F2CC6B',
+      goldTitleShadow: '#4A3418',
+      contactShadow: '#121824',
+
+      // Painted Gouache Night Sky & Atmospheric Horizon
+      nightSkyZenith: '#111A36',
+      nightSkyMid: '#1C2E54',
+      nightSkyHorizon: '#2D4B68',
+      nightMistTeal: '#43697D',
+      nightDeepGlade: '#0E1C2E',
+      nightGladeMid: '#183047',
+      nightGladeHorizon: '#284A5E',
+
+      // Painted Woodland & Garden Foliage (Robin Hood / Christmas Carol earthy gouache)
+      foliageShadow: '#162A2C',
+      foliageMid: '#24453E',
+      foliageLit: '#3D6A54',
+      foliageRim: '#6A9477',
+      grassNightDeep: '#1E3A32',
+      grassNightMid: '#2C5141',
+      grassNightLit: '#4A7557',
+      gladeGlow: '#3F6E61',
+
+      // Painted Earthen Lane & Stonework
+      pathEarthDark: '#4D4037',
+      pathEarthMid: '#766352',
+      pathMoonlit: '#A6937A',
+      stoneBase: '#8E919C',
+      stoneLight: '#C8CBD0',
+      stoneShadow: '#515666',
+      waterDeep: '#193257',
+      waterMid: '#2E5882',
+      waterHighlight: '#96C9DF',
+
+      // Warm Practical Lighting (Lantern, Cottage Windows, Fireflies)
+      warmAmberCore: '#FFF1B8',
+      warmAmberGlow: '#F7C95C',
+      warmAmberWash: '#E69B3A',
+      warmAmberDeep: '#B86A24',
+
+      // Painted Timber & Cottage Gouache
+      woodDark: '#3E271C',
+      woodMid: '#68442E',
+      woodLit: '#8E6242',
+      cottagePlaster: '#C9A878',
+      cottagePlasterShadow: '#7E6A58',
+      cottageRoof: '#8C3A2B',
+      cottageRoofShadow: '#54221B',
+      cottageShutter: '#3B666B',
+      cottageShutterShadow: '#264549',
+      ironDark: '#23262E',
+      ironHighlight: '#5A6475',
+
+      // Mochi Classic Cel Paint Ramp (base + shadow + moonlight rim)
+      mochiFurBase: '#5A78A8',
+      mochiFurShadow: '#354970',
+      mochiFurRim: '#A5C1E3',
+      mochiStripe: '#263454',
+      mochiCream: '#EFE6D5',
+      mochiCreamShadow: '#C7BDAE',
+      mochiEarPink: '#D98E8E',
+      mochiNose: '#C8646E',
+      mochiTongue: '#D96A73',
+      mochiMouthInner: '#5C2229',
+      mochiCollar: '#B8342A',
+      mochiCollarShadow: '#7A1E18',
+      mochiGold: '#E8B838',
+      mochiGoldHighlight: '#FBE592',
+      mochiEyeIris: '#D99B38',
+
+      // Classic Painted Moon & Velvet Nightcap
+      moonCream: '#F7E098',
+      moonAmber: '#E3B04B',
+      moonShadow: '#C48E35',
+      moonCrater: '#B87F2C',
+      nightcapBlue: '#48749E',
+      nightcapShadow: '#2B4B6B',
+      nightcapStripe: '#DCE6EE',
+      starGlow: '#FFF4C4',
+      flowerCream: '#F2E8D0',
+      flowerBlue: '#8EB8D9',
+      flowerRose: '#D68B96',
+    },
+
+    strokes: {
+      xeroxHeavy: 2.4,
+      xeroxMedium: 1.85,
+      xeroxFine: 1.2,
+      sketchLine: 0.95,
+    },
+
+    timing: {
+      fps: 12, // Classic Disney "animated on twos" (12 drawings/sec inside 24fps film)
+      frameDurationMs: 1000 / 12,
+      containerFps: 24,
+    },
+
+    filters: {
+      ids: {
+        xeroxInk: 'xerox-ink',
+        gouacheWash: 'gouache-wash',
+        celDropShadow: 'cel-drop-shadow',
+        celSoftGlow: 'cel-soft-glow',
+        celGrade: 'cel-grade',
+        filmGrain: 'film-grain',
+        filmVignette: 'film-vignette',
+      },
+      xerox: {
+        baseFrequency: '0.075 0.085',
+        numOctaves: 2,
+        displacementScale: 0.55,
+      },
+      gouache: {
+        baseFrequency: '0.032 0.042',
+        numOctaves: 3,
+        displacementScale: 1.2,
+      },
+      filmGrain: {
+        baseFrequency: 0.68,
+        numOctaves: 2,
+        overlayOpacity: 0.075,
+        vignetteEdgeOpacity: 0.34,
+      },
+    },
+
+    typography: {
+      fontFamilySerif: '"Georgia", "Palatino Linotype", "Book Antiqua", serif',
+      fontFamilyDialogue: '"Trebuchet MS", "Georgia", serif',
+    },
+  },
 } as const;
 
 export type ThemeTokens = typeof TOKENS;
