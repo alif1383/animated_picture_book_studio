@@ -238,8 +238,8 @@ describe("Barnaby's Christmas Hearth — Classic Cel Winter Short (classic-chris
     expect(litHearth).toContain('data-lit="true"');
   });
 
-  it('renders all 3 zones (A -> B -> C), hearth cold-to-lit ignition, theatrical opening/closing, and zero #crayon-stroke', () => {
-    const sampleTimes = [1.2, 6.0, 11.1, 13.5, 19.5, 25.5, 31.5, 36.1, 40.5, 46.8];
+  it('renders all 3 zones (A -> B -> C), scaled-up Zone B interior (>= 1.65), hearth ignition, speaking:true lip-sync with ZERO speech bubbles, and zero #crayon-stroke', () => {
+    const sampleTimes = [1.2, 6.0, 11.1, 13.5, 18.5, 19.5, 25.5, 31.0, 31.5, 36.1, 40.5, 46.8];
 
     for (const t of sampleTimes) {
       const out = evaluateAndRenderScene(CLASSIC_CHRISTMAS_HEARTH_SCENE, t);
@@ -253,6 +253,9 @@ describe("Barnaby's Christmas Hearth — Classic Cel Winter Short (classic-chris
       expect(out.svg).toContain('id="film-grain"');
       expect(out.bookFrame.enabled).toBe(false);
 
+      // ZERO comic speech bubbles anywhere in Barnaby's Christmas Hearth
+      expect(out.svg).not.toContain('data-character-speech');
+
       const bodySvg = out.svg.split('</defs>')[1] ?? out.svg;
       expect(bodySvg).not.toContain('crayon-stroke');
       expect(bodySvg).not.toContain('pat-crayon-');
@@ -265,7 +268,7 @@ describe("Barnaby's Christmas Hearth — Classic Cel Winter Short (classic-chris
     expect(opening.svg).toContain('id="theatrical-opening-title"');
     expect(opening.svg).toContain("Barnaby's Christmas Hearth");
 
-    // Zone A (t = 6.0s): snowy cottages, snowfall, Pippin walking +X, Barnaby hidden, hearth/tree absent
+    // Zone A (t = 6.0s): snowy cottages, snowfall, Pippin walking +X, Barnaby hidden, silent mouths
     const zoneA = evaluateAndRenderScene(CLASSIC_CHRISTMAS_HEARTH_SCENE, 6.0);
     expect(zoneA.svg).toContain('data-building="snowy_cottage"');
     expect(zoneA.svg).toContain('data-prop="falling_snow"');
@@ -273,42 +276,77 @@ describe("Barnaby's Christmas Hearth — Classic Cel Winter Short (classic-chris
     expect(zoneA.svg).not.toContain('data-character="old_badger"');
     expect(zoneA.svg).not.toContain('data-prop="hearth_fireplace"');
     expect(zoneA.svg).not.toContain('data-prop="christmas_tree"');
+    expect(zoneA.svg).not.toContain('data-speaking-mouth="true"');
 
-    // Zone B cold hearth + Barnaby grumpy speaking (t = 19.5s)
+    // Zone B intimate interior scales (>= 1.65) + Pippin speaking mouth active at t=13.5s & t=25.5s
+    const evalZoneBPippin1 = evaluateSceneAtTime(
+      CLASSIC_CHRISTMAS_HEARTH_SCENE,
+      13.5,
+      12
+    );
+    expect(evalZoneBPippin1.nodes['zb-window']?.scale).toBeGreaterThanOrEqual(1.65);
+    expect(evalZoneBPippin1.nodes['zb-fireplace']?.scale).toBeGreaterThanOrEqual(1.65);
+    expect(evalZoneBPippin1.nodes['zb-desk']?.scale).toBeGreaterThanOrEqual(1.65);
+    expect(evalZoneBPippin1.nodes['barnaby-badger']?.scale).toBeGreaterThanOrEqual(1.65);
+    expect(evalZoneBPippin1.nodes['pippin-squirrel']?.scale).toBeGreaterThanOrEqual(1.65);
+    expect(evalZoneBPippin1.nodes['bramble-robin']?.scale).toBeGreaterThanOrEqual(1.65);
+    expect(evalZoneBPippin1.nodes['pippin-squirrel']?.speaking).toBe(true);
+    expect(evalZoneBPippin1.nodes['barnaby-badger']?.speaking).toBe(false);
+
+    const pippin1Svg = evaluateAndRenderScene(
+      CLASSIC_CHRISTMAS_HEARTH_SCENE,
+      13.5
+    ).svg;
+    expect(pippin1Svg).toContain('data-speaking-mouth="true"');
+    const pippin2Svg = evaluateAndRenderScene(
+      CLASSIC_CHRISTMAS_HEARTH_SCENE,
+      25.5
+    ).svg;
+    expect(pippin2Svg).toContain('data-speaking-mouth="true"');
+
+    // Silent gap between dialogue lines (t = 16.4s): no speaking mouth active
+    const silentGapSvg = evaluateAndRenderScene(
+      CLASSIC_CHRISTMAS_HEARTH_SCENE,
+      16.4
+    ).svg;
+    expect(silentGapSvg).not.toContain('data-speaking-mouth="true"');
+
+    // Zone B cold hearth + Barnaby grumpy speaking via speaking:true (t = 18.5s)
     const evalZoneBCold = evaluateSceneAtTime(
       CLASSIC_CHRISTMAS_HEARTH_SCENE,
-      19.5,
+      18.5,
       12
     );
     expect(evalZoneBCold.nodes['zb-fireplace']?.lit).toBe(false);
     expect(evalZoneBCold.nodes['barnaby-badger']?.state).toBe('grumpy');
-    expect(evalZoneBCold.nodes['barnaby-badger']?.speechText).toBe(
-      'Bah! Cold toes and bells!'
-    );
+    expect(evalZoneBCold.nodes['barnaby-badger']?.speaking).toBe(true);
+    expect(evalZoneBCold.nodes['barnaby-badger']?.speechText ?? '').toBe('');
 
     const zoneBCold = evaluateAndRenderScene(
       CLASSIC_CHRISTMAS_HEARTH_SCENE,
-      19.5
+      18.5
     );
+    expect(zoneBCold.svg).toContain('data-speaking-mouth="true"');
     expect(zoneBCold.svg).toContain('data-prop="hearth_fireplace"');
     expect(zoneBCold.svg).toContain('data-prop="snowy_window"');
     expect(zoneBCold.svg).toContain('data-prop="victorian_desk"');
     expect(zoneBCold.svg).not.toContain('data-building="snowy_cottage"');
     expect(zoneBCold.svg).not.toContain('data-prop="christmas_tree"');
 
-    // Zone B lit hearth + Barnaby joyful speaking (t = 31.5s)
+    // Zone B lit hearth + Barnaby joyful speaking via speaking:true (t = 31.0s)
     const evalZoneBLit = evaluateSceneAtTime(
       CLASSIC_CHRISTMAS_HEARTH_SCENE,
-      31.5,
+      31.0,
       12
     );
     expect(evalZoneBLit.nodes['zb-fireplace']?.lit).toBe(true);
     expect(evalZoneBLit.nodes['barnaby-badger']?.state).toBe('waving');
-    expect(evalZoneBLit.nodes['barnaby-badger']?.speechText).toBe(
-      'Bless my whiskers! Merry Xmas!'
-    );
+    expect(evalZoneBLit.nodes['barnaby-badger']?.speaking).toBe(true);
+    expect(
+      evaluateAndRenderScene(CLASSIC_CHRISTMAS_HEARTH_SCENE, 31.0).svg
+    ).toContain('data-speaking-mouth="true"');
 
-    // Zone C starlit square + glowing Christmas tree + all 3 characters (t = 40.5s)
+    // Zone C starlit square + glowing Christmas tree + all 3 characters + silent mouths (t = 40.5s)
     const zoneC = evaluateAndRenderScene(CLASSIC_CHRISTMAS_HEARTH_SCENE, 40.5);
     expect(zoneC.svg).toContain('data-prop="christmas_tree"');
     expect(zoneC.svg).toContain('data-building="snowy_cottage"');
@@ -318,6 +356,7 @@ describe("Barnaby's Christmas Hearth — Classic Cel Winter Short (classic-chris
     expect(zoneC.svg).toContain('data-character="snow_robin"');
     expect(zoneC.svg).not.toContain('data-prop="hearth_fireplace"');
     expect(zoneC.svg).not.toContain('data-prop="victorian_desk"');
+    expect(zoneC.svg).not.toContain('data-speaking-mouth="true"');
 
     // Closing theatrical iris + "The End" card (t = 46.8s)
     const closing = evaluateAndRenderScene(CLASSIC_CHRISTMAS_HEARTH_SCENE, 46.8);

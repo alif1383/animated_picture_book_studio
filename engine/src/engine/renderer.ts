@@ -226,7 +226,9 @@ function renderSingleNode(
         wearingFloatie: state.wearingFloatie ?? node.wearingFloatie,
         floatieVariant: state.floatieVariant ?? node.floatieVariant,
         mounted: state.mounted ?? node.mounted,
-        isSpeaking: activeSpeechText.length > 0 && activeSpeechStyle !== 'thought',
+        isSpeaking:
+          Boolean(state.speaking ?? node.speaking) ||
+          (activeSpeechText.length > 0 && activeSpeechStyle !== 'thought'),
         fillMask: fillMaskUrl,
       });
     }

@@ -211,6 +211,8 @@ export interface CharacterNode extends BaseSceneNode {
   floatieVariant?: number;
   /** Knight & Soldier option: whether riding on horseback (default: true) or on foot (false) */
   mounted?: boolean;
+  /** Optional silent-bubble-free lip-sync toggle (drives animated speaking mouth without a speech bubble) */
+  speaking?: boolean;
   /** Optional speech or thought bubble text anchored directly above this character's head */
   speechText?: string;
   /** Style of the character-attached bubble ('speech' | 'thought', default: 'speech') */
@@ -280,6 +282,7 @@ export interface NodeKeyframe {
   wearingFloatie?: boolean;
   floatieVariant?: number;
   mounted?: boolean;
+  speaking?: boolean;
   speechText?: string;
   speechStyle?: 'speech' | 'thought';
   speechTail?: 'bottom-center' | 'bottom-left' | 'bottom-right';
