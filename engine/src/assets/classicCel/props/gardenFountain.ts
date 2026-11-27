@@ -5,10 +5,12 @@ import {
   celPath,
   celShadedShape,
   deterministicJitter,
-  gouacheDabWash,
   gouachePath,
+  pencilFoliageScribbles,
+  pencilGrassStrokes,
   round2,
   svgEl,
+  watercolorWashBlotches,
   xeroxSketchStroke,
 } from '../../../engine/svgUtils';
 import type { PropRenderOptions } from '../../props/types';
@@ -35,7 +37,7 @@ const CLASSIC_FIREFLY_SPECS: readonly ClassicFireflySpec[] = [
     periodX: 28,
     periodY: 16,
     phase: 0,
-    washR: 7.5,
+    washR: 7.8,
     coreR: 2.8,
   },
   {
@@ -46,7 +48,7 @@ const CLASSIC_FIREFLY_SPECS: readonly ClassicFireflySpec[] = [
     periodX: 32,
     periodY: 20,
     phase: 6,
-    washR: 8.0,
+    washR: 8.4,
     coreR: 3.0,
   },
   {
@@ -57,7 +59,7 @@ const CLASSIC_FIREFLY_SPECS: readonly ClassicFireflySpec[] = [
     periodX: 26,
     periodY: 18,
     phase: 11,
-    washR: 7.2,
+    washR: 7.4,
     coreR: 2.7,
   },
   {
@@ -68,7 +70,7 @@ const CLASSIC_FIREFLY_SPECS: readonly ClassicFireflySpec[] = [
     periodX: 24,
     periodY: 16,
     phase: 4,
-    washR: 7.4,
+    washR: 7.6,
     coreR: 2.8,
   },
   {
@@ -79,19 +81,21 @@ const CLASSIC_FIREFLY_SPECS: readonly ClassicFireflySpec[] = [
     periodX: 24,
     periodY: 18,
     phase: 15,
-    washR: 7.4,
+    washR: 7.6,
     coreR: 2.8,
   },
 ];
 
 /**
  * Renders the Classic 1970s–1980s Disney weathered painted stone garden fountain
- * (`'garden_fountain'`) with mottled gouache stonework (`gouacheDabWash`), sketchy
- * hand-inked stone cracks & carved moldings (`xeroxSketchStroke`), flat painterly
- * indigo water pool with thin hand-inked parchment ripples & painted ochre crescent
- * reflection, crisp hand-inked cel water arcs & droplets (zero digital blur!), and
- * 5 painted cream-gold firefly specks with tiny soft warm watercolor wash halos &
- * 2-frame hand-inked flight trails when `lit: true` (zero neon bokeh orbs!).
+ * (`'garden_fountain'`) with clipped wet-on-wet stone weathering washes
+ * (`watercolorWashBlotches`), sketchy hand-inked stone cracks & carved moldings
+ * (`xeroxSketchStroke`), flat painterly indigo water pool with wet-on-wet depth
+ * shifts, thin hand-inked parchment ripples & painted ochre crescent reflection,
+ * crisp hand-inked cel water arcs & droplets (zero digital blur!), blotchy watercolor
+ * moss cushions with `pencilFoliageScribbles` & `pencilGrassStrokes` tufts, and
+ * 5 painted cream-gold firefly specks with warm painterly `watercolorWashBlotches`
+ * glow dabs & 2-frame hand-inked flight trails when `lit: true`.
  *
  * Local origin `(0, 0)` at ground contact center of the stone pedestal base.
  * Local bounds: `~x: -92..92, y: -144..8`.
@@ -126,7 +130,6 @@ export function renderClassicGardenFountain(options: PropRenderOptions): string 
   const waterD =
     'M -62 -79 C -62 -85.5, -34 -88.5, 0 -88.5 C 34 -88.5, 62 -85.5, 62 -79 C 62 -73, 34 -70.5, 0 -70.5 C -34 -70.5, -62 -73, -62 -79 Z';
 
-  // Local clip paths keep weathered stone & water gouache washes strictly within carved planes
   const clipDefs = svgEl('defs', {}, [
     svgEl('clipPath', { id: plinthClipId }, svgEl('path', { d: plinthD })),
     svgEl('clipPath', { id: pedestalClipId }, svgEl('path', { d: pedestalD })),
@@ -138,17 +141,17 @@ export function renderClassicGardenFountain(options: PropRenderOptions): string 
   // 1. Ground Contact Shadow & Weathered Painted Stone Plinth (`data-part="stone-base"`)
   const stoneBase = svgEl('g', { 'data-part': 'stone-base' }, [
     celContactShadow(0, 2.8, 63, 6.0, 0.38),
-    // Lower stone plinth flat gouache base + clipped stone mottling
     gouachePath(plinthD, c.stoneBase, { softEdge: false }),
     svgEl('g', { 'clip-path': svgUrl(plinthClipId) }, [
-      gouacheDabWash(
+      watercolorWashBlotches(
         [
-          { cx: -28, cy: -5, rx: 22, ry: 7, fill: c.stoneLight, opacity: 0.62 },
-          { cx: -4, cy: -4, rx: 18, ry: 6, fill: c.boardToothWarm, opacity: 0.32 },
-          { cx: 26, cy: -2, rx: 24, ry: 9, fill: c.stoneShadow, opacity: 0.72 },
-          { cx: 0, cy: 4, rx: 46, ry: 4.5, fill: c.stoneShadow, opacity: 0.62 },
+          { cx: -28, cy: -5, rx: 24, ry: 8, fill: c.stoneLight, opacity: 0.65 },
+          { cx: -4, cy: -4, rx: 20, ry: 7, fill: c.boardToothWarm, opacity: 0.38 },
+          { cx: 26, cy: -2, rx: 26, ry: 10, fill: c.stoneShadow, opacity: 0.74 },
+          { cx: 0, cy: 4, rx: 48, ry: 5.0, fill: c.stoneShadow, opacity: 0.64 },
+          { cx: -34, cy: 2, rx: 14, ry: 5.0, fill: c.oliveCanopy, opacity: 0.28 },
         ],
-        { fill: c.stoneBase, wetEdgeOpacity: 0.16, softEdge: true, seed: 83 }
+        { seed: 83 }
       ),
     ]),
     xeroxSketchStroke(plinthD, {
@@ -157,7 +160,6 @@ export function renderClassicGardenFountain(options: PropRenderOptions): string 
       opacity: 0.92,
       feather: true,
     }),
-    // Upper stepped stone plinth ledge
     celShadedShape({
       d: 'M -36 -9 C -37 -16, -31 -20, -24 -20 L 24 -20 C 31 -20, 37 -16, 36 -9 C 31 -6, -31 -6, -36 -9 Z',
       baseFill: c.stoneBase,
@@ -171,7 +173,6 @@ export function renderClassicGardenFountain(options: PropRenderOptions): string 
       stroke: c.xeroxInk,
       strokeWidth: s.xeroxMedium,
     }),
-    // Sketchy sepia-ink carved masonry seams & stone weathering cracks
     xeroxSketchStroke(
       'M -24 -10 L -22 -2 M 18 -10 L 21 -2 M -34 -14 Q 0 -11, 34 -14 M -7 -19 L -6 -13 M -39 -5 L -33 -3',
       {
@@ -187,16 +188,15 @@ export function renderClassicGardenFountain(options: PropRenderOptions): string 
   const stonePedestal = svgEl('g', { 'data-part': 'stone-pedestal' }, [
     gouachePath(pedestalD, c.stoneBase, { softEdge: false }),
     svgEl('g', { 'clip-path': svgUrl(pedestalClipId) }, [
-      gouacheDabWash(
+      watercolorWashBlotches(
         [
-          { cx: -14, cy: -38, rx: 10, ry: 22, fill: c.stoneLight, opacity: 0.65 },
-          { cx: -2, cy: -32, rx: 12, ry: 16, fill: c.boardToothWarm, opacity: 0.28 },
-          { cx: 14, cy: -38, rx: 13, ry: 24, fill: c.stoneShadow, opacity: 0.78 },
-          { cx: 0, cy: -58, rx: 24, ry: 7, fill: c.stoneShadow, opacity: 0.72 },
-          // Subtle aged moss patina dab in carved waist
-          { cx: -5, cy: -42, rx: 9, ry: 6, fill: c.oliveCanopy, opacity: 0.32 },
+          { cx: -14, cy: -38, rx: 12, ry: 24, fill: c.stoneLight, opacity: 0.68 },
+          { cx: -2, cy: -32, rx: 14, ry: 18, fill: c.boardToothWarm, opacity: 0.34 },
+          { cx: 14, cy: -38, rx: 15, ry: 26, fill: c.stoneShadow, opacity: 0.8 },
+          { cx: 0, cy: -58, rx: 26, ry: 8, fill: c.stoneShadow, opacity: 0.74 },
+          { cx: -5, cy: -42, rx: 11, ry: 7, fill: c.oliveCanopy, opacity: 0.36 },
         ],
-        { fill: c.stoneBase, wetEdgeOpacity: 0.18, softEdge: true, seed: 89 }
+        { seed: 89 }
       ),
     ]),
     xeroxSketchStroke(pedestalD, {
@@ -205,7 +205,6 @@ export function renderClassicGardenFountain(options: PropRenderOptions): string 
       opacity: 0.92,
       feather: true,
     }),
-    // Sketchy vertical flutes & weathered stone cracks
     xeroxSketchStroke(
       'M -8 -20 C -6 -32, -6 -48, -9 -58 M 0 -19 C 1 -32, 1 -48, 0 -58 M 9 -20 C 7 -32, 7 -48, 10 -58 M -17 -26 L -12 -25 M 11 -35 L 15 -34',
       {
@@ -215,7 +214,6 @@ export function renderClassicGardenFountain(options: PropRenderOptions): string 
         opacity: 0.75,
       }
     ),
-    // Sculpted stone collar molding supporting the wide basin
     celPath(
       'M -30 -59 C -32 -65, -24 -68, 0 -68 C 24 -68, 32 -65, 30 -59 C 22 -55, -22 -55, -30 -59 Z',
       c.stoneBase,
@@ -225,17 +223,17 @@ export function renderClassicGardenFountain(options: PropRenderOptions): string 
 
   // 3. Wide Carved Stone Basin & Weathered Rim (`data-part="stone-basin"`)
   const stoneBasin = svgEl('g', { 'data-part': 'stone-basin' }, [
-    // Carved saucer under-bowl
     gouachePath(underBowlD, c.stoneBase, { softEdge: false }),
     svgEl('g', { 'clip-path': svgUrl(basinClipId) }, [
-      gouacheDabWash(
+      watercolorWashBlotches(
         [
-          { cx: -38, cy: -70, rx: 28, ry: 11, fill: c.stoneLight, opacity: 0.45 },
-          { cx: 12, cy: -64, rx: 46, ry: 14, fill: c.stoneShadow, opacity: 0.76 },
-          { cx: 36, cy: -68, rx: 32, ry: 12, fill: c.nightSkyMid, opacity: 0.35 },
-          { cx: -20, cy: -62, rx: 14, ry: 6, fill: c.oliveCanopy, opacity: 0.28 },
+          { cx: -38, cy: -70, rx: 32, ry: 12, fill: c.stoneLight, opacity: 0.5 },
+          { cx: 12, cy: -64, rx: 50, ry: 15, fill: c.stoneShadow, opacity: 0.78 },
+          { cx: 36, cy: -68, rx: 34, ry: 13, fill: c.nightSkyMid, opacity: 0.38 },
+          { cx: -20, cy: -62, rx: 16, ry: 7, fill: c.oliveCanopy, opacity: 0.34 },
+          { cx: 18, cy: -62, rx: 14, ry: 6, fill: c.boardToothWarm, opacity: 0.24 },
         ],
-        { fill: c.stoneShadow, wetEdgeOpacity: 0.16, softEdge: true, seed: 97 }
+        { seed: 97 }
       ),
     ]),
     xeroxSketchStroke(underBowlD, {
@@ -244,7 +242,6 @@ export function renderClassicGardenFountain(options: PropRenderOptions): string 
       opacity: 0.92,
       feather: true,
     }),
-    // Hand-inked carved gadrooning ribs radiating around bowl exterior
     xeroxSketchStroke(
       'M -52 -72 Q -46 -64, -38 -62 M -30 -70 Q -26 -62, -20 -59 M -10 -69 Q -9 -61, -7 -58 M 10 -69 Q 9 -61, 7 -58 M 30 -70 Q 26 -62, 20 -59 M 52 -72 Q 46 -64, 38 -62',
       {
@@ -254,16 +251,15 @@ export function renderClassicGardenFountain(options: PropRenderOptions): string 
         opacity: 0.76,
       }
     ),
-    // Outer wide carved stone basin lip / rim
     gouachePath(rimD, c.stoneBase, { softEdge: false }),
     svgEl('g', { 'clip-path': svgUrl(rimClipId) }, [
-      gouacheDabWash(
+      watercolorWashBlotches(
         [
-          { cx: -36, cy: -80, rx: 38, ry: 13, fill: c.stoneLight, opacity: 0.65 },
-          { cx: -12, cy: -84, rx: 28, ry: 10, fill: c.boardToothWarm, opacity: 0.34 },
-          { cx: 38, cy: -78, rx: 38, ry: 14, fill: c.stoneShadow, opacity: 0.62 },
+          { cx: -36, cy: -80, rx: 42, ry: 14, fill: c.stoneLight, opacity: 0.68 },
+          { cx: -12, cy: -84, rx: 30, ry: 11, fill: c.boardToothWarm, opacity: 0.38 },
+          { cx: 38, cy: -78, rx: 42, ry: 15, fill: c.stoneShadow, opacity: 0.66 },
         ],
-        { fill: c.stoneBase, wetEdgeOpacity: 0.14, softEdge: true, seed: 101 }
+        { seed: 101 }
       ),
     ]),
     xeroxSketchStroke(rimD, {
@@ -272,7 +268,6 @@ export function renderClassicGardenFountain(options: PropRenderOptions): string 
       opacity: 0.92,
       feather: true,
     }),
-    // Recessed inner carved stone rim wall
     celPath(
       'M -65 -80 C -65 -87, -36 -90, 0 -90 C 36 -90, 65 -87, 65 -80 C 65 -73, 36 -70, 0 -70 C -36 -70, -65 -73, -65 -80 Z',
       c.stoneShadow,
@@ -300,21 +295,20 @@ export function renderClassicGardenFountain(options: PropRenderOptions): string 
   const xeroxFilter = svgUrl(TOKENS.classicCel.filters.ids.xeroxInk);
 
   const moonlitWater = svgEl('g', { 'data-part': 'moonlit-water' }, [
-    // Flat painterly indigo water pool with soft mid-indigo gouache dab inside
     celPath(waterD, c.waterDeep, {
       stroke: c.xeroxInkSoft,
       strokeWidth: s.xeroxFine,
     }),
     svgEl('g', { 'clip-path': svgUrl(waterClipId) }, [
-      gouacheDabWash(
+      watercolorWashBlotches(
         [
-          { cx: -12, cy: -80, rx: 36, ry: 7.5, fill: c.waterMid, opacity: 0.62 },
-          { cx: 24, cy: -78, rx: 26, ry: 6.0, fill: c.slateBlue, opacity: 0.34 },
+          { cx: -14, cy: -80, rx: 38, ry: 8.5, fill: c.waterMid, opacity: 0.64 },
+          { cx: 24, cy: -78, rx: 28, ry: 6.5, fill: c.slateBlue, opacity: 0.36 },
+          { cx: 0, cy: -85, rx: 44, ry: 5.0, fill: c.nightSkyZenith, opacity: 0.32 },
         ],
-        { fill: c.waterMid, wetEdgeOpacity: 0.12, softEdge: true, seed: 107 }
+        { seed: 107 }
       ),
     ]),
-    // Thin hand-inked parchment/cream water shimmer lines
     xeroxSketchStroke(
       `M ${round2(-48 + shimmerShift * 0.5)} -81.5 Q ${round2(-30 + shimmerShift)} -83.2, ${round2(-15 + shimmerShift * 0.4)} -81.2 M ${round2(16 - shimmerShift * 0.5)} -82.0 Q ${round2(34 - shimmerShift)} -83.6, ${round2(48 - shimmerShift * 0.5)} -81.2 M ${round2(10 + shimmerShift * 0.5)} -74.8 Q ${round2(28 + shimmerShift)} -73.4, ${round2(44 + shimmerShift * 0.4)} -75.2`,
       {
@@ -324,7 +318,6 @@ export function renderClassicGardenFountain(options: PropRenderOptions): string 
         opacity: 0.68,
       }
     ),
-    // Expanding thin hand-inked white/parchment concentric water ripple rings (12 FPS)
     svgEl('ellipse', {
       cx: 0,
       cy: -79,
@@ -360,7 +353,6 @@ export function renderClassicGardenFountain(options: PropRenderOptions): string 
       filter: xeroxFilter,
       opacity: round2(0.55 * (1 - rippleC * 0.85)),
     }),
-    // Delicate splash ripple rings at jet landing spots
     svgEl('ellipse', {
       cx: -32,
       cy: -79,
@@ -382,7 +374,7 @@ export function renderClassicGardenFountain(options: PropRenderOptions): string 
       opacity: round2(0.68 * (1 - rippleA * 0.8)),
     }),
 
-    // Painted ochre/parchment crescent reflection (`data-part="moon-reflection"`, NO digital blur!)
+    // Painted ochre/parchment crescent reflection (`data-part="moon-reflection"`)
     svgEl('g', { 'data-part': 'moon-reflection' }, [
       svgEl('path', {
         d: `M ${round2(moonCx + 3.6)} ${round2(moonCy - 4.4)} C ${round2(moonCx - 3.6)} ${round2(moonCy - 4.2)}, ${round2(moonCx - 5.2)} ${round2(moonCy + 2.8)}, ${round2(moonCx + 3.8)} ${round2(moonCy + 3.6)} C ${round2(moonCx - 0.6)} ${round2(moonCy + 1.8)}, ${round2(moonCx - 0.8)} ${round2(moonCy - 2.2)}, ${round2(moonCx + 3.6)} ${round2(moonCy - 4.4)} Z`,
@@ -392,7 +384,6 @@ export function renderClassicGardenFountain(options: PropRenderOptions): string 
         'stroke-linejoin': 'round',
         opacity: 0.92,
       }),
-      // Broken hand-painted ochre reflection strokes below crescent
       xeroxSketchStroke(
         `M ${round2(moonCx - 5.2)} ${round2(moonCy + 5.0)} Q ${moonCx} ${round2(moonCy + 5.7)}, ${round2(moonCx + 5.4)} ${round2(moonCy + 5.0)} M ${round2(moonCx - 3.0)} ${round2(moonCy + 6.9)} Q ${moonCx} ${round2(moonCy + 7.4)}, ${round2(moonCx + 3.2)} ${round2(moonCy + 6.9)}`,
         {
@@ -402,7 +393,6 @@ export function renderClassicGardenFountain(options: PropRenderOptions): string 
           opacity: 0.78,
         }
       ),
-      // Tiny painted parchment starlight pinprick glints on water
       svgEl('circle', {
         cx: round2(36 - shimmerShift * 0.35),
         cy: -77.8,
@@ -432,7 +422,6 @@ export function renderClassicGardenFountain(options: PropRenderOptions): string 
     const endX = dir * 32;
     const endY = -79;
 
-    // Crisp hand-inked flat cel water arc (zero digital blur!)
     waterStreams.push(
       svgEl('path', {
         d: `M ${startX} ${startY} Q ${ctrlX} ${ctrlY}, ${endX} ${endY}`,
@@ -456,7 +445,6 @@ export function renderClassicGardenFountain(options: PropRenderOptions): string 
       })
     );
 
-    // 4 crisp hand-inked cel water pearls travelling along each parabolic arc at 12 FPS
     for (let d = 0; d < 4; d++) {
       const t = steppedLoopProgress(
         frameIndex,
@@ -481,7 +469,6 @@ export function renderClassicGardenFountain(options: PropRenderOptions): string 
       );
     }
 
-    // Crisp cel splash droplets leaping where each water jet lands
     const splashT1 = steppedLoopProgress(frameIndex, 10, dir === 1 ? 3 : 8);
     const splashT2 = steppedLoopProgress(frameIndex, 10, dir === 1 ? 8 : 3);
     waterStreams.push(
@@ -504,7 +491,6 @@ export function renderClassicGardenFountain(options: PropRenderOptions): string 
     );
   }
 
-  // Crisp central cel water crown bead popping above the stone lily bud
   const crownLift = Math.abs(steppedOscillate(frameIndex, 12, 3.5, variant));
   waterStreams.push(
     svgEl('ellipse', {
@@ -552,29 +538,34 @@ export function renderClassicGardenFountain(options: PropRenderOptions): string 
     svgEl('g', { 'data-part': 'water-droplets' }, waterStreams),
   ]);
 
-  // 6. Dappled Watercolor Moss Pads, Rim Moss & Sketchy Grass Flicks (`data-part="moss-tufts"`)
+  // 6. Soft Blotchy Watercolor Moss Cushions + Pencil Foliage Scribbles & Grass Tufts (`data-part="moss-tufts"`)
   const mossTufts = svgEl('g', { 'data-part': 'moss-tufts' }, [
-    // Impressionistic painted olive/sage moss cushions hugging base (NO hard pillow outlines!)
-    gouacheDabWash(
+    watercolorWashBlotches(
       [
-        { cx: -45, cy: 0, rx: 16, ry: 7.5, fill: c.foliageShadow, opacity: 0.88 },
-        { cx: -32, cy: -1, rx: 12, ry: 6.5, fill: c.foliageMid, opacity: 0.85 },
-        { cx: -40, cy: -3, rx: 11, ry: 5.0, fill: c.oliveCanopy, opacity: 0.82 },
-        { cx: 36, cy: 0, rx: 13, ry: 6.5, fill: c.foliageMid, opacity: 0.85 },
-        { cx: 48, cy: 0, rx: 15, ry: 7.5, fill: c.foliageShadow, opacity: 0.88 },
-        { cx: 42, cy: -3, rx: 10, ry: 5.0, fill: c.sageFoliage, opacity: 0.78 },
+        { cx: -46, cy: 0, rx: 18, ry: 8.5, fill: c.foliageShadow, opacity: 0.82 },
+        { cx: -32, cy: -1, rx: 14, ry: 7.5, fill: c.foliageMid, opacity: 0.78 },
+        { cx: -40, cy: -3.5, rx: 12, ry: 5.5, fill: c.sageFoliage, opacity: 0.65 },
+        { cx: 36, cy: 0, rx: 15, ry: 7.5, fill: c.foliageMid, opacity: 0.78 },
+        { cx: 49, cy: 0, rx: 17, ry: 8.5, fill: c.foliageShadow, opacity: 0.82 },
+        { cx: 43, cy: -3.5, rx: 11, ry: 5.5, fill: c.oliveCanopy, opacity: 0.7 },
         // Antique moss dab draped over the left stone rim
-        { cx: -60, cy: -78, rx: 9.5, ry: 4.5, fill: c.oliveCanopy, opacity: 0.84 },
-        { cx: -57, cy: -79, rx: 5.5, ry: 2.8, fill: c.foliageRim, opacity: 0.65 },
+        { cx: -60, cy: -78, rx: 10.5, ry: 5.0, fill: c.oliveCanopy, opacity: 0.78 },
+        { cx: -57, cy: -79, rx: 6.5, ry: 3.2, fill: c.foliageRim, opacity: 0.58 },
+      ],
+      { seed: 113 + variant }
+    ),
+    pencilFoliageScribbles(
+      [
+        { cx: -41, cy: -2, rx: 16, ry: 7, density: 0.95 },
+        { cx: 43, cy: -2, rx: 16, ry: 7, density: 0.95 },
+        { cx: -59, cy: -78, rx: 8, ry: 4, density: 0.8 },
       ],
       {
-        fill: c.foliageMid,
-        wetEdgeColor: c.foliageShadow,
-        wetEdgeOpacity: 0.28,
-        highlightFill: c.foliageRim,
-        highlightOpacity: 0.28,
-        softEdge: true,
-        seed: 113,
+        stroke: c.pencilOliveCharcoal,
+        strokeWidth: 1.05,
+        opacity: 0.82,
+        includeTwigs: false,
+        seed: 117 + variant,
       }
     ),
     // Smooth weathered garden pebbles nestled beside moss
@@ -588,14 +579,24 @@ export function renderClassicGardenFountain(options: PropRenderOptions): string 
       c.stoneShadow,
       { stroke: c.xeroxInkSoft, strokeWidth: s.sketchLine }
     ),
-    // Sparse crooked hand-inked grass & moss tuft flicks (Robin Hood style!)
-    xeroxSketchStroke(
-      'M -56 -2 Q -60 -9, -57 -13 M -49 -5 Q -50 -12, -46 -14 M -38 -5 Q -37 -10, -34 -11 M 36 -4 Q 38 -10, 41 -12 M 47 -5 Q 50 -12, 54 -14 M 56 -2 Q 61 -8, 59 -12 M -66 -77 Q -61 -82, -55 -78',
-      { stroke: c.xeroxInkSoft, strokeWidth: 1.15, opacity: 0.84 }
+    // Bold slanted hand-drawn Robin-Hood pencil grass tufts hugging the stone base
+    pencilGrassStrokes(
+      [
+        { x: -53, y: 2, width: 22, height: 11, blades: 5, lean: -0.36 },
+        { x: -30, y: 3, width: 16, height: 8, blades: 4, lean: 0.3 },
+        { x: 32, y: 3, width: 16, height: 8, blades: 4, lean: -0.28 },
+        { x: 54, y: 2, width: 22, height: 11, blades: 5, lean: 0.4 },
+      ],
+      {
+        stroke: c.pencilOliveCharcoal,
+        strokeWidth: 1.2,
+        opacity: 0.86,
+        seed: 121 + variant,
+      }
     ),
   ]);
 
-  // 7. 5 Charming Painted Cream-Gold Firefly Specks with Tiny Soft Warm Wash Halos & 2-Frame Trails
+  // 7. 5 Charming Painted Cream-Gold Firefly Specks with Warm Watercolor Glow Dabs & 2-Frame Trails
   const fireflyEls: string[] = [];
   if (lit) {
     for (let i = 0; i < CLASSIC_FIREFLY_SPECS.length; i++) {
@@ -642,23 +643,19 @@ export function renderClassicGardenFountain(options: PropRenderOptions): string 
               opacity: 0.62,
             }
           ),
-          // Tiny soft painted warm watercolor wash dab (NO neon bokeh orb!)
-          gouacheDabWash(
+          // Soft warm painterly wet-on-wet watercolor glow dab (zero neon bokeh orb!)
+          watercolorWashBlotches(
             [
               {
                 cx: curX,
                 cy: curY,
                 rx: washR,
-                ry: round2(washR * 0.88),
-                opacity: round2(0.26 + (pulse + 1) * 0.05),
+                ry: round2(washR * 0.9),
+                fill: c.warmAmberGlow,
+                opacity: round2(0.28 + (pulse + 1) * 0.05),
               },
             ],
-            {
-              fill: c.warmAmberGlow,
-              wetEdgeOpacity: 0,
-              softEdge: true,
-              seed: 121 + i * 7,
-            }
+            { seed: 131 + i * 7 }
           ),
           // Crisp tiny hand-inked cel fluttering wings
           svgEl('ellipse', {

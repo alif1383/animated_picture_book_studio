@@ -5,22 +5,22 @@ import {
   celPath,
   celShadedShape,
   deterministicJitter,
-  gouacheDabWash,
   round2,
   svgEl,
   svgTransform,
+  watercolorWashBlotches,
   xeroxSketchStroke,
 } from '../../../engine/svgUtils';
-import type { GouacheDab } from '../../../engine/svgUtils';
+import type { WatercolorBlotch } from '../../../engine/svgUtils';
 import type { PropRenderOptions } from '../../props/types';
 
 /**
  * Renders an authentic 1980s *Mickey's Christmas Carol*-style hand-inked Victorian
  * wrought-iron garden lamp (`'street_lantern'`): flat analog iron paint with sketchy
  * Xerox toner ink (`celPath` + `xeroxSketchStroke`), warm parchment-gold painted glass
- * panes, hand-drawn flickering candle flame, and a subtle painterly translucent warm
- * ochre gouache wash (`gouacheDabWash`) + tiny sketchy light-ray ticks when `lit: true`
- * (NO modern digital neon radial glow orb!).
+ * panes, hand-drawn flickering candle flame, and soft wet-on-wet painterly warm ochre
+ * `watercolorWashBlotches` light washes around the glass and ground pool + delicate
+ * sketchy light-ray ticks when `lit: true` (NO sterile digital circles or neon glow!).
  *
  * Origin: `(0, 0)` at lamp base.
  * Footprint: `~x: -16..52, y: -132..0`.
@@ -40,39 +40,33 @@ export function renderClassicStreetLantern(options: PropRenderOptions): string {
   const washShift = steppedOscillate(frameIndex, 18, 1.2, variant * 2);
   const wobble = round2(deterministicJitter(frameIndex % 12, variant, 0.4));
 
-  // Painterly translucent warm ochre wash pooling softly on the path when lit (no digital radialGradient)
-  const groundWashDabs: GouacheDab[] = [
-    { cx: 17, cy: 1.5, rx: round2(28 + washShift * 0.5), ry: 6.8, rotate: -2, fill: c.warmAmberWash, opacity: 0.2 },
-    { cx: 18, cy: 1, rx: round2(17 + washShift * 0.3), ry: 4.5, rotate: 3, fill: c.warmAmberGlow, opacity: 0.24 },
-    { cx: 14, cy: 2, rx: 11, ry: 3.2, rotate: -4, fill: c.ochreEarth, opacity: 0.18 },
+  // Soft wet-on-wet painterly warm ochre watercolor wash pooling on the ground path when lit
+  const groundWashBlotches: WatercolorBlotch[] = [
+    { cx: 17, cy: 1.5, rx: round2(30 + washShift * 0.5), ry: 7.2, fill: c.warmAmberWash, opacity: 0.28, rotate: -3 },
+    { cx: 19, cy: 1, rx: round2(19 + washShift * 0.35), ry: 5.0, fill: c.warmAmberGlow, opacity: 0.3, rotate: 4 },
+    { cx: 12, cy: 2.2, rx: 14, ry: 4.0, fill: c.ochreEarth, opacity: 0.24, rotate: -5 },
   ];
   const groundAmberPool = lit
     ? svgEl('g', { 'data-part': 'lantern-ground-pool' }, [
-        gouacheDabWash(groundWashDabs, {
-          fill: c.warmAmberWash,
-          wetEdgeColor: c.warmAmberDeep,
-          wetEdgeOpacity: 0.08,
-          opacity: round2(0.82 + flamePulse * 0.4),
+        watercolorWashBlotches(groundWashBlotches, {
+          opacity: round2(0.84 + flamePulse * 0.35),
           seed: variant * 13 + 2,
         }),
       ])
     : '';
 
-  // Subtle painterly translucent warm ochre gouache atmospheric wash around lantern glass (replaces neon halo)
-  const haloDabs: GouacheDab[] = [
-    { cx: 18, cy: -99, rx: round2(27 + washShift), ry: round2(25 + washShift * 0.8), rotate: -8, fill: c.warmAmberWash, opacity: 0.18 },
-    { cx: round2(19 + wobble), cy: -100, rx: round2(20 + washShift * 0.6), ry: round2(19 + washShift * 0.5), rotate: 14, fill: c.warmAmberGlow, opacity: 0.22 },
-    { cx: 17.5, cy: -98.5, rx: round2(13 + washShift * 0.35), ry: round2(14 + washShift * 0.3), rotate: -5, fill: c.warmAmberCore, opacity: 0.24 },
+  // Soft wet-on-wet warm ochre watercolor light wash around the lantern glass (no sterile digital circles!)
+  const haloBlotches: WatercolorBlotch[] = [
+    { cx: 18, cy: -99, rx: round2(28 + washShift), ry: round2(26 + washShift * 0.8), fill: c.warmAmberWash, opacity: 0.24, rotate: -10 },
+    { cx: round2(19 + wobble), cy: -100, rx: round2(21 + washShift * 0.6), ry: round2(20 + washShift * 0.5), fill: c.warmAmberGlow, opacity: 0.28, rotate: 14 },
+    { cx: 17.5, cy: -98.5, rx: round2(14 + washShift * 0.35), ry: round2(15 + washShift * 0.3), fill: c.warmAmberCore, opacity: 0.3, rotate: -6 },
   ];
 
   // Tiny sketchy hand-inked parchment-gold light-ray ticks radiating from the glass
   const rayFlicker = round2(0.45 + (flamePulse + 0.1) * 1.4);
   const warmPainterlyHalo = lit
     ? svgEl('g', { 'data-part': 'lantern-halo' }, [
-        gouacheDabWash(haloDabs, {
-          fill: c.warmAmberGlow,
-          wetEdgeColor: c.warmAmberWash,
-          wetEdgeOpacity: 0.06,
+        watercolorWashBlotches(haloBlotches, {
           opacity: round2(0.86 + flamePulse * 0.35),
           seed: variant * 19 + 4,
         }),
@@ -126,7 +120,6 @@ export function renderClassicStreetLantern(options: PropRenderOptions): string {
       c.ironDark,
       { stroke: c.xeroxInk, strokeWidth: s.xeroxFine }
     ),
-    // Broken sketchy iron edge highlight & hand-drawn ink hatch lines
     xeroxSketchStroke('M 1.1 -17 L 0.8 -113', {
       stroke: c.ironHighlight,
       strokeWidth: 0.9,
@@ -140,7 +133,6 @@ export function renderClassicStreetLantern(options: PropRenderOptions): string {
       broken: true,
       opacity: 0.62,
     }),
-    // Molded decorative iron collars
     celPath('M -5.2 -26 L 5.2 -26 L 4.5 -23 L -4.5 -23 Z', c.ironDark, {
       stroke: c.xeroxInk,
       strokeWidth: s.sketchLine,
@@ -149,7 +141,6 @@ export function renderClassicStreetLantern(options: PropRenderOptions): string {
       stroke: c.xeroxInk,
       strokeWidth: s.sketchLine,
     }),
-    // Post top finial tip
     celPath('M -4 -116 L 0 -124 L 4 -116 Z', c.ironDark, {
       stroke: c.xeroxInk,
       strokeWidth: s.sketchLine,
@@ -170,7 +161,6 @@ export function renderClassicStreetLantern(options: PropRenderOptions): string {
       broken: true,
       opacity: 0.54,
     }),
-    // Ornamental S-scroll volute brace beneath bracket arm
     xeroxSketchStroke('M 2 -100 C 11 -101, 14 -112, 8 -115 C 4 -117, 3 -111, 7 -110', {
       stroke: c.xeroxInk,
       strokeWidth: 1.75,
@@ -188,12 +178,10 @@ export function renderClassicStreetLantern(options: PropRenderOptions): string {
   // Hand-drawn flickering candle & warm flame inside glass
   const candleFlame = lit
     ? svgEl('g', { 'data-part': 'lantern-candle' }, [
-        // Wax candle stub (flat cel cream + Xerox outline)
         celPath('M 16.4 -92 L 19.6 -92 L 19.4 -86.5 L 16.6 -86.5 Z', c.parchmentCream, {
           stroke: c.xeroxInkSoft,
           strokeWidth: 0.75,
         }),
-        // Hand-drawn teardrop flame with organic 12 FPS wobble
         svgEl(
           'g',
           {
@@ -220,7 +208,7 @@ export function renderClassicStreetLantern(options: PropRenderOptions): string {
       ])
     : '';
 
-  // Hanging Victorian mullioned glass lantern box with pitched finial cap (flat analog cel paint, zero gradients!)
+  // Hanging Victorian mullioned glass lantern box with pitched finial cap (flat analog cel paint)
   const lanternHousing = svgEl('g', { 'data-part': 'lantern-housing' }, [
     celShadedShape({
       d: 'M 9 -112 L 27 -112 L 24 -86 L 12 -86 Z',
@@ -240,7 +228,6 @@ export function renderClassicStreetLantern(options: PropRenderOptions): string {
       strokeWidth: s.xeroxFine,
     }),
     candleFlame,
-    // Hand-inked iron mullions
     xeroxSketchStroke(
       'M 18 -112 L 18 -86 M 13.5 -112 L 14.5 -86 M 22.5 -112 L 21.5 -86',
       {
@@ -249,7 +236,6 @@ export function renderClassicStreetLantern(options: PropRenderOptions): string {
         opacity: 0.92,
       }
     ),
-    // Upper lantern eaves cornice & pitched pagoda roof cap
     celShadedShape({
       d: 'M 6.5 -112 L 10 -116 L 18 -122.5 L 26 -116 L 29.5 -112 Z',
       baseFill: c.ironDark,
@@ -260,12 +246,10 @@ export function renderClassicStreetLantern(options: PropRenderOptions): string {
       stroke: c.xeroxInk,
       strokeWidth: s.xeroxFine,
     }),
-    // Finial ring & spire
     celPath('M 16.2 -122.5 L 18 -129.5 L 19.8 -122.5 Z', c.ironDark, {
       stroke: c.xeroxInk,
       strokeWidth: s.sketchLine,
     }),
-    // Bottom iron cup & pendant drop finial
     celPath('M 10.5 -86 L 25.5 -86 L 22 -82.5 L 18 -79.5 L 14 -82.5 Z', c.ironDark, {
       stroke: c.xeroxInk,
       strokeWidth: s.sketchLine,

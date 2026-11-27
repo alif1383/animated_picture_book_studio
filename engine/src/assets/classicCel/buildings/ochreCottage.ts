@@ -5,7 +5,10 @@ import {
   celShadedShape,
   gouacheDabWash,
   gouachePath,
+  pencilFoliageScribbles,
+  pencilGrassStrokes,
   svgEl,
+  watercolorWashBlotches,
   xeroxSketchStroke,
 } from '../../../engine/svgUtils';
 import type { BuildingRenderOptions } from '../../buildings/types';
@@ -16,13 +19,13 @@ import type { BuildingRenderOptions } from '../../buildings/types';
  *
  * Crafted as authentic Layer 1A illustration-board background art (*Robin Hood* 1973 /
  * *Mickey's Christmas Carol* 1983):
- * - Dappled wet-edge watercolor/gouache stucco, terracotta roof shingles, weathered
- *   stone chimney, and climbing ivy (`gouachePath` + `gouacheDabWash`)
- * - Loose, broken hand-inked sepia/charcoal architectural penwork (`xeroxSketchStroke`)
- *   for timber framing, shingle courses, masonry seams, shutters, and mullions
- * - Flat painted warm amber gouache window panes & soft translucent warm ochre brush
- *   wash on the sill/wall when `windowLit: true` (zero digital gradients or neon glows!)
- * - Softly painted drifting evening chimney smoke puffs
+ * - Soft wet-on-wet blotchy watercolor washes (`watercolorWashBlotches`) across the
+ *   plaster stucco, weathered terracotta shingles, stone chimney, drifting smoke, and
+ *   warm ochre window-light spill (never smooth flat computer color!)
+ * - Crisp, loose hand-drawn pencil/ink foliage scribbles (`pencilFoliageScribbles`) on
+ *   the climbing cottage ivy & flower-box greenery and `pencilGrassStrokes` at the base
+ * - Broken sepia-ink architectural penwork (`xeroxSketchStroke`) for timber beams,
+ *   shingle edges, stonework, shutters, and mullions
  *
  * Local origin `(0, 0)` at ground contact; bounds `~x: -176..168, y: -268..0`.
  */
@@ -52,7 +55,7 @@ export function renderClassicOchreCottage(
     'M -176 -114 L -106 -194 L -38 -114 L -46 -108 L -106 -178 L -168 -108 Z';
   const chimneyBodyD = 'M -108 -190 L -108 -250 L -72 -250 L -72 -185 Z';
 
-  // Local clip paths keep dappled gouache washes cleanly tucked inside architectural planes
+  // Local clip paths keep wet-on-wet watercolor washes neatly inside architectural planes
   const clipDefs = svgEl('defs', {}, [
     svgEl('clipPath', { id: mainWallClipId }, svgEl('path', { d: mainWallD })),
     svgEl('clipPath', { id: gableWallClipId }, svgEl('path', { d: gableWallD })),
@@ -64,45 +67,31 @@ export function renderClassicOchreCottage(
   // Soft painted grounding shadow beneath foundation
   const groundShadow = celContactShadow(-8, 1.5, 166, 7.2, 0.34);
 
-  // 1. Weathered Painted Stone Chimney & Soft Watercolor Smoke Puffs
+  // 1. Weathered Painted Stone Chimney & Cloudy Wet-on-Wet Smoke Puffs
   const chimney = svgEl('g', { 'data-part': 'chimney' }, [
-    // Softly painted drifting watercolor chimney smoke puffs (kept within y: -268..0)
-    gouacheDabWash(
+    // Soft wet-on-wet drifting watercolor chimney smoke puffs (kept within y: -268..0)
+    watercolorWashBlotches(
       [
-        { cx: -86, cy: -263, rx: 9, ry: 4.5, rotate: -8, opacity: windowLit ? 0.36 : 0.16 },
-        { cx: -71, cy: -261, rx: 13, ry: 5.5, rotate: 6, opacity: windowLit ? 0.3 : 0.13 },
-        { cx: -52, cy: -262, rx: 14, ry: 5.2, rotate: -5, opacity: windowLit ? 0.22 : 0.09 },
-        { cx: -35, cy: -260, rx: 10, ry: 4.2, rotate: 8, opacity: windowLit ? 0.14 : 0.06 },
+        { cx: -86, cy: -263, rx: 10, ry: 4.8, rotate: -8, fill: c.boardToothLight, opacity: windowLit ? 0.38 : 0.16 },
+        { cx: -70, cy: -261, rx: 14, ry: 5.8, rotate: 6, fill: c.parchmentCream, opacity: windowLit ? 0.32 : 0.13 },
+        { cx: -51, cy: -262, rx: 15, ry: 5.4, rotate: -5, fill: c.stoneLight, opacity: windowLit ? 0.24 : 0.09 },
+        { cx: -34, cy: -260, rx: 11, ry: 4.5, rotate: 8, fill: c.boardToothLight, opacity: windowLit ? 0.15 : 0.06 },
       ],
-      {
-        fill: c.boardToothLight,
-        wetEdgeColor: c.stoneLight,
-        wetEdgeOpacity: 0.14,
-        opacity: 0.92,
-        softEdge: true,
-        seed: 11,
-      }
+      { seed: 11 }
     ),
-    // Base painted stone chimney mass
+    // Base painted stone chimney mass + clipped wet-on-wet stone weathering washes
     gouachePath(chimneyBodyD, c.stoneBase, { softEdge: false }),
-    // Clipped dappled stone gouache mottling & right-side night shadow wash
     svgEl('g', { 'clip-path': svgUrl(chimneyClipId) }, [
-      gouacheDabWash(
+      watercolorWashBlotches(
         [
-          { cx: -101, cy: -236, rx: 10, ry: 16, fill: c.stoneLight, opacity: 0.55 },
-          { cx: -92, cy: -206, rx: 14, ry: 18, fill: c.boardToothWarm, opacity: 0.24 },
-          { cx: -79, cy: -228, rx: 11, ry: 26, fill: c.stoneShadow, opacity: 0.72 },
-          { cx: -78, cy: -196, rx: 12, ry: 16, fill: c.nightSkyMid, opacity: 0.35 },
+          { cx: -102, cy: -236, rx: 12, ry: 18, fill: c.stoneLight, opacity: 0.6 },
+          { cx: -92, cy: -206, rx: 15, ry: 20, fill: c.boardToothWarm, opacity: 0.32 },
+          { cx: -78, cy: -228, rx: 13, ry: 28, fill: c.stoneShadow, opacity: 0.74 },
+          { cx: -77, cy: -196, rx: 13, ry: 18, fill: c.nightSkyMid, opacity: 0.38 },
         ],
-        {
-          fill: c.stoneBase,
-          wetEdgeOpacity: 0.16,
-          softEdge: true,
-          seed: 17,
-        }
+        { seed: 17 }
       ),
     ]),
-    // Loose hand-inked chimney contour & masonry seams
     xeroxSketchStroke(chimneyBodyD, {
       stroke: c.xeroxInkSoft,
       strokeWidth: s.xeroxMedium,
@@ -159,46 +148,34 @@ export function renderClassicOchreCottage(
     ),
   ]);
 
-  // 2. Dappled Watercolor Stucco Walls, Sketchy Half-Timbering, Stone Baseboard & Ivy
+  // 2. Wet-on-Wet Mottled Watercolor Stucco Walls, Half-Timbering, Stone Baseboard & Ivy
   const walls = svgEl('g', { 'data-part': 'walls' }, [
-    // Main right/center stucco wall base + dappled illustration-board watercolor washes
+    // Main right/center stucco wall base + clipped wet-on-wet watercolor mottling
     gouachePath(mainWallD, c.cottagePlaster, { softEdge: false }),
     svgEl('g', { 'clip-path': svgUrl(mainWallClipId) }, [
-      gouacheDabWash(
+      watercolorWashBlotches(
         [
-          { cx: -20, cy: -88, rx: 46, ry: 36, fill: c.boardToothWarm, opacity: 0.45 },
-          { cx: 52, cy: -74, rx: 64, ry: 44, fill: c.cottagePlaster, opacity: 0.52 },
-          { cx: 122, cy: -62, rx: 48, ry: 54, fill: c.cottagePlasterShadow, opacity: 0.68 },
-          { cx: 18, cy: -18, rx: 78, ry: 24, fill: c.cottagePlasterShadow, opacity: 0.56 },
-          { cx: 112, cy: -22, rx: 52, ry: 26, fill: c.pathEarthDark, opacity: 0.36 },
-          { cx: 48, cy: -120, rx: 116, ry: 18, fill: c.nightSkyMid, opacity: 0.42 },
-          { cx: -36, cy: -64, rx: 16, ry: 68, fill: c.nightSkyZenith, opacity: 0.34 },
+          { cx: -20, cy: -88, rx: 52, ry: 40, fill: c.boardToothWarm, opacity: 0.52 },
+          { cx: 52, cy: -74, rx: 68, ry: 46, fill: c.ochreEarth, opacity: 0.36 },
+          { cx: 122, cy: -62, rx: 54, ry: 58, fill: c.cottagePlasterShadow, opacity: 0.72 },
+          { cx: 18, cy: -18, rx: 84, ry: 28, fill: c.cottagePlasterShadow, opacity: 0.6 },
+          { cx: 112, cy: -22, rx: 56, ry: 28, fill: c.pathEarthDark, opacity: 0.42 },
+          { cx: 48, cy: -120, rx: 122, ry: 20, fill: c.nightSkyMid, opacity: 0.46 },
+          { cx: -36, cy: -64, rx: 18, ry: 72, fill: c.nightSkyZenith, opacity: 0.36 },
         ],
-        {
-          fill: c.cottagePlaster,
-          wetEdgeColor: c.cottagePlasterShadow,
-          wetEdgeOpacity: 0.2,
-          softEdge: true,
-          seed: 23,
-        }
+        { seed: 23 }
       ),
-      // Soft painted warm ochre wash brushed around the lit window onto the stucco (NO neon glow!)
+      // Soft wet-on-wet warm ochre watercolor window-light spill across the stucco
       windowLit
-        ? gouacheDabWash(
+        ? watercolorWashBlotches(
             [
-              { cx: 47, cy: -66, rx: 82, ry: 48, fill: c.warmAmberWash, opacity: 0.2 },
-              { cx: 47, cy: -64, rx: 68, ry: 42, fill: c.warmAmberGlow, opacity: 0.22 },
+              { cx: 47, cy: -66, rx: 86, ry: 52, fill: c.warmAmberWash, opacity: 0.26 },
+              { cx: 47, cy: -64, rx: 66, ry: 42, fill: c.warmAmberGlow, opacity: 0.3 },
             ],
-            {
-              fill: c.warmAmberGlow,
-              wetEdgeOpacity: 0,
-              softEdge: true,
-              seed: 29,
-            }
+            { seed: 29 }
           )
         : '',
     ]),
-    // Loose sepia architectural outline around main wall
     xeroxSketchStroke(mainWallD, {
       stroke: c.xeroxInkSoft,
       strokeWidth: s.xeroxMedium,
@@ -206,38 +183,26 @@ export function renderClassicOchreCottage(
       feather: true,
     }),
 
-    // Protruding gabled left wing stucco base + dappled moonlight gouache brushwork
+    // Protruding gabled left wing stucco + clipped wet-on-wet watercolor mottling
     gouachePath(gableWallD, c.cottagePlaster, { softEdge: false }),
     svgEl('g', { 'clip-path': svgUrl(gableWallClipId) }, [
-      gouacheDabWash(
+      watercolorWashBlotches(
         [
-          { cx: -144, cy: -84, rx: 34, ry: 52, fill: c.boardToothLight, opacity: 0.38 },
-          { cx: -108, cy: -138, rx: 38, ry: 34, fill: c.boardToothWarm, opacity: 0.42 },
-          { cx: -72, cy: -64, rx: 34, ry: 68, fill: c.cottagePlasterShadow, opacity: 0.62 },
-          { cx: -112, cy: -18, rx: 58, ry: 22, fill: c.pathEarthDark, opacity: 0.34 },
-          { cx: -106, cy: -168, rx: 54, ry: 22, fill: c.nightSkyMid, opacity: 0.38 },
+          { cx: -144, cy: -84, rx: 38, ry: 56, fill: c.boardToothLight, opacity: 0.46 },
+          { cx: -108, cy: -138, rx: 42, ry: 36, fill: c.boardToothWarm, opacity: 0.48 },
+          { cx: -72, cy: -64, rx: 38, ry: 72, fill: c.cottagePlasterShadow, opacity: 0.68 },
+          { cx: -112, cy: -18, rx: 62, ry: 26, fill: c.pathEarthDark, opacity: 0.38 },
+          { cx: -106, cy: -168, rx: 58, ry: 24, fill: c.nightSkyMid, opacity: 0.42 },
         ],
-        {
-          fill: c.cottagePlaster,
-          wetEdgeColor: c.cottagePlasterShadow,
-          wetEdgeOpacity: 0.18,
-          softEdge: true,
-          seed: 31,
-        }
+        { seed: 31 }
       ),
-      // Soft painted warm amber wash near the lit attic window & heart door pane
       windowLit
-        ? gouacheDabWash(
+        ? watercolorWashBlotches(
             [
-              { cx: -106, cy: -142, rx: 24, ry: 22, fill: c.warmAmberGlow, opacity: 0.24 },
-              { cx: -106, cy: -56, rx: 24, ry: 20, fill: c.warmAmberWash, opacity: 0.18 },
+              { cx: -106, cy: -142, rx: 28, ry: 24, fill: c.warmAmberGlow, opacity: 0.28 },
+              { cx: -106, cy: -56, rx: 28, ry: 22, fill: c.warmAmberWash, opacity: 0.22 },
             ],
-            {
-              fill: c.warmAmberGlow,
-              wetEdgeOpacity: 0,
-              softEdge: true,
-              seed: 37,
-            }
+            { seed: 37 }
           )
         : '',
     ]),
@@ -274,7 +239,6 @@ export function renderClassicOchreCottage(
         stroke: c.xeroxInkSoft,
         strokeWidth: s.xeroxFine,
       }),
-      // Broken hand-inked timber grain scratches & peg ticks
       xeroxSketchStroke(
         [
           'M -164 -108 L -164 -20',
@@ -324,44 +288,37 @@ export function renderClassicOchreCottage(
       strokeWidth: s.sketchLine,
     }),
 
-    // Painterly dappled watercolor ivy & sparse ink leaf ticks (`data-part="cottage-vines"`)
+    // Wet-on-wet watercolor climbing ivy + Robin-Hood pencil foliage scribbles (`data-part="cottage-vines"`)
     svgEl('g', { 'data-part': 'cottage-vines' }, [
-      gouacheDabWash(
+      watercolorWashBlotches(
         [
-          { cx: -48, cy: -22, rx: 10, ry: 8, fill: c.foliageShadow, opacity: 0.85 },
-          { cx: -44, cy: -40, rx: 11, ry: 9, fill: c.foliageMid, opacity: 0.85 },
-          { cx: -49, cy: -58, rx: 10, ry: 9, fill: c.oliveCanopy, opacity: 0.82 },
-          { cx: -43, cy: -78, rx: 11, ry: 10, fill: c.foliageMid, opacity: 0.84 },
-          { cx: -48, cy: -98, rx: 9, ry: 9, fill: c.sageFoliage, opacity: 0.78 },
-          { cx: -43, cy: -112, rx: 8, ry: 7, fill: c.foliageLit, opacity: 0.8 },
+          { cx: -48, cy: -22, rx: 12, ry: 10, fill: c.foliageShadow, opacity: 0.78 },
+          { cx: -44, cy: -44, rx: 13, ry: 12, fill: c.foliageMid, opacity: 0.76 },
+          { cx: -49, cy: -66, rx: 12, ry: 12, fill: c.oliveCanopy, opacity: 0.75 },
+          { cx: -44, cy: -88, rx: 13, ry: 12, fill: c.sageFoliage, opacity: 0.72 },
+          { cx: -46, cy: -108, rx: 10, ry: 9, fill: c.foliageLit, opacity: 0.72 },
+        ],
+        { seed: 41 }
+      ),
+      pencilFoliageScribbles(
+        [
+          { cx: -47, cy: -34, rx: 10, ry: 16, density: 1.0 },
+          { cx: -46, cy: -74, rx: 11, ry: 18, density: 1.05 },
+          { cx: -46, cy: -104, rx: 9, ry: 11, density: 0.9 },
         ],
         {
-          fill: c.foliageMid,
-          wetEdgeColor: c.foliageShadow,
-          wetEdgeOpacity: 0.28,
-          highlightFill: c.foliageRim,
-          highlightOpacity: 0.28,
-          softEdge: true,
-          seed: 41,
+          stroke: c.pencilOliveCharcoal,
+          strokeWidth: 1.05,
+          opacity: 0.82,
+          seed: 43,
         }
       ),
-      // Sparse sketchy ink vine stem & tiny irregular leaf flicks
-      xeroxSketchStroke(
-        [
-          'M -45 -10 Q -53 -42, -43 -72 Q -50 -98, -44 -118',
-          'M -54 -28 Q -50 -32, -46 -27',
-          'M -38 -46 Q -42 -50, -45 -45',
-          'M -54 -68 Q -49 -72, -45 -67',
-          'M -39 -88 Q -43 -92, -46 -87',
-          'M -52 -106 Q -47 -109, -43 -104',
-        ].join(' '),
-        {
-          stroke: c.xeroxInkSoft,
-          strokeWidth: s.sketchLine,
-          broken: true,
-          opacity: 0.78,
-        }
-      ),
+      xeroxSketchStroke('M -45 -10 Q -53 -42, -43 -72 Q -50 -98, -44 -118', {
+        stroke: c.xeroxInkSoft,
+        strokeWidth: s.sketchLine,
+        broken: true,
+        opacity: 0.78,
+      }),
       // Tiny painted storybook blossom dabs
       svgEl('circle', { cx: -43, cy: -62, r: 2.9, fill: c.dustyRose }),
       svgEl('circle', { cx: -48, cy: -84, r: 2.7, fill: c.flowerCream }),
@@ -371,7 +328,6 @@ export function renderClassicOchreCottage(
 
   // 3. Left Wing Round Attic Window, Arched Oak Door with Heart Pane & Cobblestone Stoop
   const leftWingDetails = svgEl('g', { 'data-part': 'left-wing-details' }, [
-    // Round timber attic window surround
     svgEl('circle', {
       cx: -106,
       cy: -142,
@@ -381,7 +337,6 @@ export function renderClassicOchreCottage(
       'stroke-width': s.xeroxFine,
       filter: svgUrl(TOKENS.classicCel.filters.ids.xeroxInk),
     }),
-    // Painted amber gouache attic pane (flat + warm dappled center when lit; slate night when dark)
     svgEl('circle', {
       cx: -106,
       cy: -142,
@@ -401,23 +356,22 @@ export function renderClassicOchreCottage(
           strokeWidth: 1.2,
           opacity: 0.45,
         }),
-    // Hand-inked attic window mullion crossbars
-    xeroxSketchStroke(
-      'M -122 -142 L -90 -142 M -106 -158 L -106 -126',
-      { stroke: c.woodDark, strokeWidth: 2.1, opacity: 0.96 }
-    ),
-    xeroxSketchStroke(
-      'M -122 -142 L -90 -142 M -106 -158 L -106 -126',
-      { stroke: c.xeroxInk, strokeWidth: 0.85, opacity: 0.85 }
-    ),
+    xeroxSketchStroke('M -122 -142 L -90 -142 M -106 -158 L -106 -126', {
+      stroke: c.woodDark,
+      strokeWidth: 2.1,
+      opacity: 0.96,
+    }),
+    xeroxSketchStroke('M -122 -142 L -90 -142 M -106 -158 L -106 -126', {
+      stroke: c.xeroxInk,
+      strokeWidth: 0.85,
+      opacity: 0.85,
+    }),
 
-    // Recessed arched timber doorway frame
     celPath(
       'M -135 0 L -135 -69 Q -106 -94, -77 -69 L -77 0 Z',
       c.woodDark,
       { stroke: c.xeroxInkSoft, strokeWidth: s.xeroxMedium }
     ),
-    // Arched plank oak door (flat analog wood paint + crisp shadow plane)
     celShadedShape({
       d: 'M -132 0 L -132 -68 Q -106 -90, -80 -68 L -80 0 Z',
       baseFill: c.woodMid,
@@ -434,7 +388,6 @@ export function renderClassicOchreCottage(
       stroke: c.xeroxInk,
       strokeWidth: s.xeroxMedium,
     }),
-    // Sketchy oak plank joints & wrought-iron strap hinges
     xeroxSketchStroke(
       'M -118 -77 L -118 0 M -106 -80 L -106 0 M -94 -77 L -94 0 M -125 -52 L -125 -34 M -99 -42 L -99 -18',
       {
@@ -455,13 +408,11 @@ export function renderClassicOchreCottage(
     svgEl('circle', { cx: -126, cy: -60.5, r: 1, fill: c.ironHighlight }),
     svgEl('circle', { cx: -126, cy: -22.5, r: 1, fill: c.ironHighlight }),
 
-    // Painted heart-shaped door pane (flat warm ochre-cream when lit, cool slate when dark)
     celPath(
       'M -106 -58 C -109 -63, -116 -62, -115 -56 L -106 -47 L -97 -56 C -96 -62, -103 -63, -106 -58 Z',
       windowLit ? c.warmAmberCore : c.nightcapShadow,
       { stroke: c.xeroxInk, strokeWidth: s.xeroxFine }
     ),
-    // Painterly olive/sage welcome wreath with dusty-rose bow around heart pane
     gouacheDabWash(
       [
         { cx: -116, cy: -57, rx: 4.5, ry: 4.5 },
@@ -489,7 +440,6 @@ export function renderClassicOchreCottage(
       c.mochiCollar,
       { stroke: c.xeroxInk, strokeWidth: 0.8 }
     ),
-    // Flat cel antique brass doorknob
     svgEl('circle', {
       cx: -87,
       cy: -36,
@@ -500,7 +450,6 @@ export function renderClassicOchreCottage(
     }),
     svgEl('circle', { cx: -88, cy: -37, r: 1, fill: c.parchmentCream }),
 
-    // Two-tier weathered cobblestone doorstep with warm painted reflection wash when lit
     celPath('M -142 0 L -70 0 L -74 -6 L -138 -6 Z', c.stoneShadow, {
       stroke: c.xeroxInkSoft,
       strokeWidth: s.xeroxFine,
@@ -519,7 +468,6 @@ export function renderClassicOchreCottage(
 
   // 4. Painted Amber Mullioned Bedroom Window, Louvered Teal Shutters & Flower Box
   const bedroomWindow = svgEl('g', { 'data-part': 'bedroom-window' }, [
-    // Left louvered cottage shutter
     celPath('M -30 -104 L -13 -104 L -13 -28 L -30 -28 Z', c.cottageShutter, {
       stroke: c.xeroxInkSoft,
       strokeWidth: s.xeroxMedium,
@@ -542,7 +490,6 @@ export function renderClassicOchreCottage(
       { stroke: c.cottageShutterShadow, strokeWidth: 1.35, broken: true, opacity: 0.85 }
     ),
 
-    // Right louvered cottage shutter
     celPath('M 107 -104 L 124 -104 L 124 -28 L 107 -28 Z', c.cottageShutter, {
       stroke: c.xeroxInkSoft,
       strokeWidth: s.xeroxMedium,
@@ -565,7 +512,6 @@ export function renderClassicOchreCottage(
       { stroke: c.cottageShutterShadow, strokeWidth: 1.35, broken: true, opacity: 0.85 }
     ),
 
-    // Subtle painted warm ochre edge stroke on inner shutters when lit
     windowLit
       ? xeroxSketchStroke('M -14.5 -102 L -14.5 -30 M 108.5 -102 L 108.5 -30', {
           stroke: c.warmAmberGlow,
@@ -575,28 +521,22 @@ export function renderClassicOchreCottage(
         })
       : '',
 
-    // Painted amber gouache interior window pane (NO smooth radial gradient!)
+    // Painted amber watercolor interior window pane
     svgEl('path', {
       d: 'M -12 -106 L 106 -106 L 106 -26 L -12 -26 Z',
       fill: windowLit ? c.warmAmberGlow : c.nightSkyZenith,
     }),
     windowLit
-      ? gouacheDabWash(
+      ? watercolorWashBlotches(
           [
-            { cx: 47, cy: -74, rx: 38, ry: 22, fill: c.warmAmberCore, opacity: 0.78 },
-            { cx: 24, cy: -60, rx: 24, ry: 18, fill: c.warmAmberWash, opacity: 0.34 },
-            { cx: 76, cy: -62, rx: 26, ry: 18, fill: c.warmAmberWash, opacity: 0.34 },
+            { cx: 47, cy: -74, rx: 40, ry: 24, fill: c.warmAmberCore, opacity: 0.78 },
+            { cx: 22, cy: -60, rx: 26, ry: 20, fill: c.warmAmberWash, opacity: 0.38 },
+            { cx: 76, cy: -62, rx: 28, ry: 20, fill: c.warmAmberWash, opacity: 0.38 },
           ],
-          {
-            fill: c.warmAmberGlow,
-            wetEdgeOpacity: 0.12,
-            softEdge: true,
-            seed: 47,
-          }
+          { seed: 47 }
         )
       : '',
 
-    // Cozy painted quilt / interior sill band
     celPath(
       'M -10 -46 Q 47 -50, 104 -46 L 104 -26 L -10 -26 Z',
       windowLit ? c.nightcapBlue : c.nightSkyMid,
@@ -609,7 +549,6 @@ export function renderClassicOchreCottage(
       opacity: windowLit ? 0.55 : 0.35,
     }),
 
-    // Painted dusty-rose curtains with sketchy drape folds
     celPath(
       'M -12 -106 L 26 -106 Q 17 -74, 6 -46 L -12 -46 Z',
       windowLit ? c.dustyRose : c.cottageRoofShadow,
@@ -642,7 +581,6 @@ export function renderClassicOchreCottage(
         })
       : '',
 
-    // Delicate hand-inked timber muntin bars & carved window frame
     xeroxSketchStroke(
       'M 27 -106 L 27 -26 M 67 -106 L 67 -26 M -12 -68 L 106 -68',
       { stroke: c.woodDark, strokeWidth: 2.4, opacity: 0.95 }
@@ -661,7 +599,7 @@ export function renderClassicOchreCottage(
       opacity: 0.92,
     }),
 
-    // Wooden Window Flower Box with Dappled Watercolor Foliage (`data-part="flower-boxes"`)
+    // Wooden Window Flower Box with Wet-on-Wet Foliage & Pencil Scribbles (`data-part="flower-boxes"`)
     svgEl('g', { 'data-part': 'flower-boxes' }, [
       svgEl('path', {
         d: 'M -14 -13 L 108 -13 L 104 -8 L -10 -8 Z',
@@ -677,28 +615,30 @@ export function renderClassicOchreCottage(
         fill: c.woodDark,
         opacity: 0.62,
       }),
-      // Dappled painted watercolor flower-box foliage
-      gouacheDabWash(
+      // Wet-on-wet watercolor flower-box foliage + crisp pencil leaf scribbles
+      watercolorWashBlotches(
         [
-          { cx: -4, cy: -28, rx: 14, ry: 7.5, fill: c.foliageShadow, opacity: 0.88 },
-          { cx: 20, cy: -30, rx: 16, ry: 8.5, fill: c.foliageMid, opacity: 0.88 },
-          { cx: 48, cy: -29, rx: 17, ry: 8.0, fill: c.oliveCanopy, opacity: 0.86 },
-          { cx: 74, cy: -30, rx: 16, ry: 8.5, fill: c.foliageMid, opacity: 0.88 },
-          { cx: 98, cy: -28, rx: 14, ry: 7.5, fill: c.foliageShadow, opacity: 0.88 },
+          { cx: 0, cy: -29, rx: 16, ry: 8.5, fill: c.foliageShadow, opacity: 0.82 },
+          { cx: 26, cy: -31, rx: 19, ry: 9.0, fill: c.foliageMid, opacity: 0.8 },
+          { cx: 54, cy: -30, rx: 20, ry: 8.5, fill: c.oliveCanopy, opacity: 0.78 },
+          { cx: 82, cy: -31, rx: 18, ry: 9.0, fill: c.sageFoliage, opacity: 0.74 },
+          { cx: 100, cy: -29, rx: 14, ry: 8.0, fill: c.foliageShadow, opacity: 0.82 },
+        ],
+        { seed: 53 }
+      ),
+      pencilFoliageScribbles(
+        [
+          { cx: 12, cy: -30, rx: 20, ry: 7.5, density: 0.95 },
+          { cx: 54, cy: -30, rx: 24, ry: 7.5, density: 1.0 },
+          { cx: 90, cy: -30, rx: 18, ry: 7.5, density: 0.95 },
         ],
         {
-          fill: c.foliageMid,
-          wetEdgeColor: c.foliageShadow,
-          wetEdgeOpacity: 0.28,
-          highlightFill: c.sageFoliage,
-          highlightOpacity: 0.35,
-          softEdge: true,
-          seed: 53,
+          stroke: c.pencilOliveCharcoal,
+          strokeWidth: 1.0,
+          opacity: 0.8,
+          includeTwigs: false,
+          seed: 55,
         }
-      ),
-      xeroxSketchStroke(
-        'M -12 -27 Q -2 -36, 8 -27 M 14 -28 Q 26 -37, 36 -27 M 44 -28 Q 56 -36, 68 -28 M 76 -28 Q 88 -37, 102 -27',
-        { stroke: c.xeroxInkSoft, strokeWidth: s.sketchLine, broken: true, opacity: 0.72 }
       ),
       // Loose painted flower dabs warmed by window spill
       svgEl('circle', { cx: -2, cy: -29, r: 3.8, fill: c.dustyRose }),
@@ -768,37 +708,26 @@ export function renderClassicOchreCottage(
       ])
     : '';
 
-  // 6. Weathered Gouache Terracotta Shingled Roof with Sketchy Sepia Shingle Penwork
+  // 6. Wet-on-Wet Weathered Terracotta Shingled Roof with Sketchy Sepia Shingle Penwork
   const roof = svgEl('g', { 'data-part': 'roof' }, [
-    // Base roof gouache wash
     gouachePath(mainRoofD, c.cottageRoof, { softEdge: false }),
     svgEl('g', { 'clip-path': svgUrl(mainRoofClipId) }, [
-      // Dappled weathered terracotta, russet & deep mahogany roof brushwork
-      gouacheDabWash(
+      watercolorWashBlotches(
         [
-          { cx: -60, cy: -196, rx: 46, ry: 18, fill: c.russetEarth, opacity: 0.62 },
-          { cx: 18, cy: -194, rx: 56, ry: 20, fill: c.cottageRoof, opacity: 0.58 },
-          { cx: 98, cy: -192, rx: 48, ry: 22, fill: c.cottageRoofShadow, opacity: 0.52 },
-          { cx: -12, cy: -162, rx: 58, ry: 22, fill: c.russetEarth, opacity: 0.45 },
-          { cx: 68, cy: -160, rx: 58, ry: 24, fill: c.cottageRoofShadow, opacity: 0.55 },
-          { cx: 132, cy: -146, rx: 44, ry: 28, fill: c.cottageRoofShadow, opacity: 0.72 },
-          { cx: 40, cy: -128, rx: 118, ry: 16, fill: c.cottageRoofShadow, opacity: 0.62 },
-          // Cool subtle moonlight ridge brush stroke
-          { cx: 14, cy: -206, rx: 112, ry: 8, fill: c.stoneLight, opacity: 0.22 },
-          // Touch of weathered moss on old shingles
-          { cx: -46, cy: -168, rx: 14, ry: 6, fill: c.oliveCanopy, opacity: 0.26 },
-          { cx: 88, cy: -142, rx: 16, ry: 6, fill: c.oliveCanopy, opacity: 0.22 },
+          { cx: -60, cy: -196, rx: 52, ry: 20, fill: c.russetEarth, opacity: 0.68 },
+          { cx: 18, cy: -194, rx: 62, ry: 22, fill: c.ochreEarth, opacity: 0.34 },
+          { cx: 98, cy: -192, rx: 54, ry: 24, fill: c.cottageRoofShadow, opacity: 0.58 },
+          { cx: -12, cy: -162, rx: 62, ry: 24, fill: c.russetEarth, opacity: 0.5 },
+          { cx: 68, cy: -160, rx: 62, ry: 26, fill: c.cottageRoofShadow, opacity: 0.6 },
+          { cx: 132, cy: -146, rx: 48, ry: 30, fill: c.cottageRoofShadow, opacity: 0.76 },
+          { cx: 40, cy: -128, rx: 124, ry: 18, fill: c.cottageRoofShadow, opacity: 0.64 },
+          { cx: 14, cy: -206, rx: 118, ry: 9, fill: c.stoneLight, opacity: 0.25 },
+          { cx: -46, cy: -168, rx: 16, ry: 7, fill: c.oliveCanopy, opacity: 0.3 },
+          { cx: 88, cy: -142, rx: 18, ry: 7, fill: c.oliveCanopy, opacity: 0.26 },
         ],
-        {
-          fill: c.cottageRoof,
-          wetEdgeColor: c.cottageRoofShadow,
-          wetEdgeOpacity: 0.24,
-          softEdge: true,
-          seed: 59,
-        }
+        { seed: 59 }
       ),
     ]),
-    // Loose sketchy sepia shingle courses & broken shingle tabs
     xeroxSketchStroke(
       [
         'M -84 -192 Q -62 -184, -40 -192 T 4 -192 T 48 -192 T 92 -192 T 134 -192',
@@ -825,7 +754,6 @@ export function renderClassicOchreCottage(
         opacity: 0.62,
       }
     ),
-    // Outer sketchy roof contour
     xeroxSketchStroke(mainRoofD, {
       stroke: c.xeroxInkSoft,
       strokeWidth: s.xeroxHeavy,
@@ -833,21 +761,14 @@ export function renderClassicOchreCottage(
       feather: true,
     }),
 
-    // Left gable roof overhang with dappled brushwork & sketchy bargeboard trim
     gouachePath(gableRoofD, c.cottageRoof, { softEdge: false }),
     svgEl('g', { 'clip-path': svgUrl(gableRoofClipId) }, [
-      gouacheDabWash(
+      watercolorWashBlotches(
         [
-          { cx: -140, cy: -152, rx: 32, ry: 22, rotate: -48, fill: c.russetEarth, opacity: 0.55 },
-          { cx: -72, cy: -152, rx: 32, ry: 22, rotate: 48, fill: c.cottageRoofShadow, opacity: 0.68 },
+          { cx: -140, cy: -152, rx: 36, ry: 24, rotate: -48, fill: c.russetEarth, opacity: 0.6 },
+          { cx: -72, cy: -152, rx: 36, ry: 24, rotate: 48, fill: c.cottageRoofShadow, opacity: 0.72 },
         ],
-        {
-          fill: c.cottageRoof,
-          wetEdgeColor: c.cottageRoofShadow,
-          wetEdgeOpacity: 0.22,
-          softEdge: true,
-          seed: 67,
-        }
+        { seed: 67 }
       ),
     ]),
     xeroxSketchStroke(gableRoofD, {
@@ -856,19 +777,32 @@ export function renderClassicOchreCottage(
       opacity: 0.92,
       feather: true,
     }),
-    // Hand-inked scalloped parchment bargeboard trim under gable overhang
     xeroxSketchStroke('M -167 -109 L -106 -179 L -45 -109', {
       stroke: c.parchmentCream,
       strokeWidth: 2.0,
       dasharray: '5 3.5',
       opacity: 0.82,
     }),
-    // Tiny carved wooden finial peg at gable peak
     celPath('M -108 -193 L -104 -193 L -106 -202 Z', c.woodLit, {
       stroke: c.xeroxInkSoft,
       strokeWidth: s.sketchLine,
     }),
   ]);
+
+  // 7. Subtle Robin-Hood hand-drawn pencil grass tufts rooting the stone foundation at y = 0
+  const baseGrass = pencilGrassStrokes(
+    [
+      { x: -156, y: 0, width: 22, height: 8, blades: 5, lean: -0.35 },
+      { x: -58, y: 0, width: 20, height: 7.5, blades: 4, lean: 0.3 },
+      { x: 140, y: 0, width: 24, height: 8.5, blades: 5, lean: 0.4 },
+    ],
+    {
+      stroke: c.pencilOliveCharcoal,
+      strokeWidth: 1.1,
+      opacity: 0.82,
+      seed: 73,
+    }
+  );
 
   return svgEl(
     'g',
@@ -876,6 +810,16 @@ export function renderClassicOchreCottage(
       'data-building': 'ochre_cottage',
       'data-art-style': 'classic_cel',
     },
-    [clipDefs, groundShadow, chimney, walls, leftWingDetails, bedroomWindow, ladder, roof]
+    [
+      clipDefs,
+      groundShadow,
+      chimney,
+      walls,
+      leftWingDetails,
+      bedroomWindow,
+      ladder,
+      roof,
+      baseGrass,
+    ]
   );
 }
