@@ -720,8 +720,8 @@ export function pencilFoliageScribbles(
   const {
     id,
     stroke = TOKENS.classicCel.colors.pencilOliveCharcoal,
-    strokeWidth = 1.15,
-    opacity = 0.78,
+    strokeWidth = 1.45,
+    opacity = 0.88,
     seed = 1,
     includeTwigs = true,
     includeDots = true,
@@ -895,8 +895,8 @@ export function pencilGrassStrokes(
   const {
     id,
     stroke = TOKENS.classicCel.colors.xeroxInk,
-    strokeWidth = 1.25,
-    opacity = 0.84,
+    strokeWidth = 1.55,
+    opacity = 0.9,
     seed = 1,
     usePencilFilter = true,
   } = options;

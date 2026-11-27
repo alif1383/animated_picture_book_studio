@@ -305,8 +305,8 @@ export const TOKENS = {
         id: 'watercolor-wash-soft',
         baseFrequency: '0.018 0.024',
         numOctaves: 3,
-        displacementScale: 14,
-        blurStdDev: 4.5,
+        displacementScale: 8,
+        blurStdDev: 2.4,
       },
       pencilBgSketch: {
         id: 'pencil-bg-sketch',

@@ -673,12 +673,12 @@ export function renderEngineDefs(options: FilterRenderOptions): string {
           in: 'washMottle',
           type: 'matrix',
           values:
-            '0.82 0 0 0 0.10  0.80 0 0 0 0.10  0.76 0 0 0 0.10  0 0 0 0 1',
+            '0.16 0 0 0 0.42  0.16 0 0 0 0.42  0.14 0 0 0 0.43  0 0 0 0 1',
           result: 'pigmentCloud',
         }),
         svgEl('feBlend', {
-          in: 'SourceGraphic',
-          in2: 'pigmentCloud',
+          in: 'pigmentCloud',
+          in2: 'SourceGraphic',
           mode: 'soft-light',
           result: 'mottledBg',
         }),
