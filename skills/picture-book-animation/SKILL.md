@@ -1,15 +1,17 @@
 ---
 name: picture-book-animation
-description: "How to create, edit, and style animations, scenes, acts, timelines, camera choreography, audio cues, and visual styling in the Picture-Book Crayon Video Engine. Activate whenever deciding how to make or edit animations, scenes, acts, timelines, camera choreography, or visual styling."
+description: "How to create, edit, and style Picture-Book Crayon Style animations, scenes, acts, timelines, camera choreography, hardcover bookFrame, audio cues, and wax-crayon visual styling (artStyle: 'crayon') in the Studio engine. Activate whenever building or editing scenes in Picture-Book Crayon Style (for Classic Hand-Drawn Cel style, use classic-animation instead)."
 ---
 
-# Picture-Book Animation & Scene Authoring Skill
+# Picture-Book Crayon Animation & Scene Authoring Skill (`artStyle: 'crayon'`)
 
-This skill is the authoritative guide for creating and editing animated storybook scenes in the **Picture-Book Crayon Video Engine** (`<workspace>`, scaffolded from `<plugin-root>/engine/`).
+This skill is the authoritative guide for creating and editing animated storybook scenes in **Picture-Book Crayon Style (`artStyle: 'crayon'`)** inside the Studio engine (`<workspace>`, scaffolded from `<plugin-root>/engine/`).
 
 > [!IMPORTANT]
-> - If the user's prompt is brief or lacks story/dialogue detail, load **`skills/picture-book-script/SKILL.md`** first to create the Production Script Blueprint.
-> - For the complete catalog of all **19 characters, 4 buildings, 22 props, 21+ crayon fill patterns**, full TypeScript interfaces, `TOKENS` color palette, and `SCENE_REGISTRY` routing — see [references/catalog-and-schema.md](references/catalog-and-schema.md).
+> - **Scope**: Use this skill ONLY for **Picture-Book Crayon Style (`artStyle: 'crayon'`)** — warm 6 FPS wax-crayon/oil-pastel stop-motion on cold-press watercolor paper with hardcover `bookFrame`. For **Classic 1970s–1980s Hand-Drawn Cel Animation (`artStyle: 'classic_cel'`)**, load **`skills/classic-animation/SKILL.md`** instead.
+> - If the user's prompt is brief or lacks story/dialogue detail, load **`skills/picture-book-script/SKILL.md`** first (with `Animation Style: crayon`) to create the Production Script Blueprint.
+> - For custom Picture-Book Crayon characters, props, or buildings, load **`skills/photo-to-crayon-asset/SKILL.md`**.
+> - For the complete catalog of built-in **characters, buildings, props, 22+ crayon fill patterns**, full TypeScript interfaces, `TOKENS` color palette, and `SCENE_REGISTRY` routing — see [references/catalog-and-schema.md](references/catalog-and-schema.md).
 
 ---
 

@@ -1,14 +1,15 @@
 ---
 name: photo-to-crayon-asset
-description: "Workflow for turning user-supplied photos or reference images into hand-crafted 2D cutout SVG TypeScript assets for the Picture-Book Crayon Video Engine. Activate whenever the user provides photos/images or wants custom characters, props, or buildings modeled after reference images."
+description: "Workflow for turning user-supplied photos or reference images into hand-crafted 2D Picture-Book Crayon cutout SVG TypeScript assets (artStyle: 'crayon') in src/assets/{characters,props,buildings}/. Activate whenever creating custom or photo-modeled characters, props, or buildings in Picture-Book Crayon Style (for Classic Hand-Drawn Cel style, use classic-cel-asset instead)."
 ---
 
-# Photo-to-Crayon Asset Pipeline
+# Photo-to-Crayon Asset Pipeline (`artStyle: 'crayon'`)
 
-This skill provides a step-by-step workflow for turning a user-supplied **photo** (or an AI-generated reference image via `image-generator`) into a **hand-crafted 2D cutout SVG TypeScript asset** that renders inside the Picture-Book Crayon Video Engine at `<workspace>/src/assets/`.
+This skill provides a step-by-step workflow for turning a user-supplied **photo** (or reference image / story description) into a **hand-crafted 2D wax-crayon cutout SVG TypeScript asset** for **Picture-Book Crayon Style (`artStyle: 'crayon'`)** at `<workspace>/src/assets/{characters,props,buildings}/`.
 
 > [!IMPORTANT]
-> The engine has **no automated photo import pipeline**. All assets are hand-coded TypeScript functions that return SVG strings. The photo serves as a **visual reference only** — the agent must interpret and re-create the subject in the engine's wax crayon / oil pastel / felt-tip marker aesthetic.
+> - **Scope**: Use this skill ONLY for **Picture-Book Crayon Style (`artStyle: 'crayon'`)**. For **Classic 1970s–1980s Hand-Drawn Cel Animation (`artStyle: 'classic_cel'`)** characters, props, or buildings, load **`skills/classic-cel-asset/SKILL.md`** instead (`src/assets/classicCel/`).
+> - The engine has **no automated photo import pipeline**. All assets are hand-coded TypeScript functions that return SVG strings. The photo serves as a **visual reference only** — the agent must interpret and re-create the subject in the engine's wax crayon / oil pastel / felt-tip marker aesthetic.
 
 ---
 

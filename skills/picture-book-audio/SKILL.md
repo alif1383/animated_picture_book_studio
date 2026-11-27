@@ -9,12 +9,13 @@ description: >-
   `picture-book-voiceover`.)
 ---
 
-# Picture-Book Audio Skill (SFX, Dynamic BGM & `audioClips`)
+# Studio Audio Skill (SFX, Dynamic BGM & `audioClips` — Both Animation Styles)
 
-This skill covers **sound effects, dynamic background music, and `audioClips` integration** in the Picture-Book Crayon Video Engine (`<workspace>`, scaffolded from `<plugin-root>/engine/`).
+This skill covers **sound effects, dynamic background music, and `audioClips` integration** across **both** Studio animation styles — **Picture-Book Crayon Style (`artStyle: 'crayon'`, `6 FPS`)** and **Classic Hand-Drawn Animation Style (`artStyle: 'classic_cel'`, `12 FPS`)** (`<workspace>`, scaffolded from `<plugin-root>/engine/`).
 
 > [!IMPORTANT]
 > - **For voiceovers, story narration, or character speech**, load **`skills/picture-book-voiceover/SKILL.md`** instead.
+> - **Style-Aware Cue Selection**: In **Classic Hand-Drawn Animation (`classic_cel`)** scenes, do **NOT** use `crayon_scribble` cues (which are papery wax-crayon foley for `crayon` scenes). Instead favor orchestral/storybook cues (`lullaby`, `chime`, `garden_wind_chime`, `medieval_lute`, `fire_crackle`, etc.) and rich multi-section WAV BGM/foley clips.
 > - **Parallel Side-by-Side Execution**: Isolated SFX/BGM subagents should run **concurrently alongside** code, custom asset, and voiceover subagents. Each SFX subagent creates only its standalone file (`src/audio/sfx/<sfxName>.ts` or `scripts/sfx/<clipName>.mjs`) and returns metadata/catalog text so the orchestrator wires shared registries (`schema.ts`, `index.ts`, `AUDIO_CATALOG.md`) cleanly with zero file collisions.
 
 ---
@@ -38,7 +39,7 @@ interface AudioNoteCue {
 }
 ```
 
-Cues fire at **stepped 6 FPS boundaries** via
+Cues fire at **stepped scene FPS boundaries** (`6 FPS` for `'crayon'`, `12 FPS` for `'classic_cel'`) via
 `soundEngine.triggerCuesForFrame(cues, prevTime, curTime)` during live
 preview, and are rendered offline via
 `soundEngine.renderOfflineAudio(cues, start, dur)` into the `.mp4` audio

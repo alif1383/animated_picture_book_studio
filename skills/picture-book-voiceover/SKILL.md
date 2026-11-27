@@ -234,15 +234,15 @@ agy-node "<plugin-root>/skills/picture-book-voiceover/scripts/generate_audio.mjs
    ]
    ```
 
-3. **Synchronize with `acts[]` and `bookFrame`**:
-   - If `bookFrame.enabled` is `true` on the **first scene**, the 3D cover opening animation takes `openDurationSec` (default `3.5s`). Start your first narration clip at `startTime: 3.6`–`4.0` so the voice begins just as the page settles open.
-   - If `bookFrame.enabled` is `true` on the **last scene**, leave `closeDurationSec` (default `3.5s`) after the final narration clip finishes so the book cover closes gracefully after the final word.
+3. **Synchronize with `acts[]` and Style Framing (`bookFrame` vs. `theatricalFrame`)**:
+   - **Picture-Book Crayon Style (`artStyle: 'crayon'`, `bookFrame.enabled: true`)**: The 3D cover opening animation takes `openDurationSec` (default `3.5s`) and closing takes `closeDurationSec` (default `3.5s`–`4.5s`). Start your first narration clip at `startTime: 3.6`–`4.0` and finish the final spoken clip at least `closeDurationSec` before `durationSec`.
+   - **Classic Hand-Drawn Animation Style (`artStyle: 'classic_cel'`, `theatricalFrame.enabled: true`)**: The circular iris/fade opening + gold-serif title card takes `openDurationSec` (default `3.0s`) and closing iris-out + `"The End"` card takes `closeDurationSec` (default `3.0s`). Start your first narration clip at `startTime: 3.1`–`3.5` and finish the final spoken clip cleanly before `durationSec - closeDurationSec`.
 
 ---
 
 ## Step 8: Mandatory Voiceover Timing, Scene-Change Cutoff, Mouth Animation & Dialogue Rules
 
-Enforce these rules on **every** voiced scene:
+Enforce these rules on **every** voiced scene (in both `crayon` and `classic_cel` styles):
 
 1. **Complete Every Voice Before Scene Changes (Unless Intentionally Cut Off)**:
    - Always measure the exact WAV duration of every generated clip (from `tts`/`dialogue` stdout or `generate_audio.mjs info`).
@@ -253,10 +253,12 @@ Enforce these rules on **every** voiced scene:
    - Whenever a scene/act transitions or the speaking character leaves the scene (`visible: false` / exits the shot), that character's voice **MUST end at or before the transition timestamp** — never let a voice clip bleed into the next scene after the scene or character has changed.
    - Mechanically enforce this in `scene.audioClips[]` by setting an explicit `duration` capped at or before the transition (`duration <= transitionTime - startTime`), and simultaneously clearing `speechText: ''` and stopping mouth movement at that timestamp.
 
-3. **Animate the Character's Mouth Area Whenever They Talk**:
-   - Whenever adding voiceover dialogue for an on-screen character, **that character's mouth area MUST visibly move/animate** across stepped `6 FPS` `frameIndex` ticks (cycling open/closed/shaped mouth shapes) for the exact `[startTime, startTime + duration]` window of their voice clip, and return to a closed/neutral mouth the moment their line ends.
-   - Match the character's timeline keyframes (speaking/talking state, `speechText`, and `speechStyle: 'speech'`) tightly to the voice clip window.
-   - **Rig check**: Verify that the character's SVG rig in `src/assets/characters/<name>.ts` actually animates its mouth area in the pose used while talking (for example, `'singing'` already cycles open/closed mouths on rigs like `little_girl`, `birthday_strawberry`, `singing_radish`, and `crying_onion`). If a built-in or custom character speaks while standing, walking, sitting, or riding and its rig currently draws a static frozen mouth in that state, **extend the character rig** so its mouth area animates at `6 FPS` while speaking (e.g., driven by a dedicated speaking state/flag or active non-empty `speechText` when `speechStyle !== 'thought'`).
+3. **Animate the Character's Mouth Area Whenever They Talk (Style-Aware FPS Sync)**:
+   - Whenever adding voiceover dialogue for an on-screen character, **that character's mouth area MUST visibly move/animate** for the exact `[startTime, startTime + duration]` window of their voice clip, and return to a closed/neutral mouth the moment their line ends:
+     - **Picture-Book Crayon Style (`6 FPS`)**: Stepped `6 FPS` mouth variations driven by `frameIndex` in `src/assets/characters/<name>.ts`.
+     - **Classic Hand-Drawn Cel Style (`12 FPS` on twos)**: Expressive **4-stage cel lip-sync mouth** cycling via `Math.floor(frameIndex / 2) % 4` (`closed smile` → `soft 'o'` → `open jaw + tongue` → `half-open grin`, with `data-speaking-mouth="true"` and `data-mouth-phase`) in `src/assets/classicCel/characters/<name>.ts`.
+   - Match the character's timeline keyframes (speaking/talking state, `speechText`, and `speechStyle: 'speech'`) tightly to the voice clip window (`renderer.ts` automatically passes `isSpeaking: true` whenever `speechText` is non-empty and `speechStyle !== 'thought'`).
+   - **Rig check**: Verify that the character's SVG rig in `src/assets/characters/<name>.ts` (for `crayon`) or `src/assets/classicCel/characters/<name>.ts` (for `classic_cel`) actually animates its mouth area in the pose used while talking. If a built-in or custom character speaks while standing, walking, sitting, or riding and its rig currently draws a static frozen mouth in that state, **extend the character rig** so its mouth area animates smoothly at the style's FPS while `options.isSpeaking` is true.
 
 4. **Do Not Overlap Multiple Characters' Voices (Unless Specifically Intended)**:
    - **Never** let multiple characters talk over each other accidentally (`clipNext.startTime < clipPrev.startTime + clipPrev.actualDuration`). Only overlap voices when the script *explicitly wants* simultaneous talking, chaotic chatter, a chorus, or a deliberate interruption.

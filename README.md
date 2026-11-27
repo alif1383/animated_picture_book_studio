@@ -4,7 +4,7 @@
   <img src="assets/studio-preview.jpg" alt="Animated Picture Book Studio Live Preview" width="760" />
 </p>
 
-> Create charming crayon-style animated storybook videos from a single prompt, with custom photo characters, expressive voiceovers, music, live preview, and MP4 export.
+> Create animated storybook videos in **two distinct visual styles** — **Picture-Book Crayon** (`6 FPS` wax-crayon/oil-pastel stop-motion) or **Classic 1970s–80s Hand-Drawn Cel Animation** (`12 FPS` Xerox ink-and-paint & painted watercolor/gouache) — from a single prompt, with custom photo characters, expressive voiceovers, music, live preview, and MP4 export.
 
 ---
 
@@ -66,15 +66,17 @@ The **Animated Picture Book Studio** is a **100% standalone, zero-dependency** A
 
 It works out-of-the-box on **any machine with only Antigravity installed** (`agy-node`)—no external `node`, `npm`, `pnpm`, `git`, or `python` installation is required. You can scaffold the bundled engine into any active `<workspace>` (or run it in-place) using `agy-node "<plugin-root>/scripts/ensure_engine.mjs"`. It provides skills, agents, rules, and the full engine so you can ask Antigravity to:
 
-- **Create animated videos** — Design scenes with characters, props, buildings, camera movements, and hand-drawn annotations in a warm crayon/oil-pastel aesthetic, complete with an automatic **Storybook Cover Opening & Ending/Credits Book-Frame (`bookFrame`)** where a hardcover picture book opens to a 0% color charcoal sketch, progressively colors in from 0% to 100% as the camera zooms into the story, and un-colors back to a sketch at the end before closing the cover with `"The End ★"` and credits.
-- **Model assets after photos** — Turn user-provided photos into hand-crafted 2D cutout SVG characters, props, or buildings that match the storybook style.
+- **Create animated videos in two distinct styles** *(if you don't specify a style in your prompt, the agent will ask you which one you want right after checking your voiceover API key)*:
+  1. **Picture-Book Crayon Style (`artStyle: 'crayon'`, `6 FPS`)** — Warm wax-crayon & oil-pastel stop-motion on heavy cold-press watercolor paper, complete with an automatic **Storybook Cover Opening & Ending/Credits Book-Frame (`bookFrame`)** where a hardcover picture book opens to a `0%` charcoal sketch, progressively colors in `0% → 100%` as the camera zooms in, and un-colors back to a sketch before closing with `"The End ★"`.
+  2. **Classic Hand-Drawn Animation Style (`artStyle: 'classic_cel'`, `12 FPS` on twos)** — Theatrical 1970s–1980s Disney cel animation inspired by ***Mickey's Christmas Carol* (1983)** and ***Robin Hood* (1973)**: multiplane painted watercolor/gouache backgrounds, crisp Xerox charcoal ink outlines, 2-tone cel shading with moonlight/warm rim highlights, smooth `12 FPS` ("on twos") motion exported in a `24 FPS` film container, subtle 35mm celluloid film grain & vignette, and classic **Theatrical Iris/Fade Opening & `"The End"` Closing Cards (`theatricalFrame`)**. Includes a full Classic Cel showcase of *Mochi's Moonlit Garden* (`?scene=classic-moonlit-cat`).
+- **Model assets after photos** — Turn user-provided photos into either hand-crafted 2D wax-crayon cutout SVG assets (`src/assets/`) or 2-tone cel-shaded Xerox ink-and-paint SVG assets (`src/assets/classicCel/`).
 - **Add and generate audio** — Sync built-in procedural sound effects, attach user-provided audio files, or generate narration and custom WAV sound effects at precise timestamps.
-- **Preview live** — Spin up the bundled studio dev server (`agy-node scripts/studio-cli.mjs dev`) and inspect your video interactively in the browser with scene switching, playback controls, live audio/voiceover playback, and layer toggles.
-- **Export MP4 directly via CLI** — Run `agy-node scripts/studio-cli.mjs export --scene <id> --resolution 1080p` to export the `.mp4` in headless mode without needing to open a visible browser tab or click buttons, then launch the dev server so you can inspect the live site as well.
+- **Preview live** — Spin up the bundled studio dev server (`agy-node scripts/studio-cli.mjs dev`) and inspect your video interactively in the browser with scene switching, style/FPS switching (`?style=classic_cel|crayon`), playback controls, live audio/voiceover playback, and layer toggles.
+- **Export MP4 directly via CLI** — Run `agy-node scripts/studio-cli.mjs export --scene <id> --resolution 1080p` (with optional `--style classic_cel|crayon`) to export the `.mp4` in headless mode without needing to open a visible browser tab or click buttons, then launch the dev server so you can inspect the live site as well.
 
-### Visual Modes: Classic vs. Vibrant Crayon Mode
+### Visual Modes: Classic vs. Vibrant Crayon Mode (`crayon` Style)
 
-You can preview and export any video in either **Classic (non-vibrant)** or **Vibrant** mode (just ask in your prompt, toggle the **Vibrant Crayon Mode** checkbox in the Studio UI, pass `?vibrant=1|0` in the URL, or pass `--vibrant 1|0` to `studio-cli.mjs export`):
+In Picture-Book Crayon style, you can preview and export any video in either **Classic (non-vibrant)** or **Vibrant** mode (just ask in your prompt, toggle the **Vibrant Crayon Mode** checkbox in the Studio UI, pass `?vibrant=1|0` in the URL, or pass `--vibrant 1|0` to `studio-cli.mjs export`):
 
 - **Classic Mode (Non-Vibrant, default):** A warm, muted, vintage picture-book look with stronger cold-press watercolor paper grain and chalky dry-crayon texture showing through the pigment — ideal for cozy bedtime stories and moonlit scenes.
 - **Vibrant Mode (`--vibrant 1`):** Boosts crayon pigment saturation (`1.42×`) and contrast, fills strokes more densely, and softens the paper overlay so blues, greens, reds, and yellows pop off the page — ideal for bright daytime adventures and upbeat comedies.
@@ -118,74 +120,90 @@ You can preview and export any video in either **Classic (non-vibrant)** or **Vi
 │   └── AGENTS.md                            # Always-on routing rules & non-negotiable guardrails
 ├── agents/
 │   └── picture-book-director.md             # Main turnkey orchestrator & export agent (spins up parallel subagents)
-└── skills/
+└── skills/                                  # 8 modular domain skills (2 symmetric visual style pairs + 4 shared skills)
     ├── picture-book-script/
-    │   └── SKILL.md                         # Story craft, continuity/scale staging & character voice sheets
+    │   └── SKILL.md                         # Style-aware story craft, continuity/scale staging & character voice sheets
     ├── picture-book-animation/
-    │   ├── SKILL.md                         # Scene design, terrain, continuity, scale & animation guide
+    │   ├── SKILL.md                         # Picture-Book Crayon scene design (`crayon`, 6 FPS, terrain, `bookFrame`)
     │   └── references/
     │       └── catalog-and-schema.md        # Full asset catalog & TypeScript schema
     ├── photo-to-crayon-asset/
-    │   ├── SKILL.md                         # Photo-to-SVG asset workflow & rigging guide
+    │   ├── SKILL.md                         # Picture-Book Crayon photo-to-SVG asset workflow & 6 FPS rigging (`src/assets/`)
     │   └── scripts/
     │       └── analyze_reference_photo.mjs  # Zero-dep Node photo analysis utility
+    ├── classic-animation/
+    │   └── SKILL.md                         # Classic 1970s–80s Hand-Drawn Cel scene design (`classic_cel`, 12 FPS, gouache, `theatricalFrame`)
+    ├── classic-cel-asset/
+    │   └── SKILL.md                         # Classic Cel 2-tone ink-and-paint asset pipeline & 12 FPS rigging (`src/assets/classicCel/`)
     ├── picture-book-voiceover/
-    │   ├── SKILL.md                         # Google AI Studio Generate Speech (Gemini TTS) voiceover guide
+    │   ├── SKILL.md                         # Style-aware Google AI Studio Generate Speech (Gemini TTS) voiceover guide
     │   ├── references/
     │   │   └── voice-catalog.md             # All 30 Gemini voices & 40 character/narrator presets
     │   └── scripts/
     │       └── generate_audio.mjs           # Zero-dep Node Gemini TTS, dialogue, voice-design & WAV SFX CLI
     ├── picture-book-audio/
-    │   ├── SKILL.md                         # SFX, dynamic BGM & audioClips sync guide
+    │   ├── SKILL.md                         # Style-aware SFX, dynamic BGM & `audioClips` sync guide
     │   ├── references/
     │   │   └── audio-catalog.md             # Master Audio & Sound Effects Catalog
     │   └── scripts/
     │       └── generate_audio.mjs           # Zero-dep Node WAV SFX & clip inspection CLI
     └── picture-book-studio-export/
-        └── SKILL.md                         # Dev server, headless MP4 export & asset promotion runbook
+        └── SKILL.md                         # Dev server, headless MP4 export (`--style`, 24/30 FPS) & asset promotion runbook
 ```
 
 ---
 
-## Skills
+## Skills (8 Domain Skills)
 
-### ✍️ `picture-book-script`
+### ✍️ `picture-book-script` *(Shared — Both Styles)*
 Story and scriptwriting skill invoked automatically whenever the user's prompt is brief or lacks detail:
-- Crafts classic 3–5 act picture-book arcs sized around `bookFrame` opening/closing beats
+- Locks the **Animation Style (`crayon` | `classic_cel`)** and crafts classic 3–5 act arcs sized around `bookFrame` (`3.5s` open/close, `6 FPS`) or `theatricalFrame` (`3.0s` iris/fade + gold-serif title cards, `12 FPS`)
 - Bakes in chronological day/night continuity, location-driven background changes, brisk exit cuts, in-scene object/companion permanence, and proportional scale
 - Defines a complete **Character Voice Casting & Sound Direction Sheet** (`docs/VOICE_CATALOG.md`, `--style` acting prompts, inline vocal tags) and **Dynamic BGM & SFX Cue Sheet** (`docs/AUDIO_CATALOG.md`)
 - Outputs a **Parallel-Ready Production Script Blueprint** with exact file paths and IDs so code, asset, SFX/BGM, and voiceover subagents can immediately execute side-by-side
 
-### 🎨 `picture-book-animation`
-Complete guide to designing, choreographing, and editing animations in the Picture-Book Crayon Video Engine. Covers:
-- Core visual philosophy (wax crayon, oil pastel, cold-press paper aesthetic) and 3-layer render pipeline
+### 🖍️ `picture-book-animation` *(Picture-Book Crayon Style — `artStyle: 'crayon'`)*
+Complete guide to designing, choreographing, and editing scenes in **Picture-Book Crayon Style** (`6 FPS`):
+- Core visual philosophy (wax crayon, oil pastel, cold-press watercolor paper aesthetic) and 3-layer crayon render pipeline
 - Mandatory Two-Tier Terrain Coloring, Story Continuity, Location Backgrounds, Brisk Empty-Stage Cuts, and Proportional Scale
 - **Storybook Cover Opening & Ending/Credits Book-Frame (`bookFrame`)**: Default `3.5s` opening cover & `0% -> 100%` color-in zoom (`0.68 -> 1.0`), full-bleed middle story, and final `3.5s` `100% -> 0%` color-out zoom-out & closing credits card
-- `SceneDefinition` schema, all **19 built-in characters, 4 buildings, 22 props**, and 21+ crayon fill patterns
-- Scene registration, URL routing (`?scene=`, `?short_sample=`, `?book_frame=1|0`), and 6 FPS stop-motion rules
+- `SceneDefinition` schema, built-in characters, buildings, props, 22+ crayon fill patterns, Vibrant Crayon Mode, and 6 FPS stop-motion rules
 
-### 📷 `photo-to-crayon-asset`
-Step-by-step workflow for turning user photos (or generated reference images) into hand-crafted 2D cutout SVG assets:
+### 📷 `photo-to-crayon-asset` *(Picture-Book Crayon Style — `src/assets/`)*
+Step-by-step workflow for turning user photos (or specs) into hand-crafted 2D wax-crayon cutout SVG assets:
 - Visual inspection and automated palette mapping via `analyze_reference_photo.mjs`
-- SVG cutout decomposition, multi-state rigging (`+X` forward walking profile, `CHARACTER_SPEECH_ANCHORS`, stepped `6 FPS` animated speaking mouths), and proportional local SVG sizing
+- SVG cutout decomposition (`crayonPath`, `TOKENS.patterns.*`), multi-state rigging (`+X` forward walking profile, `CHARACTER_SPEECH_ANCHORS`, stepped `6 FPS` animated speaking mouths), and proportional local SVG sizing
 - File-isolated authoring for parallel subagents + registration checklist
 
-### 🎙️ `picture-book-voiceover`
+### 🎞️ `classic-animation` *(Classic Hand-Drawn Animation Style — `artStyle: 'classic_cel'`)*
+Complete guide to designing, choreographing, and editing **1970s–1980s Classic Hand-Drawn Cel** scenes inspired by *Mickey's Christmas Carol* (1983) & *Robin Hood* (1973):
+- Multiplane painted watercolor/gouache backgrounds using `background_patch` `gradient` / `fill` tokens from `TOKENS.classicCel.colors` (`#gouache-wash`)
+- Xerox charcoal ink-and-paint foreground cels (`#xerox-ink`), practical optical halation (`#cel-soft-glow`), Eastmancolor print grading (`#cel-grade`), and Layer 3 35mm film grain + vignette (`#layer-3-film-composite`)
+- **Theatrical Iris/Fade Opening & `"The End"` Closing Cards (`theatricalFrame`)** and smooth **`12 FPS` ("on twos")** motion exported inside a **`24 FPS`** MP4 film container
+- Continuity, proportional scale, `+X` facing, 4-stage cel lip-sync alignment, and scene registration (`src/scenes/classicMoonlitCat.ts`)
+
+### 🖌️ `classic-cel-asset` *(Classic Hand-Drawn Animation Style — `src/assets/classicCel/`)*
+Step-by-step workflow for creating 1970s–1980s Disney-inspired cel characters, painted props, and architecture (from user photos or story specs):
+- Silhouette & anatomical decomposition, 3-value cel paint ramps (`base` + `shadow` + moonlight/warm `rim`), `celShadedShape`, `celContactShadow`, `gouachePath`, and Xerox charcoal ink strokes (`TOKENS.classicCel`)
+- Expressive classic eyes (cream sclera, colored irises, catchlights, eyelids & brows), smooth `12 FPS` walk cycles with secondary follow-through facing `+X`, and 4-stage cel lip-sync mouths (`Math.floor(frameIndex / 2) % 4`)
+- Style-isolated `src/assets/classicCel/{characters,props,buildings}/` layout & `CLASSIC_CEL_*_RENDERERS` dispatch registration
+
+### 🎙️ `picture-book-voiceover` *(Shared — Both Styles)*
 Dedicated skill for generating expressive studio-grade voiceovers, character voices, multi-speaker dialogue, and custom voice designs using **Google AI Studio's Generate Speech (Gemini TTS)** API (`gemini-3.8-flash-tts`, `gemini-3.8-flash-lite-tts`, `gemini-2.5-flash-preview-tts`, and `POST /v1beta/voices`):
 - **API Key Check & Persistent Setup**: `check-key` / `set-key` with no default OS synthesizer fallback (guides user to free `$0` Google AI Studio API key at `https://aistudio.google.com/apikey`)
 - **Single-Speaker Narration & 40 Character/Narrator Presets (`tts`)**, **Multi-Speaker Dialogue (`dialogue`)**, and **Custom Voice Design (`voice-design`)**
-- **Voiceover Timing & Lip-Sync Rules**: Complete lines before scene cuts (unless intentionally cut off), end voices on character/scene changes (zero bleed), animate speaker mouths at `6 FPS`, and prevent unintended overlapping voices
+- **Style-Aware Timing & Lip-Sync Rules**: Syncs to `bookFrame` (`3.5s`) or `theatricalFrame` (`3.0s`), completes lines before cuts, ends voices cleanly at scene/character changes, animates speaker mouths (`6 FPS` crayon or 4-stage `12 FPS` cel), and prevents unintended overlapping voices
 
-### 🔊 `picture-book-audio`
+### 🔊 `picture-book-audio` *(Shared — Both Styles)*
 Comprehensive guide to sound effects, dynamic background music, and `audioClips` integration (`docs/AUDIO_CATALOG.md`):
-- **Mode A — Modular Procedural SFX** (`audioCues`, `src/audio/sfx/<name>.ts`): 16 built-in one-file-per-SFX synthesizer modules
+- **Mode A — Modular Procedural SFX** (`audioCues`, `src/audio/sfx/<name>.ts`): 19 built-in one-file-per-SFX synthesizer modules synced to active scene FPS (`6 FPS` or `12 FPS`; omits `crayon_scribble` in `classic_cel` scenes)
 - **Mode B — External & Bundled WAV Files** (`audioClips`, `public/audio/*.wav`): Attach `.mp3`/`.wav` clips with dynamic BGM tempo/mood shifts across story sections (faster/energetic for action, calmer/softer ducked under dialogue)
 - **Mode C — Isolated Per-SFX Generation** (`scripts/sfx/<name>.mjs` & `generate_audio.mjs`): Build new SFX/BGM concurrently alongside code & voiceover subagents
 
-### 🎬 `picture-book-studio-export`
+### 🎬 `picture-book-studio-export` *(Shared — Both Styles)*
 Turnkey runbook for previewing, exporting, and promoting assets:
 - Build verification (`agy-node scripts/studio-cli.mjs test` & `build`)
-- Direct headless CLI video export (`agy-node scripts/studio-cli.mjs export --scene <id> --resolution 1080p`)
+- Direct headless CLI video export (`agy-node scripts/studio-cli.mjs export --scene <id> [--style classic_cel|crayon] --resolution 1080p` — `30 FPS` container for `6 FPS` crayon, theatrical `24 FPS` container for `12 FPS` classic cel)
 - Studio dev server management (`agy-node scripts/studio-cli.mjs dev` on `http://localhost:5173`) and asset promotion (`--promote-from`)
 
 ---
@@ -193,7 +211,7 @@ Turnkey runbook for previewing, exporting, and promoting assets:
 ## Agent Architecture
 
 ### `picture-book-director` (Single Main Orchestrator)
-The single main producer, engineering coordinator, and export agent. Rather than duplicating multiple overlapping coder agents, `picture-book-director` loads domain skills on demand and **spins up isolated subagents side-by-side in parallel** — running character rigs, props/buildings, scene TypeScript, per-SFX/dynamic BGM modules, and Gemini TTS voiceovers concurrently with strict file-level isolation, followed by one clean integration, test, build, and MP4 export pass.
+The single main producer, engineering coordinator, and export agent. Always runs the **Mandatory Pre-Production Check** (Step 1: check Google AI Studio API key; Step 2: if animation style wasn't specified, ask the user to choose **Picture-Book Crayon** vs. **Classic Hand-Drawn Animation**), loads the matching style's domain skills on demand, and **spins up isolated subagents side-by-side in parallel** — running character rigs, props/buildings, scene TypeScript, per-SFX/dynamic BGM modules, and Gemini TTS voiceovers concurrently with strict file-level isolation, followed by one clean integration, test, build, and MP4 export pass.
 
 ---
 
@@ -202,9 +220,10 @@ The single main producer, engineering coordinator, and export agent. Rather than
 `rules/AGENTS.md` is always active when the plugin is enabled. It acts as a lean, non-redundant router and guardrail sheet enforcing:
 
 1. **100% standalone engine & VCS**: Auto-resolved via `ensure_engine.mjs` (Option A isolated scratch workspace by default) and `scripts/vcs.mjs`
-2. **Skill routing**: Routes every domain (scripting, animation, assets, voiceover, audio, export) to its Single-Source-of-Truth `SKILL.md`
-3. **Side-by-side parallel subagents & engineering discipline**: Concurrent isolated code + asset + SFX + voiceover subagents, `>= 3` research subagents for `> 100` LOC, centralized `TOKENS`, strict TypeScript, living docs, and atomic commits
-4. **Always-on production guardrails**: Script-first on brief prompts, Two-Tier Terrain & `bookFrame`, continuity/exit pacing/scale, voiceover cutoff/mouth-sync/non-overlap, dynamic BGM, headless export, and asset promotion prompt
+2. **Mandatory Pre-Production Check (API Key → Style Clarification)**: Checks the Gemini TTS API key first (unless voiceover is opted out), then asks the user to choose Picture-Book Crayon vs. Classic Hand-Drawn Animation whenever not already specified
+3. **Dual-Style Skill Routing**: Routes every domain (scripting, crayon vs. classic cel scenes & assets, voiceover, audio, export) to its Single-Source-of-Truth `SKILL.md`
+4. **Side-by-Side Parallel Subagents & Engineering Discipline**: Concurrent isolated code + asset (`src/assets/` or `src/assets/classicCel/`) + SFX + voiceover subagents, `>= 3` research subagents for `> 100` LOC, centralized `TOKENS` / `TOKENS.classicCel`, strict TypeScript, living docs, and atomic commits
+5. **Always-on production guardrails**: Script-first on brief prompts, style-pure backgrounds & framing (`bookFrame` vs. `theatricalFrame`), continuity/exit pacing/scale, voiceover cutoff/mouth-sync/non-overlap, dynamic BGM, headless export, and asset promotion prompt
 
 ---
 
@@ -217,16 +236,14 @@ The single main producer, engineering coordinator, and export agent. Rather than
 | Active engine workspace | `<workspace>` (where `ensure_engine.mjs` scaffolds `<plugin-root>/engine/`) |
 | Bundled pure-JS dependencies | `<workspace>/vendor/` (`typescript`, `mp4-muxer`, `vitest-shim`, `isomorphic-git`) |
 | Source code | `<workspace>/src/` |
-| Scenes | `<workspace>/src/scenes/` |
-| Characters | `<workspace>/src/assets/characters/` |
-| Props | `<workspace>/src/assets/props/` |
-| Buildings | `<workspace>/src/assets/buildings/` |
+| Scenes | `<workspace>/src/scenes/` (incl. `classicMoonlitCat.ts`) |
+| Crayon Characters / Props / Buildings | `<workspace>/src/assets/{characters,props,buildings}/` |
+| Classic Cel Characters / Props / Buildings | `<workspace>/src/assets/classicCel/{characters,props,buildings}/` |
 | Audio engine | `<workspace>/src/audio/soundEngine.ts` |
-| Book-frame engine | `<workspace>/src/engine/bookFrame.ts` |
+| Book-frame & Theatrical-frame engines | `<workspace>/src/engine/bookFrame.ts` & `<workspace>/src/engine/theatricalFrame.ts` |
 | Schema | `<workspace>/src/engine/schema.ts` |
-| Design tokens | `<workspace>/src/theme/tokens.ts` |
-| Architecture docs | `<workspace>/docs/ARCHITECTURE.md` |
-| Style guide | `<workspace>/docs/STYLE_GUIDE.md` |
+| Design tokens | `<workspace>/src/theme/tokens.ts` (`TOKENS` & `TOKENS.classicCel`) |
+| Architecture & Style docs | `<workspace>/docs/ARCHITECTURE.md`, `STYLE_GUIDE.md`, `PLANS.md` |
 | Audio files | `<workspace>/public/audio/` |
 | Exported videos | `<workspace>/exports/` |
 | Dev server | `agy-node scripts/studio-cli.mjs dev` (`http://localhost:5173`) |

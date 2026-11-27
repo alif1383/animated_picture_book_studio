@@ -3,29 +3,31 @@ name: picture-book-script
 description: "Create a complete, engaging picture-book story script — including act-by-act visual beats, continuity/scale staging, character voice casting & acting direction sheets, and dynamic BGM/SFX cue sheets — whenever the user's prompt is brief, high-level, or lacks script detail. Load before coding or generating audio whenever the user hasn't already provided a detailed script."
 ---
 
-# Picture-Book Story & Scriptwriting Skill
+# Story & Scriptwriting Skill (Picture-Book Crayon & Classic Hand-Drawn Cel)
 
-Load this skill **first** whenever the user gives a high-level, brief, or open-ended prompt (e.g., *"Make a 30-second video about a cat exploring a moonlit garden"*, *"Tell a funny knight and dragon adventure"*, *"Create a cozy bedtime story"*).
+Load this skill **first** (after confirming the API key and **Animation Style**) whenever the user gives a high-level, brief, or open-ended prompt (e.g., *"Make a 30-second video about a cat exploring a moonlit garden"*, *"Tell a funny knight and dragon adventure"*, *"Create a cozy bedtime story"*).
 
 If the user has **already** provided a detailed act-by-act script with verbatim dialogue, settings, character voices, and pacing, skip this skill (or use only the missing parts to fill gaps).
 
-The goal of this skill is to produce a crisp **Production Script Blueprint** that tells a memorable story **and** locks down every character's voice, visual setting, prop list, and target filenames so downstream **code, asset, SFX/BGM, and voiceover subagents can immediately execute side-by-side in parallel**.
+The goal of this skill is to produce a crisp **Production Script Blueprint** locked to the chosen **Animation Style (`crayon` | `classic_cel`)** that tells a memorable story **and** pins down every character's voice, visual setting, prop list, and target filenames so downstream **code, asset, SFX/BGM, and voiceover subagents can immediately execute side-by-side in parallel**.
 
 ---
 
-## 1. Story Craft — What Makes a Great Picture-Book Video
+## 1. Story Craft — What Makes a Great Animated Short
 
-### Classic Picture-Book Arc (3 to 5 Acts)
-Target `24s–70s` total duration (unless the user specifies otherwise), always accounting for the automatic `bookFrame` opening (`0 .. ~3.5s`) and closing (`last ~3.5s`):
+### Classic Story Arc (3 to 5 Acts)
+Target `24s–70s` total duration (unless the user specifies otherwise), always accounting for the chosen style's opening and closing framing:
+- **Picture-Book Crayon Style (`artStyle: 'crayon'`, `6 FPS`)**: Hardcover `bookFrame` opening (`0 .. ~3.5s`, cover opens to `0%` sketch and colors in) and closing (`last ~3.5s`–`4.5s`, drains to sketch and closes on `"The End ★"`).
+- **Classic Hand-Drawn Animation Style (`artStyle: 'classic_cel'`, `12 FPS` on twos)**: Theatrical `theatricalFrame` opening (`0 .. ~3.0s`, circular iris-in or warm fade with gold-serif title card) and closing (`last ~3.0s`, iris-out centered on hero into gold-serif `"The End"` card).
 
 | Story Beat | Typical Share | Purpose |
 | :--- | :--- | :--- |
-| **Opening (`bookFrame` intro, `0–3.5s`)** | `~3.5s` | Hardcover book opens and colors in on an inviting establishing visual (no crucial dialogue yet). |
+| **Opening (`bookFrame` `~3.5s` or `theatricalFrame` `~3.0s`)** | `~3.0–3.5s` | Establishing visual during cover color-in (`crayon`) or iris-in + title card (`classic_cel`) — no crucial dialogue yet. |
 | **Act I — Setup & Hook** | `~20%` | Introduce the hero, setting, and a clear desire, curiosity, or playful question right away. |
 | **Act II — Journey / Spark** | `~25%` | Move to a new location or encounter a delightful obstacle, discovery, or quirky friend. |
 | **Act III — Rising Action / Twist** | `~25%` | Escalate energy (action, comedy, mystery, or surprise reveal); shift music tempo/mood to match! |
 | **Act IV — Heart / Payoff** | `~18%` | Resolve the problem with warmth, cleverness, or humor — give every character a clear reaction. |
-| **Act V / Closing (`bookFrame` outro, last `~3.5s`)** | `~12%` | Gentle farewell pose, waving goodbye or cozy rest as the page un-colors and closes on `"The End ★"`. |
+| **Act V / Closing (`bookFrame` `~3.5s` or `theatricalFrame` `~3.0s`)** | `~12%` | Gentle farewell pose, waving goodbye, or cozy rest during book-close (`"The End ★"`) or iris-out (`"The End"`). |
 
 ### Picture-Book Writing Principles
 - **Visual-First Storytelling**: Every act needs a clear physical action (walking, climbing, riding, discovering, splashing, sharing) — never just two characters standing frozen while a narrator reads an essay.
@@ -58,7 +60,7 @@ For **every** speaking role, define:
 ### Script-Level Dialogue & Lip-Sync Rules
 - **Sequential Turns by Default**: Write dialogue as clean sequential turns (`0.25–0.6s` gap between speakers). Never have characters talk over each other unless purposefully marked **`[INTENTIONAL OVERLAP]`** (e.g., simultaneous cheering or comedic interruption).
 - **Finish Every Line Before Scene Cuts**: Budget enough act time for every line to finish cleanly (`+0.4–0.8s` beat before cutting). Only cut someone off at a scene change if explicitly marked **`[INTENTIONAL CUT-OFF]`**.
-- **On-Screen Speaker Mouth Animation**: Clearly tag which on-screen character speaks each line (vs. off-screen `Narrator`) so downstream animators sync stepped `6 FPS` mouth movement and optional `speechText` bubbles to that character's exact clip window.
+- **On-Screen Speaker Mouth Animation**: Clearly tag which on-screen character speaks each line (vs. off-screen `Narrator`) so downstream animators sync stepped **`6 FPS`** mouth movement (`crayon`) or **4-stage `12 FPS` cel lip-sync mouths** (`classic_cel`) and optional `speechText` bubbles to that character's exact clip window.
 - **Concise Speech/Thought Bubbles (`~20–30` chars soft guideline)**: Whenever scripting `speechText` bubbles (especially for stories using text bubbles instead of voiceover narration), aim to keep each bubble around `20–30` characters (soft guideline, not a hard rule) so bubbles stay compact and legible; split longer beats into sequential short bubbles rather than stuffing a long sentence into one bubble.
 
 ---
@@ -72,7 +74,7 @@ Inspect `<workspace>/docs/AUDIO_CATALOG.md` (or `skills/picture-book-audio/refer
   - *Action / Chase / Battle / Comedy Chaos*: Quicker tempo, driving rhythm/percussion, lively staccato articulation.
   - *Cozy / Dialogue / Bedtime / Emotional Beat*: Slower tempo, warm sparse instrumentation, ducked gently under voices (`volume: 0.20–0.35`).
   - *Finale / Victory*: Bright, joyful, resolving cadence.
-- **Foley & SFX Beats**: Reuse matching catalog `audioCues` / `audioClips` first, and list any brand-new theme SFX/BGM to be built as isolated modular files (`src/audio/sfx/<name>.ts` or `scripts/sfx/<name>.mjs`).
+- **Foley & SFX Beats**: Reuse matching catalog `audioCues` / `audioClips` first, and list any brand-new theme SFX/BGM to be built as isolated modular files (`src/audio/sfx/<name>.ts` or `scripts/sfx/<name>.mjs`). *(Note: omit `crayon_scribble` in `classic_cel` scenes.)*
 
 ---
 
@@ -83,30 +85,34 @@ Produce the script using this concise blueprint so the orchestrator can immediat
 ```markdown
 # Production Script Blueprint: <Story Title>
 
+- **Animation Style**: `crayon` *(6 FPS, `bookFrame`, `skills/picture-book-animation` + `skills/photo-to-crayon-asset`)* | `classic_cel` *(12 FPS on twos, `theatricalFrame`, `skills/classic-animation` + `skills/classic-cel-asset`)*
 - **Scene ID & File**: `<scene-id>` → `src/scenes/<sceneName>.ts`
-- **Target Duration**: `~<N>s` (`bookFrame`: `openDurationSec: 3.5`, `closeDurationSec: 3.5`)
-- **Cover / Ending**: `coverTitle`, `coverSubtitle`, `endingTitle: "The End ★"`
+- **Target Duration & FPS**: `~<N>s` at `6 FPS` (`crayon`) or `12 FPS` (`classic_cel`)
+- **Framing**:
+  - If `crayon`: `bookFrame` (`openDurationSec: 3.5`, `closeDurationSec: 3.5`, `coverTitle`, `coverSubtitle`, `endingTitle: "The End ★"`) + `vibrantMode: true | false`
+  - If `classic_cel`: `theatricalFrame` (`mode: 'iris' | 'fade'`, `openDurationSec: 3.0`, `closeDurationSec: 3.0`, `title`, `subtitle`, `endingTitle: "The End"`, `irisFocus: { x, y }`), `bookFrame: false`
 - **Time-of-Day Arc**: e.g. `Morning → Afternoon → Sunset → Starry Night`
-- **Vibrant Mode**: `true | false`
 
 ## Cast, Assets & Voice Direction
 | Role / Node ID | Asset (`CharacterKind` / New File) | Voice (`--character` / `--voice`) | How They Should Sound (`--style`) | Notes (Scale / Props / Mouth) |
 | :--- | :--- | :--- | :--- | :--- |
 | `narrator` | *(off-screen)* | `Sulafat` (`narrator`) | Warm fireside storybook narrator, unhurried | — |
-| `hero-id` | `little_girl` *(existing)* or `src/assets/characters/<new>.ts` | `Leda` | Bright, curious child voice, playful wonder | `scale: 1.0`, animated speaking mouth |
+| `hero-id` | `crayon`: `src/assets/characters/<new>.ts` · `classic_cel`: `src/assets/classicCel/characters/<new>.ts` | `Leda` | Bright, curious child voice, playful wonder | `scale: 1.0`, animated speaking mouth (`6 FPS` or 4-stage `12 FPS`) |
 
 ## New Props / Buildings (If Any)
 | Node ID | Existing Kind or New File | Proportional Size Target (vs. `~100px` Character) | Continuity Behavior |
 | :--- | :--- | :--- | :--- |
-| `prop-id` | `src/assets/props/<new>.ts` | e.g. Table `~52px` tall (waist-high) | Stays in scene until location cut |
+| `prop-id` | `src/assets/props/<new>.ts` (or `src/assets/classicCel/props/<new>.ts`) | e.g. Table `~52px` tall (waist-high) | Stays in scene until location cut |
 
 ## Dynamic BGM & SFX Plan
 - **BGM**: Existing track or new `scripts/sfx/<bgmName>.mjs` → `/audio/<bgm-name>.wav` with section-by-section tempo/mood changes (Act I: ..., Act II: ..., Act III: fast action ..., Act IV: ...).
-- **SFX**: Existing `audioCues` (`chime`, `crayon_scribble`, ...) + any new isolated SFX files (`src/audio/sfx/<sfx>.ts` / `scripts/sfx/<sfx>.mjs`).
+- **SFX**: Existing `audioCues` (`chime`, `lullaby`, `garden_wind_chime`, etc.; use `crayon_scribble` ONLY in `crayon` style) + any new isolated SFX files (`src/audio/sfx/<sfx>.ts` / `scripts/sfx/<sfx>.mjs`).
 
 ## Act-by-Act Script
 ### Act I (`<act-id>`, `~0–12s`) — <Location> · <Time of Day>
-- **Background**: Tier 1 sky/ground (`crayonSkyBlue`, `crayonGrassGreen`) + Tier 2 props/buildings.
+- **Background**:
+  - `crayon`: Tier 1 crayon `background_patch` (`crayonSkyBlue`, `crayonGrassGreen`) + Tier 2 props/buildings.
+  - `classic_cel`: Multiplane painted gouache `background_patch` (`gradient`/`fill` from `TOKENS.classicCel.colors`) + painted set props/buildings.
 - **Visual Action & Exits**: Character blocking, prop handling, and brisk exit transition (`~0.5s` after all characters leave).
 - **Spoken Lines** *(sequential; exact timestamps finalized after WAV generation)*:
   1. **Narrator** → `/audio/<scene>_act1_narrator.wav` (`--voice Sulafat`, `--style "..."`): `"..."`

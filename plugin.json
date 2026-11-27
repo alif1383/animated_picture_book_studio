@@ -3,7 +3,7 @@
   "name": "animated-picture-book-studio",
   "displayName": "Animated Picture Book Studio",
   "version": "1.0.0",
-  "description": "Create charming crayon-style animated storybook videos from a single prompt, with custom photo characters, expressive voiceovers, and music.",
+  "description": "Create animated storybook videos in two distinct styles — Picture-Book Crayon (6 FPS wax-crayon/pastel) or Classic 1970s–80s Hand-Drawn Cel Animation (12 FPS Xerox ink & painted gouache) — from a single prompt, with custom photo characters, expressive voiceovers, and music.",
   "logo": "assets/logo.svg",
   "author": {
     "name": "Ali Farahbakhsh",
@@ -18,12 +18,14 @@
     "storybook",
     "picture-book",
     "crayon",
+    "classic-cel",
+    "hand-drawn",
     "voiceover",
     "creative",
     "mp4"
   ],
   "suggestedPrompts": [
-    "Create a new 30-second animated picture-book video about a cat exploring a moonlit garden, with narration, lullaby music, and chime sound effects, then export it as an MP4",
+    "Create a new 30-second animated video about a cat exploring a moonlit garden in Classic Hand-Drawn Animation style, with narration, lullaby music, and chime sound effects, then export it as an MP4",
     "Here's a photo of my dog — turn them into a crayon storybook character, then add an expressive character voiceover and a playful sound effect",
     "Create an animated picture-book video of a knight and his soldiers leaving their castle after hearing a dragon burned a village. When they find the dragon, it turns out he just has fiery hiccups from a toothache — the knight pulls a thorn out of the dragon's tooth to fix it, and everyone returns to the castle to celebrate saving the realm. Don't use voiceover narration; tell the story using text bubbles instead, then export the MP4."
   ]

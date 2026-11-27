@@ -51,15 +51,17 @@ agy-node scripts/studio-cli.mjs export --scene <sceneId> --resolution 1080p
 ```
 
 Optional flags:
-- `--scene <sceneId>` — Scene ID or registry key (e.g. `1`, `2`, `3`, `strawberry-beach-birthday`, `knight-dragon-quest`, `moonlit-garden`)
+- `--scene <sceneId>` — Scene ID or registry key (e.g. `starter-moonlit-cat`, `classic-moonlit-cat`, `starter-bandana-dog`, `starter-knight-dragon-hiccups`, `1`, `2`, `3`)
+- `--style crayon|classic_cel` — Override animation rendering style (`crayon` 6 FPS storybook vs. `classic_cel` 12 FPS hand-drawn cel)
 - `--resolution 1080p|720p` — Output resolution (default: `1080p`)
 - `--footage <actId>` — Export a single story act
-- `--vibrant 1|0` — Override vibrant mode
+- `--vibrant 1|0` — Override vibrant crayon mode (`crayon` style)
+- `--book-frame 1|0` — Override hardcover `bookFrame` (defaults to `1` for `crayon`, `0` for `classic_cel`)
 
 ### How CLI Export Works
 1. Starts an ephemeral local Studio server in-process.
 2. Automatically locates an installed Chromium/Edge browser binary on the OS (e.g., Windows's built-in `msedge.exe`, so **Google Chrome does NOT need to be installed**) and spawns it in invisible `--headless=new` mode.
-3. Renders all stepped 6 FPS SVG frames, mixes procedural `audioCues` and file-based `audioClips` via `OfflineAudioContext`, encodes H.264 + AAC via `WebCodecs` + `mp4-muxer`, writes `<workspace>/exports/<filename>.mp4` to disk, and prints the saved path and clickable `file:///` link directly to stdout.
+3. Renders all stepped SVG frames (`6 FPS` in `crayon` style packed into a `30 FPS` MP4 container; **`12 FPS` on twos in `classic_cel` style packed into an authentic theatrical `24 FPS` MP4 container**), mixes procedural `audioCues` and file-based `audioClips` via `OfflineAudioContext`, encodes H.264 + AAC via `WebCodecs` + `mp4-muxer`, writes `<workspace>/exports/<filename>.mp4` to disk, and prints the saved path and clickable `file:///` link directly to stdout.
 
 ---
 
@@ -77,34 +79,38 @@ run_command:
 
 The server starts on **http://localhost:5173**.
 
-- **If the dev server starts cleanly**: Keep it running, tell the user that the video has been exported, provide the clickable `[<filename>.mp4](file:///<workspace>/exports/<filename>.mp4)` link, **and** give them the live site URL (`http://localhost:5173/?scene=<sceneId>&autoplay=1`) so they can go check it out.
+- **If the dev server starts cleanly**: Keep it running, tell the user that the video has been exported, provide the clickable `[<filename>.mp4](file:///<workspace>/exports/<filename>.mp4)` link, **and** give them the live site URL (`http://localhost:5173/?scene=<sceneId>&autoplay=1`, or `&style=classic_cel` when overriding style) so they can go check it out.
 - **If the dev server cannot be started** (e.g., port conflict or environment restriction): Tell the user that the video has been exported (with the clickable `[<filename>.mp4](file:///<workspace>/exports/<filename>.mp4)` link) and inform them that the live preview server could not be set up.
 
 ### URL Parameters (Live Studio Preview)
 
 | Parameter              | Example                              | Effect                                  |
 |------------------------|--------------------------------------|-----------------------------------------|
-| `?scene=<id>`          | `?scene=short-sample-1`             | Select any scene by registry key or id  |
-| `?short_sample=<n>`    | `?short_sample=1`                   | Select scene 1–6 (legacy)               |
+| `?scene=<id>`          | `?scene=classic-moonlit-cat`         | Select any scene by registry key or id  |
+| `?style=<id>`          | `?style=classic_cel` or `?style=crayon` | Override animation style (`classic_cel` 12 FPS cel vs. `crayon` 6 FPS storybook) |
+| `?short_sample=<n>`    | `?short_sample=1`                   | Select legacy demo scene 1–6            |
 | `?footage=<actId>`     | `?footage=act-3-nightfall`          | Loop a single act                       |
 | `?t=<sec>`             | `?t=12.5`                           | Seek to timestamp                       |
 | `?autoplay=1`          | `?autoplay=1`                       | Auto-play on load                       |
-| `?vibrant=1`           | `?vibrant=1`                        | Force vibrant crayon mode               |
-| `?book_frame=1|0`      | `?book_frame=1`                     | Toggle Storybook Cover Opening & Ending/Credits Book-Frame (`#chk-book-frame`, default `1`) |
+| `?vibrant=1`           | `?vibrant=1`                        | Force vibrant crayon mode (`crayon`)    |
+| `?book_frame=1|0`      | `?book_frame=1`                     | Toggle Storybook Cover Opening & Ending/Credits Book-Frame (`#chk-book-frame`, default `1` in `crayon`, `0` in `classic_cel`) |
 | `?auto_export=1`       | `?auto_export=1&resolution=1080p`   | Auto-start video export on page load    |
 | `?resolution=<preset>` | `?resolution=720p`                  | Export resolution (default: 1080p)      |
 
 ### Scene Registry Quick-Reference
 
-| URL                                   | Scene                                          | Duration |
-|---------------------------------------|-------------------------------------------------|----------|
-| `?short_sample=1`                     | SHORT_SAMPLE_1 (Sun & Moon story)              | 30 s     |
-| `?short_sample=2`                     | MOONLIGHT_STORY (Lune Store + Ochre Cottage)   | 28 s     |
-| `?short_sample=3`                     | MEADOW_PARTY (Strawberry's Birthday, vibrant)  | 24 s     |
-| `?scene=corner-store-day`             | CORNER_STORE_DAY (Daytime Lune Store)          | 32 s     |
-| `?scene=moonlit-garden`               | MOONLIT_GARDEN (Cat in Moonlit Garden)         | 30 s     |
-| `?scene=strawberry-beach-birthday`    | STRAWBERRY_BEACH_BIRTHDAY (Beach Splash)       | 46 s     |
-| `?scene=knight-dragon-quest`          | KNIGHT_DRAGON_QUEST (Sir Leo & Barnaby Dragon) | 66 s     |
+| URL                                   | Scene                                          | Style / FPS | Duration |
+|---------------------------------------|-------------------------------------------------|-------------|----------|
+| `?scene=starter-moonlit-cat`          | STARTER_MOONLIT_CAT (Mochi's Moonlit Garden)   | `crayon` / 6 FPS | 30 s |
+| `?scene=classic-moonlit-cat`          | CLASSIC_MOONLIT_CAT (Mochi's Moonlit Garden — Classic Cel) | `classic_cel` / 12 FPS | 30 s |
+| `?scene=starter-bandana-dog`          | STARTER_BANDANA_DOG (Biscuit's Sunny Day)      | `crayon` / 6 FPS | 38 s |
+| `?scene=starter-knight-dragon-hiccups`| STARTER_KNIGHT_DRAGON_HICCUPS (Fiery Hiccups)  | `crayon` / 6 FPS | 54 s |
+| `?short_sample=1`                     | SHORT_SAMPLE_1 (Sun & Moon story)              | `crayon` / 6 FPS | 30 s |
+| `?short_sample=2`                     | MOONLIGHT_STORY (Lune Store + Ochre Cottage)   | `crayon` / 6 FPS | 28 s |
+| `?short_sample=3`                     | MEADOW_PARTY (Strawberry's Birthday, vibrant)  | `crayon` / 6 FPS | 24 s |
+| `?scene=corner-store-day`             | CORNER_STORE_DAY (Daytime Lune Store)          | `crayon` / 6 FPS | 32 s |
+| `?scene=strawberry-beach-birthday`    | STRAWBERRY_BEACH_BIRTHDAY (Beach Splash)       | `crayon` / 6 FPS | 46 s |
+| `?scene=knight-dragon-quest`          | KNIGHT_DRAGON_QUEST (Sir Leo & Barnaby Dragon) | `crayon` / 6 FPS | 66 s |
 
 Custom scenes registered in `SCENE_REGISTRY` can be loaded with
 `?scene=<sceneId>`.
@@ -135,7 +141,9 @@ into the final audio track via `renderOfflineAudio()`.
 | 720p   | 1280 × 720  | 5 Mbps        | `avc1.42001f`   |
 
 Audio: AAC 128 kbps stereo, 48 kHz sample rate.
-Container FPS: 30 (renders only on stepped 6 FPS ticks).
+Container FPS:
+- **Picture-Book Crayon (`6 FPS`)**: `30 FPS` container (renders only on stepped `6 FPS` ticks, `5` container frames per drawing).
+- **Classic Hand-Drawn Cel (`12 FPS` on twos)**: **`24 FPS` theatrical film container** (`24 % fps === 0` in `videoExporter.ts`, holding each `12 FPS` drawing cleanly for `2` frames — authentic Disney "on twos" cadence).
 
 ---
 
