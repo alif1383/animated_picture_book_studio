@@ -77,40 +77,45 @@ run_command:
   WaitMsBeforeAsync: 3000
 ```
 
-The server starts on **http://localhost:5173**.
+The server starts on **http://localhost:5173** with **dedicated style routes**:
+- **Picture-Book Crayon Studio (`/`)**: `http://localhost:5173/` (or `http://localhost:5173/?scene=<sceneId>&autoplay=1`) — original Picture-Book Crayon interface with the Picture-Book scene switcher.
+- **Classic 1970s–80s Hand-Drawn Cel Studio (`/classic/...`)**: `http://localhost:5173/classic` · `http://localhost:5173/classic/mochi` · `http://localhost:5173/classic/<sceneId>?autoplay=1` — dark vintage rostrum studio with the Classic Cel scene switcher and 1-click navigation back to `/`.
 
-- **If the dev server starts cleanly**: Keep it running, tell the user that the video has been exported, provide the clickable `[<filename>.mp4](file:///<workspace>/exports/<filename>.mp4)` link, **and** give them the live site URL (`http://localhost:5173/?scene=<sceneId>&autoplay=1`, or `&style=classic_cel` when overriding style) so they can go check it out.
+- **If the dev server starts cleanly**: Keep it running, tell the user that the video has been exported, provide the clickable `[<filename>.mp4](file:///<workspace>/exports/<filename>.mp4)` link, **and** give them the matching live site URL (`http://localhost:5173/?scene=<sceneId>&autoplay=1` for Picture-Book Crayon, or **`http://localhost:5173/classic/<sceneId>?autoplay=1`** for Classic Hand-Drawn Cel) so they can go check it out.
 - **If the dev server cannot be started** (e.g., port conflict or environment restriction): Tell the user that the video has been exported (with the clickable `[<filename>.mp4](file:///<workspace>/exports/<filename>.mp4)` link) and inform them that the live preview server could not be set up.
 
-### URL Parameters (Live Studio Preview)
+### Website Routes & URL Parameters (Live Studio Preview)
 
-| Parameter              | Example                              | Effect                                  |
-|------------------------|--------------------------------------|-----------------------------------------|
-| `?scene=<id>`          | `?scene=classic-moonlit-cat`         | Select any scene by registry key or id  |
+| Route / Parameter      | Example                                 | Effect                                  |
+|------------------------|-----------------------------------------|-----------------------------------------|
+| `/`                    | `http://localhost:5173/`                | Picture-Book Crayon Studio (`artStyle: 'crayon'`, `6 FPS`) |
+| `/classic` · `/classic/mochi` | `http://localhost:5173/classic/mochi` | Classic 1970s–80s Hand-Drawn Cel Studio (`CLASSIC_MOONLIT_CAT_SCENE`, `12 FPS`) |
+| `/classic/<sceneId>`   | `http://localhost:5173/classic/<id>`    | Open any registered scene in Classic Hand-Drawn Cel Studio (`artStyle: 'classic_cel'`) |
+| `?scene=<id>`          | `?scene=starter-moonlit-cat`            | Select any scene by registry key or id  |
 | `?style=<id>`          | `?style=classic_cel` or `?style=crayon` | Override animation style (`classic_cel` 12 FPS cel vs. `crayon` 6 FPS storybook) |
-| `?short_sample=<n>`    | `?short_sample=1`                   | Select legacy demo scene 1–6            |
-| `?footage=<actId>`     | `?footage=act-3-nightfall`          | Loop a single act                       |
-| `?t=<sec>`             | `?t=12.5`                           | Seek to timestamp                       |
-| `?autoplay=1`          | `?autoplay=1`                       | Auto-play on load                       |
-| `?vibrant=1`           | `?vibrant=1`                        | Force vibrant crayon mode (`crayon`)    |
-| `?book_frame=1|0`      | `?book_frame=1`                     | Toggle Storybook Cover Opening & Ending/Credits Book-Frame (`#chk-book-frame`, default `1` in `crayon`, `0` in `classic_cel`) |
-| `?auto_export=1`       | `?auto_export=1&resolution=1080p`   | Auto-start video export on page load    |
-| `?resolution=<preset>` | `?resolution=720p`                  | Export resolution (default: 1080p)      |
+| `?short_sample=<n>`    | `?short_sample=1`                       | Select legacy demo scene 1–6            |
+| `?footage=<actId>`     | `?footage=act-3-nightfall`              | Loop a single act                       |
+| `?t=<sec>`             | `?t=12.5`                               | Seek to timestamp                       |
+| `?autoplay=1`          | `?autoplay=1`                           | Auto-play on load                       |
+| `?vibrant=1`           | `?vibrant=1`                            | Force vibrant crayon mode (`crayon`)    |
+| `?book_frame=1|0`      | `?book_frame=1`                         | Toggle Storybook Cover Opening & Ending/Credits Book-Frame (`#chk-book-frame`, default `1` in `crayon`, `0` in `classic_cel`) |
+| `?auto_export=1`       | `?auto_export=1&resolution=1080p`       | Auto-start video export on page load    |
+| `?resolution=<preset>` | `?resolution=720p`                      | Export resolution (default: 1080p)      |
 
 ### Scene Registry Quick-Reference
 
-| URL                                   | Scene                                          | Style / FPS | Duration |
+| Route / URL                           | Scene                                          | Style / FPS | Duration |
 |---------------------------------------|-------------------------------------------------|-------------|----------|
-| `?scene=starter-moonlit-cat`          | STARTER_MOONLIT_CAT (Mochi's Moonlit Garden)   | `crayon` / 6 FPS | 30 s |
-| `?scene=classic-moonlit-cat`          | CLASSIC_MOONLIT_CAT (Mochi's Moonlit Garden — Classic Cel) | `classic_cel` / 12 FPS | 30 s |
-| `?scene=starter-bandana-dog`          | STARTER_BANDANA_DOG (Biscuit's Sunny Day)      | `crayon` / 6 FPS | 38 s |
-| `?scene=starter-knight-dragon-hiccups`| STARTER_KNIGHT_DRAGON_HICCUPS (Fiery Hiccups)  | `crayon` / 6 FPS | 54 s |
-| `?short_sample=1`                     | SHORT_SAMPLE_1 (Sun & Moon story)              | `crayon` / 6 FPS | 30 s |
-| `?short_sample=2`                     | MOONLIGHT_STORY (Lune Store + Ochre Cottage)   | `crayon` / 6 FPS | 28 s |
-| `?short_sample=3`                     | MEADOW_PARTY (Strawberry's Birthday, vibrant)  | `crayon` / 6 FPS | 24 s |
-| `?scene=corner-store-day`             | CORNER_STORE_DAY (Daytime Lune Store)          | `crayon` / 6 FPS | 32 s |
-| `?scene=strawberry-beach-birthday`    | STRAWBERRY_BEACH_BIRTHDAY (Beach Splash)       | `crayon` / 6 FPS | 46 s |
-| `?scene=knight-dragon-quest`          | KNIGHT_DRAGON_QUEST (Sir Leo & Barnaby Dragon) | `crayon` / 6 FPS | 66 s |
+| `/classic/mochi` or `/classic/classic-moonlit-cat` | CLASSIC_MOONLIT_CAT (Mochi's Moonlit Garden — Classic Cel) | `classic_cel` / 12 FPS | 30 s |
+| `/?scene=starter-moonlit-cat`         | STARTER_MOONLIT_CAT (Mochi's Moonlit Garden)   | `crayon` / 6 FPS | 30 s |
+| `/?scene=starter-bandana-dog`         | STARTER_BANDANA_DOG (Biscuit's Sunny Day)      | `crayon` / 6 FPS | 38 s |
+| `/?scene=starter-knight-dragon-hiccups`| STARTER_KNIGHT_DRAGON_HICCUPS (Fiery Hiccups) | `crayon` / 6 FPS | 54 s |
+| `/?short_sample=1`                    | SHORT_SAMPLE_1 (Sun & Moon story)              | `crayon` / 6 FPS | 30 s |
+| `/?short_sample=2`                    | MOONLIGHT_STORY (Lune Store + Ochre Cottage)   | `crayon` / 6 FPS | 28 s |
+| `/?short_sample=3`                    | MEADOW_PARTY (Strawberry's Birthday, vibrant)  | `crayon` / 6 FPS | 24 s |
+| `/?scene=corner-store-day`            | CORNER_STORE_DAY (Daytime Lune Store)          | `crayon` / 6 FPS | 32 s |
+| `/?scene=strawberry-beach-birthday`   | STRAWBERRY_BEACH_BIRTHDAY (Beach Splash)       | `crayon` / 6 FPS | 46 s |
+| `/?scene=knight-dragon-quest`         | KNIGHT_DRAGON_QUEST (Sir Leo & Barnaby Dragon) | `crayon` / 6 FPS | 66 s |
 
 Custom scenes registered in `SCENE_REGISTRY` can be loaded with
 `?scene=<sceneId>`.

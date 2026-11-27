@@ -4,17 +4,17 @@ The Studio engine supports **two distinct, style-isolated visual pipelines**. Ne
 
 ## Side-by-Side Style Contract
 
-| Dimension | Picture-Book Crayon (`artStyle: 'crayon'`) | Classic Hand-Drawn Cel (`artStyle: 'classic_cel'`) |
+| Dimension | Picture-Book Crayon (`artStyle: 'crayon'`, `/`) | Classic Hand-Drawn Cel (`artStyle: 'classic_cel'`, `/classic/...`) |
 | :--- | :--- | :--- |
-| **Visual Inspiration** | Children's wax-crayon, oil-pastel & felt-tip storybook on cold-press watercolor paper | 1970s–1980s Disney Xerox cel animation (*Mickey's Christmas Carol* 1983, *Robin Hood* 1973, *The Aristocats*) |
-| **Frame Rate & Export** | `6 FPS` stepped stop-motion (`30 FPS` MP4 container) | `12 FPS` ("on twos") fluid hand-drawn motion (`24 FPS` theatrical MP4 container) |
-| **Backgrounds** | Tier 1 textured crayon/marker `<pattern>` `background_patch` with `0–25px` organic seams & progressive fill masks | Multiplane painted watercolor/gouache `background_patch` using SVG `linear`/`radial` `gradient` & `fill` (`#gouache-wash`) |
-| **Characters & Shading** | Cutout crayon `<pattern>` fills + heavy charcoal pencil outlines (`#crayon-stroke`, `outlineMedium: 2.6`) | Opaque matte cel fills + crisp 2-tone clipped shadow & rim highlight (`celShadedShape`) + Xerox charcoal ink (`xeroxInk`, `1.85`) + `celContactShadow` |
-| **Lighting & Glows** | **Forbidden** (no CSS glow, no gradients, no drop shadows) | **Mandatory** warm optical halation (`#cel-soft-glow`) on practical lamps, moon, stars & fireflies + soft ground light pools |
-| **Opening & Closing** | Hardcover `bookFrame` (`3.5s` cover flip & `0→100%` color-in; closing sketch & `"The End ★"`) | `theatricalFrame` (`3.0s` circular iris/fade + gold-serif title card; closing iris-out + `"The End"`) |
-| **Layer 3 Finish** | Cold-press paper multiply + dry-brush flecks (`#layer-3-paper-composite`) | 35mm celluloid film grain (`overlay`, `0.075`) + optical vignette (`#layer-3-film-composite`) |
+| **Visual Inspiration** | Children's wax-crayon, oil-pastel & felt-tip storybook on cold-press watercolor paper | 1970s–1980s Disney Xerox cel animation (*Robin Hood* 1973, *Mickey's Christmas Carol* 1983, *The Aristocats*) |
+| **Frame Rate & Export** | `6 FPS` stepped stop-motion (`30 FPS` MP4 container) | `12 FPS` ("on twos") organic hand-drawn motion (`24 FPS` theatrical MP4 container) |
+| **Backgrounds (Layer 1A)** | Tier 1 textured crayon/marker `<pattern>` `background_patch` with `0–25px` organic seams & progressive fill masks | Dappled, loose, impressionistic watercolor/gouache washes on heavy illustration board (`#gouache-wash`, `gouacheDabWash`, `#bg-board-texture`) + sparse loose hand-inked foliage/grass/wood ticks |
+| **Characters (Layer 1B)** | Cutout crayon `<pattern>` fills + heavy charcoal pencil outlines (`#crayon-stroke`, `outlineMedium: 2.6`) | **Flat matte analog cel paint** (mixed in physical paint jars — earthy Eastmancolor pigments, NO digital gradients!) + **raw electrostatic Xerox graphite toner outlines** (`#xerox-ink`, `xeroxSketchStroke` fur/cloth ticks) + rostrum hover shadow (`#cel-drop-shadow`) + `celContactShadow` |
+| **Lighting & Halation** | **Forbidden** (no CSS glow, no gradients, no drop shadows) | Restrained physical 35mm optical halation (`#cel-soft-glow`) on practical lamps/moon/fireflies only — **NO modern neon glow halos or Photoshop bloom rings** |
+| **Opening & Closing** | Hardcover `bookFrame` (`3.5s` cover flip & `0→100%` color-in; closing sketch & `"The End ★"`) | `theatricalFrame` (`3.0s` circular iris/fade + vintage parchment-gold serif title directly over scene; closing iris-out + `"The End"`) |
+| **Layer 3 Finish** | Cold-press paper multiply + dry-brush flecks (`#layer-3-paper-composite`) | Tangible animated 35mm celluloid film grain (`#film-grain`, `overlay`) + warm film-gate optical vignette (`#layer-3-film-composite`) + Eastmancolor `#cel-grade` |
 | **Asset Folders & Skills** | `src/assets/{characters,props,buildings}/` (`picture-book-animation` + `photo-to-crayon-asset`) | `src/assets/classicCel/{characters,props,buildings}/` (`classic-animation` + `classic-cel-asset`) |
-| **Forbidden In Both** | Pure `#000000` / `#FFFFFF`, neon cyberpunk effects, sterile 60fps CSS `ease-in-out`, hardcoded magic hex colors | Pure `#000000` / `#FFFFFF`, wax-crayon patterns/`#crayon-stroke`/`crayon_scribble`, flat unshaded digital vector shapes |
+| **Strictly Forbidden** | Pure `#000000` / `#FFFFFF`, flat digital gradients, glowing effects, sterile 60fps CSS `ease-in-out` | Pure `#000000` / `#FFFFFF`, **modern digital gradients on characters**, **neon glow halos**, **clean sterile Illustrator vectors**, **slick glossy/airbrushed shading**, wax-crayon patterns/`#crayon-stroke`/`crayon_scribble` |
 
 ---
 
@@ -84,27 +84,27 @@ The Studio engine supports **two distinct, style-isolated visual pipelines**. Ne
 
 ## 4. Classic 1970s–1980s Hand-Drawn Cel Animation Style (`artStyle: 'classic_cel'`)
 
-### 4.1 Core Classic Cel Aesthetic Rules
-- **Medium & Heritage**: Theatrical 1970s–1980s Disney Xerox-era hand-drawn animation (*Mickey's Christmas Carol* 1983, *Robin Hood* 1973, *The Aristocats* 1970) — **lush painted watercolor/gouache multiplane backgrounds** contrasted with **crisp Xerox charcoal ink-and-paint foreground cels**.
-- **Mandatory Techniques**:
-  - **Multiplane Painted Gouache Backgrounds**: Full-bleed layered `background_patch` planes using `gradient` (`linear` / `radial`) and `fill` tokens from `TOKENS.classicCel.colors` rendered via `gouachePath()` (`#gouache-wash`), with outer overbleed (`x: -80..1360`, `y: -60..780`).
-  - **2-Tone Cel Shading + Rim Highlights**: Every foreground character and hero interactive prop uses `celShadedShape()` — opaque matte cel base paint, crisp clipped shadow band(s), moonlight or warm-lantern rim highlight(s), and a clean Xerox charcoal outline (`TOKENS.classicCel.colors.xeroxInk = '#1D1815'`) drawn on top.
-  - **Ground Contact Shadows**: Ground every standing character/prop with `celContactShadow()` (`TOKENS.classicCel.colors.contactShadow = '#121824'`).
-  - **Practical Optical Lighting**: Emit warm golden/cream optical halation (`#cel-soft-glow`) from lanterns, cottage windows, moon, stars, and fireflies, paired with radial warm ground pools.
-  - **Theatrical Framing (`theatricalFrame`)**: Circular iris-in or warm fade (`3.0s`) with gold-serif title card, full-bleed middle story, and closing iris-out centered on `irisFocus` into a gold-serif `"The End"` card (`3.0s`).
-  - **35mm Film Composite**: Layer 3 applies `#film-vignette` + fine 35mm `#film-grain` (`renderFilmCompositeLayer`) over Eastmancolor-graded `#cel-grade` Layer 1.
-- **Forbidden in `classic_cel`**:
-  - **NEVER** use `#crayon-stroke`, wax-crayon `<pattern>` fills (`TOKENS.patterns.crayon*`), raw `#paper-base` (`#F4EFE6`), `#layer-3-paper-composite`, `bookFrame` (unless explicitly requested), or `crayon_scribble` SFX cues.
-  - **NEVER** use pure `#000000` or pure `#FFFFFF` (always use `xeroxInk` `#1D1815` and `celCream` `#FAF6EC` / `warmAmberCore` `#FFF1B8`).
-  - **NEVER** draw flat unshaded digital vector silhouettes without 2-tone cel shadow planes or contact shadows.
+### 4.1 Core Physical Craft Rules (Why 1970s–80s Animation Looks Authentic, Not Modern Digital 2D)
+- **Medium & Heritage**: Theatrical 1970s–1980s Disney Xerox-era hand-drawn cel animation (*Robin Hood* 1973, *Mickey's Christmas Carol* 1983, *The Aristocats* 1970).
+- **Mandatory Physical Techniques**:
+  1. **Raw Electrostatic Xerox Graphite Toner Lines (`#xerox-ink`, `xeroxSketchStroke`)**: Sketchy, slightly broken, variable-pressure charcoal pencil toner outlines preserving the animator's raw pencil energy (fur tufts, cheek/whisker strokes, cloth creases, collar ticks) with subtle living Xerox line boil — NOT razor-sharp clean Illustrator vectors!
+  2. **Flat Opaque Analog Cel Paint on Characters**: Paint characters with **flat matte physical cel paint** mixed in earthy, slightly muted 1970s Eastmancolor pigments (olive greens, russet browns, dusty pinks/lilacs, slate blues, creamy parchment — optional hard-edged cast shadow band ONLY where strong dramatic lighting requires it).
+  3. **Dappled, Loose Watercolor/Gouache Illustration-Board Backgrounds**: Paint backgrounds and set foliage/architecture with loose, blotchy, impressionistic watercolor/gouache brushwork (`#gouache-wash`, `gouacheDabWash`, `#bg-board-texture`) topped with sparse loose hand-inked foliage/grass/wood ticks — creating the iconic visual contrast between crisp graphic foreground cels and soft painted worlds.
+  4. **Real Rostrum Camera, Optical Depth & 35mm Eastmancolor Film**: Separate painted illustration-board backgrounds (Layer 1A, slight optical softness) from transparent acetate foreground cels (Layer 1B, tiny physical rostrum hover shadow `#cel-drop-shadow`), grade with warm earthy Eastmancolor `#cel-grade` (lifted charcoal shadows, creamy paper highlights, micro-soft 35mm focus), and finish with perceptible animated 35mm celluloid film grain + gentle warm film-gate vignette (`#layer-3-film-composite`).
+  5. **Organic 12 FPS ("On Twos") Human Drawing & Vintage Theatrical Cards**: Expressive squash-and-stretch, overlapping follow-through, and vintage serif opening/closing `theatricalFrame` titles without synthetic geometric oval scrims.
+- **STRICTLY FORBIDDEN in `classic_cel`**:
+  - **NEVER** put modern digital gradients (`linearGradient` / `radialGradient`) on foreground character bodies, fur, skin, or clothing!
+  - **NEVER** use neon glow halos, harsh Photoshop bloom rings, or slick glossy/airbrushed shading!
+  - **NEVER** draw sterile, razor-sharp modern vector/Illustrator contours devoid of Xerox pencil character!
+  - **NEVER** use `#crayon-stroke`, wax-crayon `<pattern>` fills (`TOKENS.patterns.crayon*`), raw `#paper-base` (`#F4EFE6`), `#layer-3-paper-composite`, `bookFrame` (unless explicitly requested), or `crayon_scribble` SFX cues!
+  - **NEVER** use pure `#000000` or pure `#FFFFFF`, or bright modern hyper-saturated neon RGB!
 
 ### 4.2 Centralized Classic Cel Tokens (`TOKENS.classicCel` in `src/theme/tokens.ts`)
-- **Theatre, Ink & Titles**: `backdropDark` (`#121014`), `xeroxInk` (`#1D1815`), `xeroxInkSoft` (`#3A312A`), `celCream` (`#FAF6EC`), `celBubbleFill` (`#FBF7EE`), `goldTitle` (`#F2CC6B`), `goldTitleShadow` (`#4A3418`), `contactShadow` (`#121824`)
-- **Painted Night Sky & Glade**: `nightSkyZenith` (`#111A36`), `nightSkyMid` (`#1C2E54`), `nightSkyHorizon` (`#2D4B68`), `nightMistTeal` (`#43697D`), `nightDeepGlade` (`#0E1C2E`), `nightGladeMid` (`#183047`), `nightGladeHorizon` (`#284A5E`)
-- **Woodland & Garden Gouache**: `foliageShadow` (`#162A2C`), `foliageMid` (`#24453E`), `foliageLit` (`#3D6A54`), `foliageRim` (`#6A9477`), `grassNightDeep` (`#1E3A32`), `grassNightMid` (`#2C5141`), `grassNightLit` (`#4A7557`), `gladeGlow` (`#3F6E61`)
-- **Earth, Stone, Water & Practical Light**: `pathEarthDark`, `pathEarthMid`, `pathMoonlit`, `stoneBase`, `stoneLight`, `stoneShadow`, `waterDeep`, `waterMid`, `waterHighlight`, `warmAmberCore`, `warmAmberGlow`, `warmAmberWash`, `warmAmberDeep`
-- **Xerox Strokes**: `xeroxHeavy: 2.4`, `xeroxMedium: 1.85`, `xeroxFine: 1.2`, `sketchLine: 0.95`
-- **Timing & Filters**: `fps: 12` ("on twos"), `containerFps: 24`, filter IDs `#xerox-ink`, `#gouache-wash`, `#cel-drop-shadow`, `#cel-soft-glow`, `#cel-grade`, `#film-grain`, `#film-vignette`
+- **Theatre, Xerox Toner & Titles**: `backdropDark`, `xeroxInk` (warm graphite toner), `xeroxInkSoft`, `celCream` (creamy parchment), `celBubbleFill`, `goldTitle` (antique gold), `goldTitleShadow`, `contactShadow`
+- **Painted Night Sky, Glade & Woodland Gouache**: `nightSkyZenith`, `nightSkyMid`, `nightSkyHorizon`, `nightMistTeal`, `nightDeepGlade`, `nightGladeMid`, `nightGladeHorizon`, `foliageShadow`, `foliageMid`, `foliageLit`, `foliageRim`, `grassNightDeep`, `grassNightMid`, `grassNightLit`, `gladeGlow`
+- **Earth, Stone, Water & Restrained Practical Light**: `pathEarthDark`, `pathEarthMid`, `pathMoonlit`, `stoneBase`, `stoneLight`, `stoneShadow`, `waterDeep`, `waterMid`, `waterHighlight`, `warmAmberCore`, `warmAmberGlow`, `warmAmberWash`, `warmAmberDeep`
+- **Xerox Strokes**: `xeroxHeavy`, `xeroxMedium`, `xeroxFine`, `sketchLine`
+- **Timing & Filters**: `fps: 12` ("on twos"), `containerFps: 24`, filter IDs `#xerox-ink`, `#gouache-wash`, `#bg-board-texture`, `#cel-drop-shadow`, `#cel-soft-glow`, `#cel-grade`, `#film-grain`, `#film-vignette`
 
 ---
 

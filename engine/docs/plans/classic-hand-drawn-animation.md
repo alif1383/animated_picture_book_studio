@@ -45,7 +45,17 @@
 - **Pre-Production Rule & Orchestration**: Update `rules/AGENTS.md` and `agents/picture-book-director.md` so Step 1 checks the Google AI Studio API key and Step 2 immediately asks the user to choose Picture-Book Crayon vs. Classic Hand-Drawn Animation if not specified in the prompt, then routes parallel subagents to the chosen style's skills and isolated asset folders.
 - **Manifest, README & Living Docs**: Update `plugin.json`, `README.md`, `engine/docs/ARCHITECTURE.md`, `engine/docs/STYLE_GUIDE.md`, `engine/docs/PLANS.md`, and this plan document.
 
-### Stage 5 — Final Verification, Visual Inspection & MP4 Export Check
-- Run `typecheck`, `test`, and `build` across the full engine.
-- Visually inspect `classic-moonlit-cat` and `starter-moonlit-cat` across opening, story, Zone A→B cut, and closing phases.
-- Verify headless 1080p MP4 export (`24 FPS` container for `classic-moonlit-cat`, `30 FPS` for `starter-moonlit-cat`).
+### Stage 5 — Initial Verification, Visual Inspection & MP4 Export Check *(Pass 1 Complete)*
+- Ran `typecheck`, `test` (21/21 files, 143/143 tests), and `build`, plus headless 1080p MP4 export (`24 FPS` container) and 5-keyframe visual inspection.
+
+### Stage 6 — Authentic 1970s–80s Xerox / Flat-Cel / Dappled-Gouache / 35mm-Film Overhaul & `/classic/...` Routing *(Pass 2)*
+Guided directly by *Robin Hood* (1973) reference analysis to eliminate modern clean digital 2D vector feel and isolate Classic Cel behind its own website route:
+- **Wave 1 — Core Physical Pipeline (`@cel-pipeline`), SPA Routing (`@scene-integrator`) & Style Rules/Docs (`@skills-and-docs`)**:
+  - Upgrade `#xerox-ink` (dual-pass organic graphite wobble + fine toner paper-grit cycling with clock), enable `useXeroxFilter: true` by default in `celPath()`, add `xeroxSketchStroke()` and `gouacheDabWash()`.
+  - Tune `TOKENS.classicCel.colors` to authentic earthy muted 1970s Eastmancolor pigments; upgrade `#gouache-wash` (brush-mottle + gentle rostrum softness) and add `#bg-board-texture` illustration-board paper tooth.
+  - Separate Layer 1A (painted illustration-board background) from Layer 1B (transparent acetate foreground cels with `#cel-drop-shadow`); upgrade `#cel-grade` (Eastmancolor 35mm response, lifted warm shadows) and `renderFilmCompositeLayer` (perceptible per-frame 35mm celluloid grain); remove synthetic oval scrim from `theatricalFrame.ts`.
+  - Add `/` (original Picture-Book Crayon Studio) vs. `/classic` / `/classic/mochi` / `/classic/<sceneId>` (Classic 1970s–80s Hand-Drawn Cel Studio) SPA routing + style-studio switcher bar across `studio-cli.mjs`, `app.ts`, `index.html`, and `studioAudioAndUi.test.ts`.
+  - Update all Classic Cel skills (`classic-animation`, `classic-cel-asset`), `picture-book-studio-export`, `AGENTS.md`, `picture-book-director.md`, `README.md`, `STYLE_GUIDE.md`, and `ARCHITECTURE.md` to enforce raw Xerox flat-cel + dappled gouache + 35mm film craft and `/classic/...` routes.
+- **Wave 2 — Asset & Scene Overhaul**:
+  - Update Classic Cel characters (`moonlitCat.ts`, `moon.ts`), hero props/cottage (`ochreCottage.ts`, `windChimeArbor.ts`, `gardenFountain.ts`), garden props (`tree.ts`, `streetLantern.ts`, `ambientGardenProps.ts`), and `classicMoonlitCat.ts` to use flat matte analog cel paint + `xeroxSketchStroke` + `gouacheDabWash` + illustration-board backgrounds.
+  - Re-verify `typecheck`, `test`, `build`, `/classic/mochi` visual keyframes, and headless 1080p MP4 export.

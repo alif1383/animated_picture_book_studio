@@ -1,41 +1,50 @@
 ---
 name: classic-animation
-description: "How to create, edit, and style 1970s–1980s Classic Hand-Drawn Cel animations, scenes, multiplane painted watercolor/gouache backgrounds, theatrical iris/fade framing, 12 FPS on-twos timing, camera choreography, and audio cues in the Studio engine (artStyle: 'classic_cel'). Activate whenever the user chooses or requests Classic Hand-Drawn Animation style (inspired by Disney's Mickey's Christmas Carol 1983 & Robin Hood 1973)."
+description: "How to create, edit, and style authentic 1970s–1980s Classic Hand-Drawn Cel animations — raw electrostatic Xerox graphite toner lines, flat matte analog cel paint characters, dappled watercolor/gouache illustration-board backgrounds, rostrum camera cel-over-background depth, 35mm Eastmancolor film grain, theatrical iris/fade cards, and 12 FPS on-twos motion (artStyle: 'classic_cel', routed at /classic/...). Activate whenever the user chooses Classic Hand-Drawn Animation style (inspired by Disney's Robin Hood 1973 & Mickey's Christmas Carol 1983)."
 ---
 
 # Classic Hand-Drawn Animation & Scene Authoring Skill (`artStyle: 'classic_cel'`)
 
-This skill is the authoritative guide for designing, choreographing, and editing **1970s–1980s Classic Hand-Drawn Cel Animations** in the Studio engine (`<workspace>`, scaffolded from `<plugin-root>/engine/`).
+This skill is the authoritative guide for designing, choreographing, and editing **authentic 1970s–1980s Classic Hand-Drawn Cel Animations** in the Studio engine (`<workspace>`, scaffolded from `<plugin-root>/engine/`), previewed at **`/classic/...`** (e.g., `http://localhost:5173/classic/mochi`).
 
-Visual benchmark: theatrical hand-drawn cel shorts and features from the 1970s–1980s Xerox era — inspired by ***Mickey's Christmas Carol* (1983)**, ***Robin Hood* (1973)**, and ***The Aristocats* (1970)** — pairing **lush painted watercolor/gouache multiplane backgrounds** with **crisp Xerox charcoal ink-and-paint foreground cels**, **2-tone cel shading**, **12 FPS ("on twos")** animation inside a **24 FPS** film container, **classic theatrical iris/fade title cards**, and subtle **35mm celluloid film grain**.
+Visual benchmark: theatrical Xerox-era hand-drawn shorts and features from the 1970s–1980s — inspired by ***Robin Hood* (1973)**, ***Mickey's Christmas Carol* (1983)**, and ***The Aristocats* (1970)**.
 
 > [!IMPORTANT]
-> - **Scope**: Use this skill ONLY for **Classic Hand-Drawn Animation Style (`artStyle: 'classic_cel'`)**. For **Picture-Book Crayon Style (`artStyle: 'crayon'`)**, load **`skills/picture-book-animation/SKILL.md`** instead.
-> - **Custom Characters, Props & Buildings**: Load **`skills/classic-cel-asset/SKILL.md`** for creating classic cel assets in `src/assets/classicCel/{characters,props,buildings}/`.
+> - **Scope**: Use this skill ONLY for **Classic Hand-Drawn Animation Style (`artStyle: 'classic_cel'`)**. For **Picture-Book Crayon Style (`artStyle: 'crayon'`, served at `/`)**, load **`skills/picture-book-animation/SKILL.md`** instead.
+> - **Custom Characters, Props & Buildings**: Load **`skills/classic-cel-asset/SKILL.md`** for creating authentic Xerox/flat-cel characters and gouache-board props/buildings in `src/assets/classicCel/{characters,props,buildings}/`.
 > - **Brief Prompts**: If the user's prompt is brief or lacks story/dialogue detail, load **`skills/picture-book-script/SKILL.md`** first (setting `Animation Style: classic_cel`) to create the Production Script Blueprint.
 
 ---
 
-## 1. Core Visual Philosophy (1970s–1980s Xerox Cel + Painted Gouache)
+## 1. Why 1970s–1980s Classic Animation Looks Vintage (Physical Craft Rules)
 
-Classic theatrical animation achieves depth through a deliberate visual contrast between **painted atmospheric backgrounds** and **crisp ink-and-paint foreground cels**:
+True 1970s–80s theatrical cel animation looks unmistakably analog and alive — **NEVER like modern clean 2D digital vector/Flash art**. Every scene MUST obey all four physical production pillars:
 
-### Mandatory Aesthetics
-- **Painted Gouache/Watercolor Multiplane Backgrounds**: Full-bleed painted skies, distant misty ridges, woodland hedgerows, earthen lanes, and stonework built with layered `background_patch` nodes using painterly SVG `gradient` (`linear` / `radial`) and `fill` tokens from `TOKENS.classicCel.colors`, softened by `#gouache-wash` (`softEdge: true`, `outlined: false`).
-- **Xerox Ink-and-Paint Foreground Cels**: Characters and hero interactive props are inked in warm dark charcoal (`TOKENS.classicCel.colors.xeroxInk = '#1D1815'` or `xeroxInkSoft = '#3A312A'` — **never** pure `#000000`) with solid opaque matte cel paint fills, **crisp 2-tone cel shadow planes**, **moonlit/warm rim highlights** (`celShadedShape`), and soft ground contact shadows (`celContactShadow`).
-- **Practical Lighting & Optical Halation**: Lanterns, cottage windows, moonlight, stars, music notes, and fireflies emit warm golden/cream optical glows (`#cel-soft-glow`) and cast soft warm pools across nearby ground and foliage.
-- **12 FPS ("On Twos") Timing**: Classic Disney animation runs at **`12 FPS`** (`TOKENS.classicCel.timing.fps`) — 12 drawings per second held for 2 frames each inside a **`24 FPS`** theatrical film container (`TOKENS.classicCel.timing.containerFps`) — giving fluid secondary motion (tails, ears, cloaks, water ripples, swaying vines) while retaining unmistakable hand-drawn cadence.
-- **Theatrical Framing (`theatricalFrame`)**: Opens with a circular iris-in or warm theatre fade-in (`3.0s`) and gold-serif theatrical title card, runs full-bleed across the story, and closes with an iris-out centered on the hero (`irisFocus`) into a classic gold-serif `"The End"` card.
+### Pillar 1 — Raw Electrostatic Xerox Graphite Toner Lines (`#xerox-ink` & `xeroxSketchStroke`)
+- In the 1960s–80s Xerox process, animators' raw graphite pencil drawings were transferred directly onto clear acetate cels.
+- Foreground outlines MUST use `#xerox-ink` (dual-pass organic graphite wobble + fine toner paper-grit, applied by default in `celPath()`) in warm dark charcoal (`TOKENS.classicCel.colors.xeroxInk`, never pure `#000000`) plus `xeroxSketchStroke()` for sketchy, broken, variable-pressure internal pencil lines (fur tufts, cheek/whisker ticks, cloth creases, collar folds).
+- Let the Xerox seed cycle subtly with the stepped 12 FPS clock for genuine living hand-drawn line boil.
 
-### Forbidden Effects — NEVER Use These in `classic_cel` Scenes
-- **NO** wax crayon / oil-pastel hatch patterns (`TOKENS.patterns.crayon*`) or `#pat-marker-indigo-night`
-- **NO** heavy `#crayon-stroke` displacement wobble or aggressive 6 FPS line boil
-- **NO** raw cold-press watercolor paper background (`#paper-base`, `#F4EFE6`) or cold-press paper multiply overlay (`#layer-3-paper-composite`)
-- **NO** hardcover `bookFrame` opening/closing (unless the user explicitly requests `bookFrame: true`)
-- **NO** `crayon_scribble` foley cues in `audioCues`
-- **NO** pure `#000000` ink or pure `#FFFFFF` highlights (always use `TOKENS.classicCel.colors.xeroxInk` and `celCream` / `warmAmberCore`)
-- **NO** flat sterile digital vector look (every foreground cel needs 2-tone shadow/rim modeling; every background needs layered multiplane atmospheric gradients and foliage/architecture depth)
-- **NO** neon cyberpunk glow or smooth sterile 60fps CSS `ease-in-out` tweening
+### Pillar 2 — Flat Opaque Analog Cel Paint on Characters vs. Dappled Watercolor/Gouache Illustration-Board Backgrounds
+- **Characters (Layer 1B — Transparent Acetate Cel)**: Painted on the back of clear acetate using **flat, opaque, matte physical cel paint** mixed in paint jars — earthy, slightly muted 1970s Eastmancolor pigments (olive greens, russet browns, dusty pinks/lilacs, slate blues, warm parchment creams). Keep characters graphic and readable with **flat matte fills** (optional crisp hard-edged 2-tone shadow plane ONLY where strong directional drama demands it — NEVER airbrushed gradients, NEVER glossy specular shading, NEVER glowing neon outlines!).
+- **Backgrounds (Layer 1A — Painted Watercolor/Gouache Illustration Board)**: Painted separately on heavy illustration board with **dappled, loose, impressionistic watercolor/gouache brushwork washes** (`#gouache-wash`, `gouacheDabWash`, `#bg-board-texture`) topped with **sparse, loose hand-inked foliage/grass/wood ticks** (`xeroxSketchStroke`). This stark physical separation — crisp graphic Xerox cels floating over soft, blotchy, hand-painted watercolor worlds — is the single biggest signature of *Robin Hood* (1973) and *Mickey's Christmas Carol* (1983)!
+
+### Pillar 3 — Real Rostrum Camera, Hot Lights & 35mm Eastmancolor Celluloid Film
+- **Physical Cel-Over-Background Depth**: `renderer.ts` separates Layer 1A (painted illustration-board background + `#bg-board-texture` + slight `#gouache-wash` optical softness) from Layer 1B (transparent acetate foreground cels with tiny physical rostrum hover shadow `#cel-drop-shadow`).
+- **Tangible 35mm Celluloid Finish**: `#cel-grade` applies warm earthy Eastmancolor film response (muted analog saturation, warm lifted charcoal shadows, creamy paper-stock highlights, subtle 35mm optical softness) and Layer 3 (`renderFilmCompositeLayer` → `#layer-3-film-composite`) composites **perceptible, animated 35mm celluloid film grain** (`#film-grain`) + gentle warm film-gate vignette (`#film-vignette`).
+- **Subtle Physical Optical Halation Only**: Practical lamps, cottage windows, moon, and fireflies use restrained warm 35mm optical halation (`#cel-soft-glow`) — NEVER harsh modern Photoshop/neon bloom rings!
+
+### Pillar 4 — Organic Frame-by-Frame Human Drawing (`12 FPS` on Twos / `24 FPS` Film Container)
+- Runs at **`12 FPS`** (`TOKENS.classicCel.timing.fps`) exported in a **`24 FPS`** theatrical MP4 container (`TOKENS.classicCel.timing.containerFps`), holding every hand-drawn cel cleanly on twos (`2` film frames per drawing).
+- Emphasize expressive pose variation, bold squash-and-stretch, overlapping secondary motion (ears, tail, whiskers, garments), and living Xerox line boil — NEVER sterile puppet-rig floatiness.
+
+### STRICTLY FORBIDDEN in `classic_cel` Scenes
+- **NO** modern digital gradients (`linearGradient` / `radialGradient`) on foreground characters!
+- **NO** slick glossy/airbrushed shading or modern vector/Illustrator razor-sharp sterile strokes!
+- **NO** glowing neon halos, cyberpunk/Photoshop bloom rings, or hyper-saturated modern RGB colors!
+- **NO** wax crayon / oil-pastel hatch patterns (`TOKENS.patterns.crayon*`), heavy `#crayon-stroke` displacement, raw `#paper-base` (`#F4EFE6`), `#layer-3-paper-composite`, `bookFrame` (unless explicitly requested), or `crayon_scribble` SFX cues!
+- **NO** pure `#000000` ink or pure `#FFFFFF` highlights!
+- **NO** synthetic geometric dark ellipse scrims behind opening titles!
 
 ---
 
@@ -47,51 +56,50 @@ Classic theatrical animation achieves depth through a deliberate visual contrast
 import { TOKENS } from '../theme/tokens';
 ```
 
-- **`TOKENS.classicCel.colors.*`**:
-  - *Theatre & Ink*: `backdropDark` (`#121014`), `xeroxInk` (`#1D1815`), `xeroxInkSoft` (`#3A312A`), `celCream` (`#FAF6EC`), `celBubbleFill` (`#FBF7EE`), `goldTitle` (`#F2CC6B`), `goldTitleShadow` (`#4A3418`), `contactShadow` (`#121824`)
-  - *Night Sky & Atmospheric Mist*: `nightSkyZenith` (`#111A36`), `nightSkyMid` (`#1C2E54`), `nightSkyHorizon` (`#2D4B68`), `nightMistTeal` (`#43697D`), `nightDeepGlade` (`#0E1C2E`), `nightGladeMid` (`#183047`), `nightGladeHorizon` (`#284A5E`)
-  - *Woodland & Garden Gouache*: `foliageShadow` (`#162A2C`), `foliageMid` (`#24453E`), `foliageLit` (`#3D6A54`), `foliageRim` (`#6A9477`), `grassNightDeep` (`#1E3A32`), `grassNightMid` (`#2C5141`), `grassNightLit` (`#4A7557`), `gladeGlow` (`#3F6E61`)
-  - *Earth, Stone & Water*: `pathEarthDark`, `pathEarthMid`, `pathMoonlit`, `stoneBase`, `stoneLight`, `stoneShadow`, `waterDeep`, `waterMid`, `waterHighlight`
-  - *Practical Warm Lighting*: `warmAmberCore` (`#FFF1B8`), `warmAmberGlow` (`#F7C95C`), `warmAmberWash` (`#E69B3A`), `warmAmberDeep` (`#B86A24`)
-  - *Timber, Cottage & Iron*: `woodDark`, `woodMid`, `woodLit`, `cottagePlaster`, `cottagePlasterShadow`, `cottageRoof`, `cottageRoofShadow`, `cottageShutter`, `cottageShutterShadow`, `ironDark`, `ironHighlight`
-  - *Character Cel Paint Ramps & Celestial*: `mochiFurBase/Shadow/Rim/Stripe`, `moonCream/Amber/Shadow/Crater`, `nightcapBlue/Shadow/Stripe`, `starGlow`, `flowerCream/Blue/Rose` (add new character/daylight paint ramps directly into `TOKENS.classicCel.colors` when creating new classic cel stories!)
-- **`TOKENS.classicCel.strokes.*`**: `xeroxHeavy` (`2.4`), `xeroxMedium` (`1.85`), `xeroxFine` (`1.2`), `sketchLine` (`0.95`)
-- **`TOKENS.classicCel.timing.*`**: `fps: 12`, `frameDurationMs: 83.33`, `containerFps: 24`
-- **`TOKENS.classicCel.filters.ids.*`**: `xeroxInk` (`#xerox-ink`), `gouacheWash` (`#gouache-wash`), `celDropShadow` (`#cel-drop-shadow`), `celSoftGlow` (`#cel-soft-glow`), `celGrade` (`#cel-grade`), `filmGrain` (`#film-grain`), `filmVignette` (`#film-vignette`)
-- **`TOKENS.classicCel.typography.*`**: `fontFamilySerif` (gold theatrical titles), `fontFamilyDialogue` (clean cel dialogue bubbles)
+- **`TOKENS.classicCel.colors.*`**: Earthy, slightly muted 1970s Eastmancolor physical paint pigments (zero pure `#000000` or `#FFFFFF`):
+  - *Theatre, Xerox Toner & Titles*: `backdropDark`, `xeroxInk` (warm graphite toner), `xeroxInkSoft`, `celCream` (creamy parchment), `celBubbleFill`, `goldTitle` (warm antique gold), `goldTitleShadow`, `contactShadow`
+  - *Painted Night Sky, Glade & Woodland Gouache*: `nightSkyZenith`, `nightSkyMid`, `nightSkyHorizon`, `nightMistTeal`, `nightDeepGlade`, `nightGladeMid`, `nightGladeHorizon`, `foliageShadow`, `foliageMid`, `foliageLit`, `foliageRim`, `grassNightDeep`, `grassNightMid`, `grassNightLit`, `gladeGlow`
+  - *Earth, Stone, Water, Timber & Cottage*: `pathEarthDark`, `pathEarthMid`, `pathMoonlit`, `stoneBase`, `stoneLight`, `stoneShadow`, `waterDeep`, `waterMid`, `waterHighlight`, `woodDark`, `woodMid`, `woodLit`, `cottagePlaster`, `cottagePlasterShadow`, `cottageRoof`, `cottageRoofShadow`, `cottageShutter`, `cottageShutterShadow`, `ironDark`, `ironHighlight`
+  - *Restrained Warm Practical Lights*: `warmAmberCore`, `warmAmberGlow`, `warmAmberWash`, `warmAmberDeep`
+  - *Flat Analog Character Cel Pigments*: `mochiFurBase`, `mochiFurShadow`, `mochiFurRim`, `mochiStripe`, `mochiCream`, `mochiCreamShadow`, `mochiEarPink`, `mochiNose`, `mochiTongue`, `mochiMouthInner`, `mochiCollar`, `mochiCollarShadow`, `mochiGold`, `mochiGoldHighlight`, `mochiEyeIris`, `moonCream`, `moonAmber`, `moonShadow`, `moonCrater`, `nightcapBlue`, `nightcapShadow`, `nightcapStripe`, `starGlow`, `flowerCream`, `flowerBlue`, `flowerRose`
+- **`TOKENS.classicCel.strokes.*`**: `xeroxHeavy`, `xeroxMedium`, `xeroxFine`, `sketchLine`
+- **`TOKENS.classicCel.timing.*`**: `fps: 12` ("on twos"), `frameDurationMs: 83.33`, `containerFps: 24`
+- **`TOKENS.classicCel.filters.ids.*`**: `xeroxInk` (`#xerox-ink`), `gouacheWash` (`#gouache-wash`), `bgBoardTexture` (`#bg-board-texture`), `celDropShadow` (`#cel-drop-shadow`), `celSoftGlow` (`#cel-soft-glow`), `celGrade` (`#cel-grade`), `filmGrain` (`#film-grain`), `filmVignette` (`#film-vignette`)
+- **`TOKENS.classicCel.typography.*`**: `fontFamilySerif`, `fontFamilyDialogue`
 
 > [!CAUTION]
-> **Never hardcode hex colors, stroke widths, or magic numbers** in scene files. Extend `TOKENS.classicCel.colors` if a new scene needs a daytime or custom palette (keeping warm, slightly muted 1970s Eastmancolor pigments — never `#000000` or `#FFFFFF`).
+> **Never hardcode hex colors, stroke widths, or magic numbers** in scene files. When authoring a new daytime/forest/castle classic cel short, add authentic earthy 1970s Eastmancolor pigments (olive greens, russet browns, dusty pinks, slate blues, creamy parchment) to `TOKENS.classicCel.colors`.
 
 ---
 
-## 3. The Classic Cel 3-Layer Render Pipeline (`artStyle: 'classic_cel'`)
+## 3. The Classic Cel Dual-Plane + 35mm Film Render Pipeline (`artStyle: 'classic_cel'`)
 
-When `scene.artStyle === 'classic_cel'` (or overridden via `?style=classic_cel`), `evaluateAndRenderScene` (`src/engine/renderer.ts`) automatically switches the full render stack:
+When `scene.artStyle === 'classic_cel'` (or visited via `/classic/...` or `?style=classic_cel`), `evaluateAndRenderScene` (`src/engine/renderer.ts`) automatically switches the full render stack:
 
-1. **Layer 1 — Multiplane Painted Scene + Eastmancolor Print Grade (`#layer-1-base-scene`, `filter="url(#cel-grade)"`)**:
-   - Theatre backdrop rect `#cel-backdrop` (`TOKENS.classicCel.colors.backdropDark`, `#121014`).
-   - Multiplane `background_patch` layers rendered via `gouachePath()` with painterly `gradient` / `fill` definitions (`#gouache-wash`), followed by zIndex-sorted buildings, props, classic cel character rigs (`src/assets/classicCel/`), and clean cream cel speech/thought bubbles (`#FBF7EE`, Xerox charcoal border).
-   - Progressive crayon fill masks (`enableProgressiveFill`) and `bookFrame` default to `false`; `theatricalFrame` defaults to `true` and wraps Layer 1 via `renderTheatricalFrameOverlay()`.
-2. **Layer 2 — Classic Cel & Gouache `<defs>` (`renderEngineDefs({ artStyle: 'classic_cel' })`)**:
-   - Emits `#xerox-ink` (subtle `0.55px` graphite displacement stepped cleanly), `#gouache-wash` (soft `1.2px` painterly watercolor edge), `#cel-drop-shadow` (subtle multiplane acetate separation), `#cel-soft-glow` (warm optical halation for lamps/moon/fireflies/stars), `#cel-grade` (warm Eastmancolor theatrical print color grade), `#film-grain`, and `#film-vignette`.
-3. **Layer 3 — 35mm Celluloid Film Composite (`#layer-3-film-composite` via `renderFilmCompositeLayer`)**:
-   - Subtle optical cinema gate vignette (`url(#film-vignette)`) + fine monochromatic 35mm film grain (`url(#film-grain)`, `mix-blend-mode: overlay`, `opacity: 0.075`). Replaces the cold-press paper overlay completely.
+1. **Layer 1A — Painted Watercolor/Gouache Illustration-Board Background**:
+   - Theatre backdrop `#cel-backdrop` (`TOKENS.classicCel.colors.backdropDark`) + multiplane `background_patch` layers rendered via `gouachePath()` (`#gouache-wash` brush-mottle displacement + gentle rostrum optical softness) and illustration-board paper tooth (`#bg-board-texture`), plus painted background architecture/foliage props with sparse loose hand-inked accents (`xeroxSketchStroke`).
+2. **Layer 1B — Transparent Acetate Foreground Cels (`#cel-drop-shadow`)**:
+   - Foreground classic cel characters (`src/assets/classicCel/characters/`) and hero interactive props inked with raw electrostatic `#xerox-ink` toner lines and flat matte analog cel paint, hovering with subtle physical rostrum cel separation (`#cel-drop-shadow`) over the softer painted background.
+   - Entire Layer 1 is graded through `#cel-grade` (1970s Eastmancolor response, lifted warm shadows, micro-soft 35mm lens focus) and wrapped in `renderTheatricalFrameOverlay()`.
+3. **Layer 2 — Classic Cel, Gouache & Optical `<defs>` (`renderEngineDefs({ artStyle: 'classic_cel' })`)**:
+   - Emits `#xerox-ink`, `#gouache-wash`, `#bg-board-texture`, `#cel-drop-shadow`, `#cel-soft-glow`, `#cel-grade`, `#film-grain`, and `#film-vignette`.
+4. **Layer 3 — 35mm Celluloid Film Composite (`#layer-3-film-composite` via `renderFilmCompositeLayer`)**:
+   - Animated per-frame 35mm celluloid film grain (`#film-grain`) + gentle warm film-gate optical vignette (`#film-vignette`) — completely replacing cold-press crayon paper.
 
-### Multiplane Painted Gouache Background Architecture
+### Multiplane Painted Gouache Illustration-Board Architecture
 
-Instead of crayon hatch patches with raw paper seams, build **seamless, multi-depth painted gouache backdrops** with outer overbleed (`x: -80..1360`, `y: -60..780`) so camera pans/zooms never reveal dark backdrop edges:
+Build **loose, dappled, impressionistic painted backdrops** with outer overbleed (`x: -80..1360`, `y: -60..780`) so camera pans/zooms never expose dark margins:
 
-| Multiplane Depth Plane | Typical `zIndex` | Technique (`BackgroundPatchNode`) |
+| Multiplane Depth Plane | Typical `zIndex` | Technique (`BackgroundPatchNode` / Props) |
 | :--- | :--- | :--- |
-| **Far Sky & Horizon Mist** | `1–2` | Vertical `linear` `gradient` (`nightSkyZenith → nightSkyMid → nightSkyHorizon`) + optional `radial` horizon mist/moonlight glow (`softEdge: false` or `true`). |
-| **Distant Hills / Woodland Silhouettes** | `3–4` | Soft curved ridge paths with cool atmospheric `fill` or `gradient` (`foliageShadow` / `nightMistTeal`, `softEdge: true`) for aerial perspective. |
-| **Midground Hedgerow / Canopy / Walls** | `5–6` | Layered scalloped painted foliage washes (`foliageMid` → `foliageShadow` gradient) framing the stage and separating locations cleanly. |
-| **Painted Ground / Lawn / Forest Floor** | `7–8` | Full lower-zone `linear` `gradient` (`grassNightDeep → grassNightMid → grassNightLit`) extending cleanly past `y = 760`. |
-| **Earthen Path & Practical Light Pools** | `9–10` | Curved garden lane (`pathEarthDark → pathEarthMid → pathMoonlit`) plus soft `radial` warm lantern light pools (`warmAmberGlow` fading to `opacity: 0`) or moonlight clearings (`gladeGlow`). |
-| **Set Dressing & Hero Architecture** | `11–20` | Classic cel props & buildings (`star_cluster`, `fluffy_cloud`, `tree`, `ochre_cottage`, `street_lantern`, `wind_chime_arbor`, `garden_fountain`, `grass_patch`, `meadow_flowers`). |
-| **Foreground Cel Characters & FX** | `21–34` | Classic cel character rigs (`src/assets/classicCel/characters/*`) with `celContactShadow`, 2-tone cel shading, plus glowing floating accents (`music_notes`, fireflies). |
-| **Dialogue Bubbles & Annotations** | `35–40` | Character-attached `speechText` / `speechStyle` bubbles (rendered automatically in clean cream `#FBF7EE` with Xerox charcoal outlines) or crisp serif captions. |
+| **Far Sky & Horizon Wash** | `1–2` | Soft muted vertical watercolor wash (`gradient` from `TOKENS.classicCel.colors` + `softEdge: true`) + faint atmospheric mist dab. |
+| **Distant Impressionistic Trees / Hills** | `3–4` | Soft blotchy silhouetted ridges (`fill` / `gradient`, `softEdge: true`) receding into cool aerial mist. |
+| **Midground Dappled Foliage / Hedgerow** | `5–6` | Layered scalloped watercolor/gouache foliage washes (`gouacheDabWash` inside props or layered `background_patch` shapes) with sparse loose sepia ink accents. |
+| **Painted Meadow / Forest Floor** | `7–8` | Warm/earthy dappled ground wash extending past `y = 760`. |
+| **Earthen Path & Soft Practical Pools** | `9–10` | Curved dirt/stone lane + restrained warm golden ground wash under lanterns or soft moonlight clearing pool. |
+| **Painted Set Architecture & Foliage** | `11–20` | Painted illustration-board props & buildings (`src/assets/classicCel/{buildings,props}/`) with loose hand-inked wood/grass/leaf ticks. |
+| **Foreground Xerox Cel Characters** | `21–34` | Flat matte cel-painted character rigs (`src/assets/classicCel/characters/`) with raw `#xerox-ink` outlines, `xeroxSketchStroke` fur/cloth ticks, and `celContactShadow`. |
+| **Dialogue Bubbles & Annotations** | `35–40` | Clean parchment-cream cel bubbles (`#FBF7EE`) with Xerox charcoal borders (`speechText` / `speechStyle`). |
 
 ---
 
@@ -99,11 +107,11 @@ Instead of crayon hatch patches with raw paper seams, build **seamless, multi-de
 
 Every `classic_cel` scene defaults to `theatricalFrame` enabled (`bookFrame: false`):
 1. **Opening (`0 .. openDurationSec`, default `3.0s`, `phase: 'opening'`)**:
-   - Circular iris opens (`irisProgress: 0 → 1`) or warm cinema fade lifts (`blackVeilOpacity: 1 → 0`) over the establishing painted background while the gold-serif title card (`#theatrical-opening-title`: `creditText`, `title`, ornamental hairline divider, `subtitle`) fades in, holds, and fades out before the first dialogue beat.
+   - Circular iris opens (`mode: 'iris'`) or warm theatre fade lifts (`mode: 'fade'`) directly over the painted establishing shot while `#theatrical-opening-title` displays classic parchment-gold serif lettering with an inked drop-shadow (NO modern geometric dark oval scrim!).
 2. **Main Story (`openDurationSec .. durationSec - closeDurationSec`, `phase: 'story'`)**:
-   - 100% full-bleed theatrical frame (`innerSceneMarkup` untouched, zero overlay overhead).
+   - 100% full-bleed theatrical frame (`innerSceneMarkup` untouched).
 3. **Closing (`durationSec - closeDurationSec .. durationSec`, default last `3.0s`, `phase: 'closing'`)**:
-   - Circular iris closes gently onto `irisFocus` (e.g., resting hero `{ x: 690, y: 585 }`) or fades smoothly to `#121014`, revealing the gold-serif **`"The End"`** card (`#theatrical-ending-card`) and `endingCredit`.
+   - Circular iris closes gently onto `irisFocus` (e.g., resting hero `{ x: 690, y: 585 }`) or fades to dark velvet, revealing the classic serif **`"The End"`** card (`#theatrical-ending-card`).
 
 ```typescript
 theatricalFrame: {
@@ -126,9 +134,9 @@ theatricalFrame: {
 ## 5. Continuity, Pacing, Scale, Facing & Lip-Sync Rules
 
 All narrative staging guardrails apply strictly to `classic_cel` scenes:
-1. **Location-Driven Background Changes**: When the story cuts to a new location (e.g., Cottage Garden Lane → Secret Moonlit Glade), visibly change ALL multiplane `background_patch` layers (sky gradient, woodland silhouettes, ground wash, light pools) and Tier 2 props/buildings.
+1. **Location-Driven Background Changes**: When the story cuts to a new location (e.g., Cottage Garden Lane → Secret Moonlit Glade), visibly change ALL multiplane `background_patch` layers and painted set props/buildings.
 2. **Brisk Cuts When Characters Exit**: Cut within `~0.3–1.0s` once all active characters leave a shot — never linger on an empty stage.
-3. **Chronological Day/Night Continuity**: Progress logically forward (`Dawn → Midday → Sunset → Dusk → Night → next Morning`) across sky gradients, sun/moon/stars, and warm practical lights.
+3. **Chronological Day/Night Continuity**: Progress logically forward (`Dawn → Midday → Sunset → Dusk → Night → next Morning`) across sky washes, sun/moon/stars, and warm practical lights.
 4. **Object & Companion Permanence**: Never pop props, vehicles, or animal companions out of existence mid-scene.
 5. **Proportional Scale**: Keep standing characters `~95–105px` tall at `scale: 1.0` (`~15–30%` of the `720px` canvas height in wide/medium shots), tables waist/chest height (`42–65px`), doorways `>= 110px`, cottages `~210–340px`, full cars `190–280px+` wide.
 6. **Canonical `+X` Forward Facing**: Every character rig faces RIGHT (`+X`) when `flipX: false` and LEFT (`-X`) when `flipX: true`. `evaluateSingleNode` enforces `flipX = next.x < prev.x` during horizontal `'walking'` segments.
@@ -136,120 +144,20 @@ All narrative staging guardrails apply strictly to `classic_cel` scenes:
    - Let every spoken line finish before scene transitions (`act.endTime >= clip.startTime + wavDuration + 0.4..0.8s`) unless intentionally cutting off.
    - Cap `AudioClipCue.duration <= transitionTime - startTime` and clear `speechText: ''` at character/scene changes (zero bleed).
    - Never overlap multiple speakers unless intentionally scripted (`~0.25–0.6s` gap).
-   - Animate the speaking character's 4-stage cel mouth (`Math.floor(frameIndex / 2) % 4` at 12 FPS) across their exact spoken window (`isSpeaking` is automatically enabled when `speechText` is non-empty and `speechStyle !== 'thought'`, or when `state === 'singing'`).
+   - Animate the speaking character's 4-stage hand-drawn cel mouth (`Math.floor(frameIndex / 2) % 4` at 12 FPS) across their exact spoken window (`isSpeaking` is enabled automatically when `speechText` is non-empty and `speechStyle !== 'thought'`, or when `state === 'singing'`).
    - Keep `speechText` bubbles concise (`~20–30` chars soft guideline).
 
 ---
 
-## 6. Creating & Registering a Classic Cel Scene
+## 6. Creating, Registering & Previewing a Classic Cel Scene
 
 ### Step 1: Author `<workspace>/src/scenes/<sceneName>.ts`
-
-Study `<workspace>/src/scenes/classicMoonlitCat.ts` as the canonical reference implementation. Minimal structure:
-
-```typescript
-import { TOKENS } from '../theme/tokens';
-import type {
-  AudioClipCue,
-  AudioNoteCue,
-  CameraKeyframe,
-  SceneDefinition,
-  SceneNode,
-  StoryAct,
-  TimelineTrack,
-} from '../engine/schema';
-
-const C = TOKENS.classicCel.colors;
-
-const MY_CEL_NODES: SceneNode[] = [
-  // Multiplane painted gouache sky (note: `material` stays a valid CrayonMaterialId fallback)
-  {
-    id: 'sky-night-gouache',
-    type: 'background_patch',
-    zIndex: 1,
-    x: 0, y: 0,
-    material: 'markerIndigoNight',
-    softEdge: false,
-    bounds: { x: -80, y: -60, width: 1440, height: 500 },
-    d: 'M -80 -60 L 1360 -60 L 1360 440 L -80 440 Z',
-    gradient: {
-      type: 'linear',
-      x1: '0%', y1: '0%', x2: '0%', y2: '100%',
-      stops: [
-        { offset: '0%', color: C.nightSkyZenith },
-        { offset: '55%', color: C.nightSkyMid },
-        { offset: '100%', color: C.nightSkyHorizon },
-      ],
-    },
-  },
-  // Painted moonlit lawn
-  {
-    id: 'lawn-gouache',
-    type: 'background_patch',
-    zIndex: 7,
-    x: 0, y: 0,
-    material: 'crayonGrassGreen',
-    softEdge: true,
-    bounds: { x: -80, y: 400, width: 1440, height: 380 },
-    d: 'M -80 430 Q 320 405, 640 425 T 1360 418 L 1360 780 L -80 780 Z',
-    gradient: {
-      type: 'linear',
-      x1: '0%', y1: '0%', x2: '0%', y2: '100%',
-      stops: [
-        { offset: '0%', color: C.grassNightDeep },
-        { offset: '48%', color: C.grassNightMid },
-        { offset: '100%', color: C.grassNightLit },
-      ],
-    },
-  },
-  // Classic cel character (automatically dispatched to src/assets/classicCel/characters/*)
-  {
-    id: 'hero-cat',
-    type: 'character',
-    kind: 'moonlit_cat',
-    state: 'idle',
-    zIndex: 24,
-    x: 360, y: 600,
-    scale: 1.0,
-  },
-];
-
-export const MY_CLASSIC_SCENE: SceneDefinition = {
-  id: 'my-classic-scene',
-  title: 'My Classic Short',
-  subtitle: 'A 1970s–80s Hand-Drawn Cel Short',
-  artStyle: 'classic_cel',
-  fps: TOKENS.classicCel.timing.fps, // 12 FPS on twos (exported in 24 FPS MP4 container)
-  durationSec: 30,
-  width: TOKENS.canvas.width,
-  height: TOKENS.canvas.height,
-  bookFrame: false,
-  theatricalFrame: {
-    enabled: true,
-    mode: 'iris',
-    title: 'My Classic Short',
-    subtitle: 'A 1970s–80s Hand-Drawn Cel Short',
-    creditText: 'Classic Hand-Drawn Cel Animation',
-    endingTitle: 'The End',
-    endingCredit: 'My Classic Short · Fin',
-    openDurationSec: 3.0,
-    closeDurationSec: 3.0,
-    irisFocus: { x: 640, y: 540 },
-  },
-  acts: [/* ... */],
-  nodes: MY_CEL_NODES,
-  timeline: [/* ... */],
-  camera: [{ time: 0, x: 0, y: 0, zoom: 1.0 }],
-  audioCues: [/* chime, lullaby, garden_wind_chime — NO crayon_scribble! */],
-  audioClips: [/* BGM & Gemini TTS WAVs */],
-};
-```
+Study `<workspace>/src/scenes/classicMoonlitCat.ts` as the canonical reference implementation (`artStyle: 'classic_cel'`, `fps: TOKENS.classicCel.timing.fps`, `bookFrame: false`, `theatricalFrame`, multiplane painted gouache backgrounds, zero `crayon_scribble` cues).
 
 ### Step 2: Register in `SCENE_REGISTRY` (`<workspace>/src/ui/app.ts`)
+Import your scene, add it to `SCENE_REGISTRY` under its `id` (e.g., `'my-classic-scene'`), and add a film-reel icon (`'🎞️'`) to `SCENE_SWITCHER_ICONS`. It is automatically reachable at **`/classic/<sceneId>`** (and shows in the Classic Cel Studio switcher at `/classic`).
 
-Import `MY_CLASSIC_SCENE`, add it to `SCENE_REGISTRY` under its `id` (`'my-classic-scene'`), and add a film-reel icon (`'🎞️'`) to `SCENE_SWITCHER_ICONS`.
-
-### Step 3: Verify, Preview & Export
+### Step 3: Verify, Preview at `/classic/...` & Export
 
 ```bash
 cd <workspace>
@@ -258,11 +166,13 @@ agy-node scripts/studio-cli.mjs test
 agy-node scripts/studio-cli.mjs build
 agy-node scripts/studio-cli.mjs export --scene my-classic-scene --style classic_cel --resolution 1080p
 agy-node scripts/studio-cli.mjs dev
-# Preview: http://localhost:5173/?scene=my-classic-scene&style=classic_cel&autoplay=1
+# Preview Classic Cel Studio: http://localhost:5173/classic/my-classic-scene?autoplay=1
+# (Built-in Mochi showcase:   http://localhost:5173/classic/mochi?autoplay=1)
+# (Picture-Book Crayon root:  http://localhost:5173/)
 ```
 
 > [!NOTE]
-> `videoExporter.ts` automatically detects `fps === 12` (divisible into 24) and writes a theatrical **`24 FPS` H.264/AAC MP4 container** holding each drawn cel cleanly on twos (`2 container frames per 12 FPS drawing`).
+> `videoExporter.ts` automatically detects `fps === 12` (`24 % fps === 0`) and writes a theatrical **`24 FPS` H.264/AAC MP4 container** holding each drawn cel cleanly on twos (`2` film frames per `12 FPS` drawing).
 
 ---
 
@@ -272,6 +182,6 @@ agy-node scripts/studio-cli.mjs dev
 - **Classic Cel Asset Pipeline**: `skills/classic-cel-asset/SKILL.md`
 - **Classic Cel Design Tokens**: `<workspace>/src/theme/tokens.ts` (`TOKENS.classicCel`)
 - **Theatrical Framing Engine**: `<workspace>/src/engine/theatricalFrame.ts`
-- **Cel SVG Primitives**: `<workspace>/src/engine/svgUtils.ts` (`celPath`, `celShadedShape`, `celStrokeAttrs`, `gouachePath`, `celContactShadow`)
-- **Classic Cel Filters & Film Grain**: `<workspace>/src/engine/filters.ts` (`renderEngineDefs`, `renderFilmCompositeLayer`)
+- **Xerox & Gouache Primitives**: `<workspace>/src/engine/svgUtils.ts` (`celPath`, `celShadedShape`, `xeroxSketchStroke`, `gouachePath`, `gouacheDabWash`, `celContactShadow`)
+- **Classic Cel Filters, Board Tooth & 35mm Film Grain**: `<workspace>/src/engine/filters.ts` (`renderEngineDefs`, `renderFilmCompositeLayer`)
 - **Architecture & Dual-Style Guide**: `<workspace>/docs/ARCHITECTURE.md` & `<workspace>/docs/STYLE_GUIDE.md`

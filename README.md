@@ -67,11 +67,11 @@ The **Animated Picture Book Studio** is a **100% standalone, zero-dependency** A
 It works out-of-the-box on **any machine with only Antigravity installed** (`agy-node`)—no external `node`, `npm`, `pnpm`, `git`, or `python` installation is required. You can scaffold the bundled engine into any active `<workspace>` (or run it in-place) using `agy-node "<plugin-root>/scripts/ensure_engine.mjs"`. It provides skills, agents, rules, and the full engine so you can ask Antigravity to:
 
 - **Create animated videos in two distinct styles** *(if you don't specify a style in your prompt, the agent will ask you which one you want right after checking your voiceover API key)*:
-  1. **Picture-Book Crayon Style (`artStyle: 'crayon'`, `6 FPS`)** — Warm wax-crayon & oil-pastel stop-motion on heavy cold-press watercolor paper, complete with an automatic **Storybook Cover Opening & Ending/Credits Book-Frame (`bookFrame`)** where a hardcover picture book opens to a `0%` charcoal sketch, progressively colors in `0% → 100%` as the camera zooms in, and un-colors back to a sketch before closing with `"The End ★"`.
-  2. **Classic Hand-Drawn Animation Style (`artStyle: 'classic_cel'`, `12 FPS` on twos)** — Theatrical 1970s–1980s Disney cel animation inspired by ***Mickey's Christmas Carol* (1983)** and ***Robin Hood* (1973)**: multiplane painted watercolor/gouache backgrounds, crisp Xerox charcoal ink outlines, 2-tone cel shading with moonlight/warm rim highlights, smooth `12 FPS` ("on twos") motion exported in a `24 FPS` film container, subtle 35mm celluloid film grain & vignette, and classic **Theatrical Iris/Fade Opening & `"The End"` Closing Cards (`theatricalFrame`)**. Includes a full Classic Cel showcase of *Mochi's Moonlit Garden* (`?scene=classic-moonlit-cat`).
-- **Model assets after photos** — Turn user-provided photos into either hand-crafted 2D wax-crayon cutout SVG assets (`src/assets/`) or 2-tone cel-shaded Xerox ink-and-paint SVG assets (`src/assets/classicCel/`).
+  1. **Picture-Book Crayon Style (`artStyle: 'crayon'`, `6 FPS`, Studio route `/`)** — Warm wax-crayon & oil-pastel stop-motion on heavy cold-press watercolor paper, complete with an automatic **Storybook Cover Opening & Ending/Credits Book-Frame (`bookFrame`)** where a hardcover picture book opens to a `0%` charcoal sketch, progressively colors in `0% → 100%` as the camera zooms in, and un-colors back to a sketch before closing with `"The End ★"`.
+  2. **Classic Hand-Drawn Animation Style (`artStyle: 'classic_cel'`, `12 FPS` on twos, Studio route `/classic/...`)** — Authentic 1970s–1980s theatrical Disney cel animation inspired by ***Robin Hood* (1973)** and ***Mickey's Christmas Carol* (1983)**: raw electrostatic Xerox graphite toner outlines + flat matte analog cel paint characters (NO modern digital gradients or neon glow halos) hovering over dappled watercolor/gouache illustration-board backgrounds with subtle rostrum cel depth, organic `12 FPS` ("on twos") motion exported in a `24 FPS` film container, tangible 35mm Eastmancolor celluloid film grain & optical vignette, and classic **Theatrical Iris/Fade Opening & `"The End"` Closing Cards (`theatricalFrame`)**. Includes a full Classic Cel showcase of *Mochi's Moonlit Garden* at **`http://localhost:5173/classic/mochi`** (`/classic/classic-moonlit-cat`).
+- **Model assets after photos** — Turn user-provided photos into either hand-crafted 2D wax-crayon cutout SVG assets (`src/assets/`) or authentic Xerox flat-cel & dappled-gouache SVG assets (`src/assets/classicCel/`).
 - **Add and generate audio** — Sync built-in procedural sound effects, attach user-provided audio files, or generate narration and custom WAV sound effects at precise timestamps.
-- **Preview live** — Spin up the bundled studio dev server (`agy-node scripts/studio-cli.mjs dev`) and inspect your video interactively in the browser with scene switching, style/FPS switching (`?style=classic_cel|crayon`), playback controls, live audio/voiceover playback, and layer toggles.
+- **Preview live** — Spin up the bundled studio dev server (`agy-node scripts/studio-cli.mjs dev`) and switch effortlessly between **`/`** (Picture-Book Crayon Studio) and **`/classic/mochi`** (Classic 1970s–80s Hand-Drawn Cel Studio), with playback controls, live audio/voiceover playback, and layer toggles.
 - **Export MP4 directly via CLI** — Run `agy-node scripts/studio-cli.mjs export --scene <id> --resolution 1080p` (with optional `--style classic_cel|crayon`) to export the `.mp4` in headless mode without needing to open a visible browser tab or click buttons, then launch the dev server so you can inspect the live site as well.
 
 ### Visual Modes: Classic vs. Vibrant Crayon Mode (`crayon` Style)
@@ -175,17 +175,18 @@ Step-by-step workflow for turning user photos (or specs) into hand-crafted 2D wa
 - SVG cutout decomposition (`crayonPath`, `TOKENS.patterns.*`), multi-state rigging (`+X` forward walking profile, `CHARACTER_SPEECH_ANCHORS`, stepped `6 FPS` animated speaking mouths), and proportional local SVG sizing
 - File-isolated authoring for parallel subagents + registration checklist
 
-### 🎞️ `classic-animation` *(Classic Hand-Drawn Animation Style — `artStyle: 'classic_cel'`)*
-Complete guide to designing, choreographing, and editing **1970s–1980s Classic Hand-Drawn Cel** scenes inspired by *Mickey's Christmas Carol* (1983) & *Robin Hood* (1973):
-- Multiplane painted watercolor/gouache backgrounds using `background_patch` `gradient` / `fill` tokens from `TOKENS.classicCel.colors` (`#gouache-wash`)
-- Xerox charcoal ink-and-paint foreground cels (`#xerox-ink`), practical optical halation (`#cel-soft-glow`), Eastmancolor print grading (`#cel-grade`), and Layer 3 35mm film grain + vignette (`#layer-3-film-composite`)
-- **Theatrical Iris/Fade Opening & `"The End"` Closing Cards (`theatricalFrame`)** and smooth **`12 FPS` ("on twos")** motion exported inside a **`24 FPS`** MP4 film container
-- Continuity, proportional scale, `+X` facing, 4-stage cel lip-sync alignment, and scene registration (`src/scenes/classicMoonlitCat.ts`)
+### 🎞️ `classic-animation` *(Classic Hand-Drawn Animation Style — `artStyle: 'classic_cel'`, `/classic/...`)*
+Complete guide to designing, choreographing, and editing authentic **1970s–1980s Classic Hand-Drawn Cel** scenes inspired by *Robin Hood* (1973) & *Mickey's Christmas Carol* (1983):
+- Dappled, loose watercolor/gouache illustration-board backgrounds (`#gouache-wash`, `gouacheDabWash`, `#bg-board-texture`) with sparse loose hand-inked foliage/grass/wood ticks
+- Raw electrostatic Xerox graphite toner outlines (`#xerox-ink`, `xeroxSketchStroke`) + flat matte analog cel paint foreground characters separated by subtle rostrum cel depth (`#cel-drop-shadow`), Eastmancolor 35mm print grading (`#cel-grade`), and tangible animated 35mm celluloid film grain (`#layer-3-film-composite`)
+- **Theatrical Iris/Fade Opening & `"The End"` Closing Cards (`theatricalFrame`)** and organic **`12 FPS` ("on twos")** motion exported inside a **`24 FPS`** MP4 film container
+- Dedicated `/classic` / `/classic/mochi` / `/classic/<sceneId>` Studio route (`src/scenes/classicMoonlitCat.ts`)
 
 ### 🖌️ `classic-cel-asset` *(Classic Hand-Drawn Animation Style — `src/assets/classicCel/`)*
-Step-by-step workflow for creating 1970s–1980s Disney-inspired cel characters, painted props, and architecture (from user photos or story specs):
-- Silhouette & anatomical decomposition, 3-value cel paint ramps (`base` + `shadow` + moonlight/warm `rim`), `celShadedShape`, `celContactShadow`, `gouachePath`, and Xerox charcoal ink strokes (`TOKENS.classicCel`)
-- Expressive classic eyes (cream sclera, colored irises, catchlights, eyelids & brows), smooth `12 FPS` walk cycles with secondary follow-through facing `+X`, and 4-stage cel lip-sync mouths (`Math.floor(frameIndex / 2) % 4`)
+Step-by-step workflow for creating authentic 1970s–1980s Xerox flat-cel characters and painted watercolor/gouache props & architecture (from user photos or story specs):
+- Flat opaque matte analog cel paint (earthy 1970s Eastmancolor pigments — zero digital gradients or neon glow halos on characters!) with raw `#xerox-ink` outlines, `xeroxSketchStroke` fur/cloth ticks, and `celContactShadow`
+- Dappled illustration-board `gouacheDabWash` / `gouachePath` props & buildings with sparse hand-inked accents
+- Expressive classic eyes, organic `12 FPS` squash-and-stretch walk cycles with secondary follow-through facing `+X`, and 4-stage cel lip-sync mouths (`Math.floor(frameIndex / 2) % 4`)
 - Style-isolated `src/assets/classicCel/{characters,props,buildings}/` layout & `CLASSIC_CEL_*_RENDERERS` dispatch registration
 
 ### 🎙️ `picture-book-voiceover` *(Shared — Both Styles)*
