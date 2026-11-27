@@ -13,7 +13,7 @@
  *   agy-node scripts/studio-cli.mjs test [filter]
  *   agy-node scripts/studio-cli.mjs build
  *   agy-node scripts/studio-cli.mjs dev [--port 5173]
- *   agy-node scripts/studio-cli.mjs export [--scene <id>] [--resolution 1080p|720p] [--footage <actId>]
+ *   agy-node scripts/studio-cli.mjs export [--scene <id>] [--resolution 1080p|720p] [--footage <actId>] [--style crayon|classic_cel] [--book-frame 1|0]
  */
 
 import fs from 'node:fs';
@@ -581,6 +581,8 @@ async function runHeadlessExport(args) {
   const resolution = getArgValue(args, '--resolution', '1080p');
   const footage = getArgValue(args, '--footage', '');
   const vibrant = getArgValue(args, '--vibrant', '');
+  const style = getArgValue(args, '--style', '');
+  const bookFrame = getArgValue(args, '--book-frame', '') || getArgValue(args, '--book_frame', '');
   const timeoutSec = Number(getArgValue(args, '--timeout', '180')) || 180;
 
   const browserBin = findHeadlessBrowserBinary();
@@ -621,6 +623,8 @@ async function runHeadlessExport(args) {
   });
   if (footage) query.set('footage', footage);
   if (vibrant) query.set('vibrant', vibrant);
+  if (style) query.set('style', style);
+  if (bookFrame) query.set('book_frame', bookFrame);
 
   const exportUrl = `http://127.0.0.1:${port}/?${query.toString()}`;
   const tempProfile = path.join(os.tmpdir(), `pb-cli-export-${Date.now()}`);

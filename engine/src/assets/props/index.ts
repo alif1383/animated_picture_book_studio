@@ -1,4 +1,5 @@
 import { svgEl, svgTransform } from '../../engine/svgUtils';
+import { CLASSIC_CEL_PROP_RENDERERS } from '../classicCel/props';
 import type { PropRenderOptions } from './types';
 import { renderGrassPatch } from './grassPatch';
 import { renderTree } from './tree';
@@ -73,10 +74,15 @@ export { renderCelebrationBanner } from './celebrationBanner';
  * 'fluffy_cloud' | 'meadow_flowers' | 'birthday_cake' | 'party_confetti'`).
  */
 export function renderProp(options: PropRenderOptions): string {
-  const { id, x, y, scale, rotate, flipX, opacity, kind } = options;
+  const { id, x, y, scale, rotate, flipX, opacity, kind, artStyle } = options;
 
   let inner = '';
-  switch (kind) {
+  const classicRenderer =
+    artStyle === 'classic_cel' ? CLASSIC_CEL_PROP_RENDERERS[kind] : undefined;
+  if (classicRenderer) {
+    inner = classicRenderer(options);
+  } else {
+    switch (kind) {
     case 'grass_patch':
       inner = renderGrassPatch(options);
       break;
@@ -167,9 +173,10 @@ export function renderProp(options: PropRenderOptions): string {
     case 'feast_table':
       inner = renderFeastTable(options);
       break;
-    case 'celebration_banner':
-      inner = renderCelebrationBanner(options);
-      break;
+      case 'celebration_banner':
+        inner = renderCelebrationBanner(options);
+        break;
+    }
   }
 
   const transform = svgTransform({ x, y, scale, rotate, flipX });

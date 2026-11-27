@@ -6,6 +6,7 @@ import {
   RenderSceneOptions,
 } from '../engine/renderer';
 import type {
+  AnimationStyleId,
   CharacterState,
   SceneDefinition,
 } from '../engine/schema';
@@ -25,6 +26,7 @@ import { MOONLIT_GARDEN_SCENE } from '../scenes/moonlitGarden';
 import { STRAWBERRY_BEACH_BIRTHDAY_SCENE } from '../scenes/strawberryBeachBirthday';
 import { KNIGHT_DRAGON_QUEST_SCENE } from '../scenes/knightDragonQuest';
 import { STARTER_MOONLIT_CAT_SCENE } from '../scenes/starterMoonlitCat';
+import { CLASSIC_MOONLIT_CAT_SCENE } from '../scenes/classicMoonlitCat';
 import { STARTER_BANDANA_DOG_SCENE } from '../scenes/starterBandanaDog';
 import { STARTER_KNIGHT_DRAGON_HICCUPS_SCENE } from '../scenes/starterKnightDragonHiccups';
 
@@ -47,6 +49,7 @@ export const SCENE_REGISTRY: Record<string, SceneDefinition> = {
   [KNIGHT_DRAGON_QUEST_SCENE.id]: KNIGHT_DRAGON_QUEST_SCENE,
   'dragon-quest': KNIGHT_DRAGON_QUEST_SCENE,
   [STARTER_MOONLIT_CAT_SCENE.id]: STARTER_MOONLIT_CAT_SCENE,
+  [CLASSIC_MOONLIT_CAT_SCENE.id]: CLASSIC_MOONLIT_CAT_SCENE,
   [STARTER_BANDANA_DOG_SCENE.id]: STARTER_BANDANA_DOG_SCENE,
   [STARTER_KNIGHT_DRAGON_HICCUPS_SCENE.id]: STARTER_KNIGHT_DRAGON_HICCUPS_SCENE,
 };
@@ -67,6 +70,7 @@ const SCENE_SWITCHER_ICONS: Record<string, string> = {
   [STRAWBERRY_BEACH_BIRTHDAY_SCENE.id]: '🏖️',
   [KNIGHT_DRAGON_QUEST_SCENE.id]: '🐉',
   [STARTER_MOONLIT_CAT_SCENE.id]: '🌙',
+  [CLASSIC_MOONLIT_CAT_SCENE.id]: '🎞️',
   [STARTER_BANDANA_DOG_SCENE.id]: '🐕',
   [STARTER_KNIGHT_DRAGON_HICCUPS_SCENE.id]: '🔥',
 };
@@ -97,6 +101,7 @@ function formatSceneSwitcherLabel(scene: SceneDefinition): string {
 export interface ParsedStudioParams {
   shortSample: ShortSampleId;
   scene: SceneDefinition;
+  artStyle: AnimationStyleId;
   footageId: string | null;
   loopBounds: { start: number; end: number } | null;
   initialTimeSec: number;
@@ -257,6 +262,18 @@ export function parseStudioUrlParams(
   const autoExportResolution: VideoExportResolution =
     rawResolution === '720p' ? '720p' : '1080p';
 
+  const rawStyle = params.get('style')?.toLowerCase().trim() ?? null;
+  let artStyle: AnimationStyleId = scene.artStyle ?? 'crayon';
+  if (
+    rawStyle === 'classic_cel' ||
+    rawStyle === 'classic-cel' ||
+    rawStyle === 'cel'
+  ) {
+    artStyle = 'classic_cel';
+  } else if (rawStyle === 'crayon') {
+    artStyle = 'crayon';
+  }
+
   const rawVibrant = params.get('vibrant') ?? params.get('mode');
   let vibrant = Boolean(scene.vibrantMode);
   if (
@@ -275,7 +292,9 @@ export function parseStudioUrlParams(
 
   const rawBookFrame = params.get('book_frame') ?? params.get('bookFrame');
   let bookFrame =
-    scene.bookFrame === false
+    artStyle === 'classic_cel'
+      ? false
+      : scene.bookFrame === false
       ? false
       : typeof scene.bookFrame === 'object' && scene.bookFrame !== null
       ? scene.bookFrame.enabled ?? true
@@ -295,14 +314,18 @@ export function parseStudioUrlParams(
     : footageId
     ? `?scene=${encodeURIComponent(scene.id)}&footage=${footageId}`
     : `?scene=${encodeURIComponent(scene.id)}`;
-  const canonicalQuery =
+  let canonicalQuery =
     rawVibrant !== null && !scene.vibrantMode
       ? `${baseQuery}&vibrant=${vibrant ? '1' : '0'}`
       : baseQuery;
+  if (rawStyle !== null && artStyle !== (scene.artStyle ?? 'crayon')) {
+    canonicalQuery = `${canonicalQuery}&style=${artStyle}`;
+  }
 
   return {
     shortSample,
     scene,
+    artStyle,
     footageId,
     loopBounds,
     initialTimeSec,
@@ -973,16 +996,25 @@ export function mountStorybookStudio(
   let currentTimeSec = studioConfig.initialTimeSec;
   let loopBounds = studioConfig.loopBounds;
   let isPlaying = false;
-  let activeFps: number = activeScene.fps ?? TOKENS.timing.fps;
+  let activeFps: number =
+    activeScene.fps ??
+    (studioConfig.artStyle === 'classic_cel'
+      ? TOKENS.classicCel.timing.fps
+      : TOKENS.timing.fps);
   let rafId: number | null = null;
   let lastPerfTime = 0;
   let lastRenderedKey = '';
   let prevQuantizedTime = -1;
 
+  const headerIconForStyle = (style: AnimationStyleId): string =>
+    style === 'classic_cel' ? '🎞️' : '🖍️';
+
   const renderOptions: RenderSceneOptions = {
+    artStyle: studioConfig.artStyle,
+    fps: activeFps,
     enableCrayonFilter: true,
     enablePaperTexture: true,
-    enableProgressiveFill: true,
+    enableProgressiveFill: studioConfig.artStyle !== 'classic_cel',
     vibrant: studioConfig.vibrant,
     enableBookFrame: studioConfig.bookFrame,
     overrideFillProgress: undefined,
@@ -997,7 +1029,7 @@ export function mountStorybookStudio(
     <div class="studio-shell">
       <header class="studio-header">
         <div class="studio-title-group">
-          <h1 id="header-scene-title">🖍️ ${activeScene.title}</h1>
+          <h1 id="header-scene-title">${headerIconForStyle(studioConfig.artStyle)} ${activeScene.title}</h1>
           <p id="header-scene-subtitle">${activeScene.subtitle ?? ''}</p>
         </div>
         <div class="telemetry-badges">
@@ -1006,7 +1038,7 @@ export function mountStorybookStudio(
           <span class="badge" id="badge-act">Act I</span>
           <span class="badge" id="badge-frame">Frame #0</span>
           <span class="badge" id="badge-seed">Boil Seed #1</span>
-          <span class="badge" id="badge-fps">6 FPS Stepped</span>
+          <span class="badge" id="badge-fps">${activeFps} FPS Stepped</span>
         </div>
       </header>
 
@@ -1026,7 +1058,7 @@ export function mountStorybookStudio(
       <div class="studio-grid">
         <!-- Left Main Stage & Transport -->
         <section class="panel-card">
-          <div class="storybook-stage" id="storybook-stage"></div>
+          <div class="storybook-stage" id="storybook-stage" data-art-style="${studioConfig.artStyle}"></div>
 
           <div class="caption-banner">
             <div class="caption-act" id="caption-act-title"></div>
@@ -1048,7 +1080,7 @@ export function mountStorybookStudio(
               />
               <span class="time-readout" id="time-readout">0.0s / ${activeScene.durationSec}.0s</span>
             </div>
-            <button class="btn" id="btn-fps" type="button">6 FPS</button>
+            <button class="btn" id="btn-fps" type="button">${activeFps} FPS</button>
             <button class="btn" id="btn-mute" type="button">🔊 Sound On</button>
             <button class="btn" id="btn-fullscreen" type="button" title="Toggle 16:9 Fullscreen Stage">⛶ 16:9 Fullscreen</button>
           </div>
@@ -1305,8 +1337,13 @@ export function mountStorybookStudio(
       activeFps,
       activeScene.durationSec
     );
+    const activeArtStyle: AnimationStyleId =
+      renderOptions.artStyle ?? activeScene.artStyle ?? 'crayon';
+    renderOptions.fps = activeFps;
+
     const renderKey = [
       activeScene.id,
+      activeArtStyle,
       clock.frameIndex,
       activeFps,
       renderOptions.enableCrayonFilter,
@@ -1320,13 +1357,14 @@ export function mountStorybookStudio(
     scrubberEl.max = String(activeScene.durationSec);
     scrubberEl.value = currentTimeSec.toFixed(2);
     timeReadoutEl.textContent = `${clock.quantizedTimeSec.toFixed(1)}s / ${activeScene.durationSec.toFixed(1)}s`;
+    stageEl.dataset.artStyle = activeArtStyle;
 
     if (!force && renderKey === lastRenderedKey) {
       return;
     }
     lastRenderedKey = renderKey;
 
-    const { svg, frame, bookFrame } = evaluateAndRenderScene(
+    const { svg, frame, bookFrame, theatricalFrame } = evaluateAndRenderScene(
       activeScene,
       currentTimeSec,
       renderOptions
@@ -1379,9 +1417,15 @@ export function mountStorybookStudio(
     const cakeState = frame.nodes['birthday-cake'];
 
     const rows: string[] = [
-      `<div>• <b>color-mode</b>: ${renderOptions.vibrant ? '🌈 vibrant (#vibrant-grade)' : 'classic watercolor paper'}</div>`,
+      `<div>• <b>art-style</b>: ${activeArtStyle === 'classic_cel' ? '🎞️ classic_cel (Xerox ink + gouache)' : '🖍️ crayon (picture-book stop-motion)'}</div>`,
+      `<div>• <b>color-mode</b>: ${activeArtStyle === 'classic_cel' ? '35mm cel grade (#cel-grade)' : renderOptions.vibrant ? '🌈 vibrant (#vibrant-grade)' : 'classic watercolor paper'}</div>`,
       `<div>• <b>book-frame</b>: ${bookFrame.enabled ? `📖 ${bookFrame.phase} (scale=${bookFrame.bookScale}, color=${Math.round(bookFrame.colorFillMultiplier * 100)}%)` : 'disabled'}</div>`,
     ];
+    if (theatricalFrame?.enabled) {
+      rows.push(
+        `<div>• <b>theatrical-frame</b>: 🎞️ ${theatricalFrame.phase} (${theatricalFrame.mode}, iris=${Math.round(theatricalFrame.irisProgress * 100)}%)</div>`
+      );
+    }
     if (strawberryState) {
       rows.push(
         `<div>• <b>birthday-strawberry</b>: state="${strawberryState.state}" | floatie=${strawberryState.wearingFloatie ? 'on 🦆' : 'off'} @ (${strawberryState.x}, ${strawberryState.y})</div>`
@@ -1541,13 +1585,25 @@ export function mountStorybookStudio(
     loopBounds = studioConfig.loopBounds;
     currentTimeSec = studioConfig.initialTimeSec;
     prevQuantizedTime = -1;
+    activeFps =
+      activeScene.fps ??
+      (studioConfig.artStyle === 'classic_cel'
+        ? TOKENS.classicCel.timing.fps
+        : TOKENS.timing.fps);
+    renderOptions.artStyle = studioConfig.artStyle;
+    renderOptions.fps = activeFps;
+    renderOptions.enableProgressiveFill =
+      studioConfig.artStyle !== 'classic_cel';
     renderOptions.vibrant = studioConfig.vibrant;
     renderOptions.enableBookFrame = studioConfig.bookFrame;
+    chkProgressiveFill.checked = renderOptions.enableProgressiveFill;
     chkVibrantMode.checked = studioConfig.vibrant;
     chkBookFrame.checked = studioConfig.bookFrame;
+    btnFps.textContent = `${activeFps} FPS`;
 
-    headerTitleEl.textContent = `🖍️ ${activeScene.title}`;
+    headerTitleEl.textContent = `${headerIconForStyle(studioConfig.artStyle)} ${activeScene.title}`;
     headerSubtitleEl.textContent = activeScene.subtitle ?? '';
+    stageEl.dataset.artStyle = studioConfig.artStyle;
     renderActButtons();
     updateUrlSwitcherHighlight();
     void soundEngine.preloadClips(activeScene.audioClips);
@@ -1613,8 +1669,11 @@ export function mountStorybookStudio(
     seek(parseFloat(scrubberEl.value));
   });
 
+  const FPS_CYCLE = [6, 8, 12, 24] as const;
   btnFps.addEventListener('click', () => {
-    activeFps = activeFps === 6 ? 8 : 6;
+    const idx = FPS_CYCLE.indexOf(activeFps as (typeof FPS_CYCLE)[number]);
+    activeFps = FPS_CYCLE[(idx + 1) % FPS_CYCLE.length];
+    renderOptions.fps = activeFps;
     btnFps.textContent = `${activeFps} FPS`;
     updateStage(true);
   });

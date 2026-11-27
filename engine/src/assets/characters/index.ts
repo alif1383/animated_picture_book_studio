@@ -2,6 +2,7 @@ import { steppedOscillate } from '../../engine/clock';
 import { svgEl, svgTransform } from '../../engine/svgUtils';
 import type { CharacterKind, CharacterState } from '../../engine/schema';
 import { renderAnnotation } from '../annotations/pencilAnnotation';
+import { CLASSIC_CEL_CHARACTER_RENDERERS } from '../classicCel/characters';
 import { renderSwimFloatieRing } from '../props/swimFloatie';
 import type { CharacterRenderOptions } from './types';
 import { renderLittleGirl } from './littleGirl';
@@ -326,6 +327,7 @@ export function renderCharacter(options: CharacterRenderOptions): string {
     flipX,
     opacity,
     kind,
+    artStyle,
     wearingFloatie,
     floatieVariant,
     speechText,
@@ -337,70 +339,78 @@ export function renderCharacter(options: CharacterRenderOptions): string {
   const transform = svgTransform({ x, y, scale, rotate, flipX });
 
   let inner = '';
-  switch (kind) {
-    case 'little_girl':
-      inner = renderLittleGirl(options);
-      break;
-    case 'moon':
-      inner = renderMoon(options);
-      break;
-    case 'sun':
-      inner = renderSun(options);
-      break;
-    case 'shopkeeper':
-      inner = renderShopkeeper(options);
-      break;
-    case 'cat':
-      inner = renderCat(options);
-      break;
-    case 'singing_radish':
-      inner = renderSingingRadish(options);
-      break;
-    case 'watermelon_slice':
-      inner = renderWatermelonSlice(options);
-      break;
-    case 'blue_party_cat':
-      inner = renderBluePartyCat(options);
-      break;
-    case 'hello_bug':
-      inner = renderHelloBug(options);
-      break;
-    case 'party_banana':
-      inner = renderPartyBanana(options);
-      break;
-    case 'crying_onion':
-      inner = renderCryingOnion(options);
-      break;
-    case 'cherry_twins':
-      inner = renderCherryTwins(options);
-      break;
-    case 'acorn_twins':
-      inner = renderAcornTwins(options);
-      break;
-    case 'olive_sprout':
-      inner = renderOliveSprout(options);
-      break;
-    case 'birthday_strawberry':
-      inner = renderBirthdayStrawberry(options);
-      break;
-    case 'knight':
-      inner = renderKnight(options);
-      break;
-    case 'soldier':
-      inner = renderSoldier(options);
-      break;
-    case 'dragon':
-      inner = renderDragon(options);
-      break;
-    case 'villager':
-      inner = renderVillager(options);
-      break;
-    case 'moonlit_cat':
-      inner = renderMoonlitCat(options);
-      break;
-    case 'bandana_dog':
-      inner = renderBandanaDog(options);
-      break;
+  const classicRenderer =
+    artStyle === 'classic_cel'
+      ? CLASSIC_CEL_CHARACTER_RENDERERS[kind]
+      : undefined;
+  if (classicRenderer) {
+    inner = classicRenderer(options);
+  } else {
+    switch (kind) {
+      case 'little_girl':
+        inner = renderLittleGirl(options);
+        break;
+      case 'moon':
+        inner = renderMoon(options);
+        break;
+      case 'sun':
+        inner = renderSun(options);
+        break;
+      case 'shopkeeper':
+        inner = renderShopkeeper(options);
+        break;
+      case 'cat':
+        inner = renderCat(options);
+        break;
+      case 'singing_radish':
+        inner = renderSingingRadish(options);
+        break;
+      case 'watermelon_slice':
+        inner = renderWatermelonSlice(options);
+        break;
+      case 'blue_party_cat':
+        inner = renderBluePartyCat(options);
+        break;
+      case 'hello_bug':
+        inner = renderHelloBug(options);
+        break;
+      case 'party_banana':
+        inner = renderPartyBanana(options);
+        break;
+      case 'crying_onion':
+        inner = renderCryingOnion(options);
+        break;
+      case 'cherry_twins':
+        inner = renderCherryTwins(options);
+        break;
+      case 'acorn_twins':
+        inner = renderAcornTwins(options);
+        break;
+      case 'olive_sprout':
+        inner = renderOliveSprout(options);
+        break;
+      case 'birthday_strawberry':
+        inner = renderBirthdayStrawberry(options);
+        break;
+      case 'knight':
+        inner = renderKnight(options);
+        break;
+      case 'soldier':
+        inner = renderSoldier(options);
+        break;
+      case 'dragon':
+        inner = renderDragon(options);
+        break;
+      case 'villager':
+        inner = renderVillager(options);
+        break;
+      case 'moonlit_cat':
+        inner = renderMoonlitCat(options);
+        break;
+      case 'bandana_dog':
+        inner = renderBandanaDog(options);
+        break;
+    }
   }
 
   if (wearingFloatie) {
@@ -458,6 +468,7 @@ export function renderCharacter(options: CharacterRenderOptions): string {
       bubbleStyle: speechStyle ?? 'speech',
       tailDirection: speechTail ?? 'bottom-center',
       anchorAtTailTip: true,
+      artStyle,
     });
     inner += svgEl(
       'g',

@@ -315,12 +315,13 @@ describe('PictureBookSoundEngine live audioClips playback', () => {
 });
 
 describe('Studio Scene Switcher & SFX Audition removal', () => {
-  it('getSwitcherScenes returns only the 3 built-in starter scenes (hiding older legacy scenes) and includes new registry scenes', () => {
+  it('getSwitcherScenes returns the built-in starter & classic scenes (hiding older legacy scenes) and includes new registry scenes', () => {
     const switcherScenes = getSwitcherScenes();
     const ids = switcherScenes.map((s) => s.id);
 
     expect(ids).toEqual([
       'starter-moonlit-cat',
+      'classic-moonlit-cat',
       'starter-bandana-dog',
       'starter-knight-dragon-hiccups',
     ]);
@@ -334,14 +335,34 @@ describe('Studio Scene Switcher & SFX Audition removal', () => {
     expect(ids).not.toContain('knight-dragon-quest');
 
     // All scenes (including legacy) remain accessible via getUniqueRegisteredScenes & SCENE_REGISTRY
-    expect(getUniqueRegisteredScenes().length).toBeGreaterThanOrEqual(10);
+    expect(getUniqueRegisteredScenes().length).toBeGreaterThanOrEqual(11);
     expect(SCENE_REGISTRY['1']).toBeDefined();
+    expect(SCENE_REGISTRY['classic-moonlit-cat']).toBeDefined();
   });
 
-  it('defaults canonicalQuery to ?scene=<id> when no legacy short_sample parameter is given', () => {
+  it('defaults canonicalQuery to ?scene=<id> when no legacy short_sample parameter is given and parses ?style=classic_cel', () => {
     const parsed = parseStudioUrlParams('', CORNER_STORE_DAY_SCENE);
     expect(parsed.scene.id).toBe('corner-store-day');
+    expect(parsed.artStyle).toBe('crayon');
+    expect(parsed.bookFrame).toBe(true);
     expect(parsed.canonicalQuery).toBe('?scene=corner-store-day');
+
+    const parsedClassic = parseStudioUrlParams('?scene=classic-moonlit-cat');
+    expect(parsedClassic.scene.id).toBe('classic-moonlit-cat');
+    expect(parsedClassic.artStyle).toBe('classic_cel');
+    expect(parsedClassic.bookFrame).toBe(false);
+
+    const parsedOverride = parseStudioUrlParams(
+      '?scene=starter-moonlit-cat&style=classic_cel'
+    );
+    expect(parsedOverride.artStyle).toBe('classic_cel');
+    expect(parsedOverride.bookFrame).toBe(false);
+    expect(parsedOverride.canonicalQuery).toContain('&style=classic_cel');
+
+    const parsedOverrideWithBook = parseStudioUrlParams(
+      '?scene=classic-moonlit-cat&book_frame=1'
+    );
+    expect(parsedOverrideWithBook.bookFrame).toBe(true);
   });
 
   it('mounts Studio UI without SFX Audition or short_sample clutter and wires audioClips lifecycle', () => {
@@ -416,8 +437,9 @@ describe('Studio Scene Switcher & SFX Audition removal', () => {
         KNIGHT_DRAGON_QUEST_SCENE
       );
 
-      // 1. Clean Scene Switcher: contains ?scene= links for the 3 starter scenes, zero legacy/short_sample or footage sub-parts
+      // 1. Clean Scene Switcher: contains ?scene= links for starter & classic scenes, zero legacy/short_sample or footage sub-parts
       expect(renderedHtml).toContain('?scene=starter-moonlit-cat');
+      expect(renderedHtml).toContain('?scene=classic-moonlit-cat');
       expect(renderedHtml).toContain('?scene=starter-bandana-dog');
       expect(renderedHtml).toContain('?scene=starter-knight-dragon-hiccups');
       expect(renderedHtml).not.toContain('?scene=corner-store-day');
@@ -443,8 +465,13 @@ describe('Studio Scene Switcher & SFX Audition removal', () => {
       expect(stopCalls.length).toBeGreaterThanOrEqual(1);
 
       controller.pause();
+      controller.applyUrlQuery('?scene=classic-moonlit-cat&autoplay=0');
+      expect(controller.getState().fps).toBe(12);
+      expect(controller.getState().options.artStyle).toBe('classic_cel');
+      expect(controller.getState().options.enableBookFrame).toBe(false);
+
       controller.applyUrlQuery('?scene=knight-dragon-quest');
-      expect(preloadCalls.length).toBeGreaterThanOrEqual(2);
+      expect(preloadCalls.length).toBeGreaterThanOrEqual(3);
 
       controller.destroy();
     } finally {

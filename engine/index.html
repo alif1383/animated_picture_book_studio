@@ -119,6 +119,10 @@
         position: relative;
       }
 
+      .storybook-stage[data-art-style="classic_cel"] {
+        background-color: #121014;
+      }
+
       .storybook-stage:fullscreen,
       .storybook-stage.stage-fullscreen-fallback {
         width: 100dvw;
@@ -132,6 +136,11 @@
         align-items: center;
         justify-content: center;
         z-index: 9999;
+      }
+
+      .storybook-stage[data-art-style="classic_cel"]:fullscreen,
+      .storybook-stage[data-art-style="classic_cel"].stage-fullscreen-fallback {
+        background-color: #121014;
       }
 
       .storybook-stage.stage-fullscreen-fallback {
