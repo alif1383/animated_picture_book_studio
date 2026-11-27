@@ -2,7 +2,7 @@
 
 Place `.wav`, `.mp3`, `.ogg`, or `.m4a` files in this folder to reference them in a scene's `audioClips` array via `/audio/<filename>`.
 
-For the complete catalog of all **20 procedural WebAudio synthesizers** (`src/audio/sfx/*.ts`) and **11 pre-rendered `.wav` tracks** (`public/audio/*.wav` + `scripts/sfx/*.mjs`), see [`docs/AUDIO_CATALOG.md`](../../docs/AUDIO_CATALOG.md).
+For the complete catalog of all **20 procedural WebAudio synthesizers** (`src/audio/sfx/*.ts`) and **13 pre-rendered `.wav` tracks** (`public/audio/*.wav` + `scripts/sfx/*.mjs`), see [`docs/AUDIO_CATALOG.md`](../../docs/AUDIO_CATALOG.md).
 
 ---
 
@@ -23,19 +23,18 @@ Each `.wav` file below is deterministically synthesized by its own modular scrip
 | `knight-hiccups-bgm.wav` | `scripts/sfx/knightHiccupsBgm.mjs` | `54.0s` | `0.52` | Dynamic 4-section silent-storytelling medieval comedy score (royal march, village mystery, bassoon comedy, festive jig). Themes: `medieval`, `comedy`, `knight`, `dragon`, `castle`. |
 | `knight-hiccups-thorn-pop.wav` | `scripts/sfx/knightHiccupsThornPop.mjs` | `1.5s` | `0.92` | Taut woody-vine tug & friction creak + resonant tooth POP! + D-major relief harp glissando. Themes: `medieval`, `knight`, `dragon`, `comedy_pop`, `relief`. |
 | `christmas-hearth-bgm.wav` | `scripts/sfx/christmasHearthBgm.mjs` | `48.0s` | `0.25` | Dynamic 4-section Dickensian Christmas score: G-minor snowy celesta/pizzicato (`0–16.5s`) → 120 BPM staccato bassoon comedy bounce (`16.5–28.8s`) → warm shimmering concert harp, celesta & string swell (`28.8–36.2s`) → joyful G-major Christmas waltz with sleigh-bell shimmer & Gmaj9 finale (`36.2–48.0s`). Themes: `christmas`, `winter`, `cozy_village`, `hearth`, `celebration`, `classic`. |
+| `classic-starter-cat-lullaby-bgm.wav` | `scripts/sfx/classicStarterCatLullabyBgm.mjs` | `30.0s` | `0.26` | 5-section 1970s animated-film G-major / E-minor 6/8 barcarolle nocturnal lullaby (pastoral solo wooden flute, tiptoeing pizzicato strings, muted string pads, silver chime sparkles). Themes: `bedtime`, `lullaby`, `cat`, `garden`, `classic`, `moonlit`. |
+| `classic-starter-dog-bgm.wav` | `scripts/sfx/classicStarterDogBgm.mjs` | `44.0s` | `0.25` | Dynamic 3-section 1970s folk-orchestral score: Morning Backyard 102 BPM lute/flute (`0–20.4s`) → Park Fetch Chase 138 BPM whistle/pizzicato (`20.4–32.6s`) → Golden Afternoon 88 BPM harp & clarinet ritardando (`32.6–44.0s`). Themes: `dog`, `pet`, `classic`, `backyard`, `park`, `sunny`. |
 
-## Gemini TTS Voiceover Tracks (`Barnaby's Christmas Hearth`)
+## Gemini TTS Voiceover Tracks (`Classic Cel Shorts`)
 
-Synthesized via `scripts/generate_audio.mjs` for `CLASSIC_CHRISTMAS_HEARTH_SCENE` (`/classic/christmas-hearth`):
+Synthesized via `scripts/generate_audio.mjs` for `CLASSIC_CHRISTMAS_HEARTH_SCENE`, `CLASSIC_STARTER_MOONLIT_CAT_SCENE`, and `CLASSIC_STARTER_BANDANA_DOG_SCENE`:
 
 | File (`public/audio/`) | Role & Voice | Description |
 | :--- | :--- | :--- |
-| `xmas-hearth-narrator-01.wav` | Narrator (`Algieba`) | Opening snowy Christmas Eve storybook narration |
-| `xmas-hearth-pippin-01.wav` | Pippin (`Puck`) | Pippin greeting Barnaby with warm apple pie |
-| `xmas-hearth-barnaby-01.wav` | Barnaby (`Algenib`) | Grumpy Victorian badger dismissal of Christmas |
-| `xmas-hearth-pippin-02.wav` | Pippin (`Puck`) | Gentle holiday encouragement about warming the hearth |
-| `xmas-hearth-barnaby-02.wav` | Barnaby (`Algenib`) | Barnaby's hearty laugh and warm Christmas welcome |
-| `xmas-hearth-narrator-02.wav` | Narrator (`Algieba`) | Heartwarming snowy village closing narration |
+| `xmas-hearth-narrator-01.wav` .. `02.wav`, `pippin-01..02.wav`, `barnaby-01..02.wav` | `Algieba`, `Puck`, `Algenib` | 6 Dickensian cast & narration tracks for `CLASSIC_CHRISTMAS_HEARTH_SCENE` (`/classic/christmas-hearth`) |
+| `classic-starter-cat-narrator-01..03.wav`, `clover-01.wav`, `moon-01.wav` | Narrator, Clover, Moon | 5 nocturnal bedtime cast & narration tracks for `CLASSIC_STARTER_MOONLIT_CAT_SCENE` (`/classic/starter-moonlit-cat`) |
+| `classic-starter-dog-voice-01..04.wav` | Narrator & Biscuit | 4 sunlit storybook cast & narration tracks for `CLASSIC_STARTER_BANDANA_DOG_SCENE` (`/classic/starter-bandana-dog`) |
 
 ---
 
